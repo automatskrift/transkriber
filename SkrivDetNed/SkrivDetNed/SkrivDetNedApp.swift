@@ -11,15 +11,19 @@ import UserNotifications
 @main
 struct SkrivDetNedApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @State private var showingAbout = false
 
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .sheet(isPresented: $showingAbout) {
+                    AboutView()
+                }
         }
         .commands {
             CommandGroup(replacing: .appInfo) {
                 Button("Om SkrivDetNed") {
-                    // Show about window
+                    showingAbout = true
                 }
             }
         }
@@ -31,7 +35,14 @@ struct SkrivDetNedApp: App {
 }
 
 class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
+    private var menuBarManager: MenuBarManager?
+
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Setup menu bar
+        Task { @MainActor in
+            menuBarManager = MenuBarManager.shared
+        }
+
         // Request notification permissions
         UNUserNotificationCenter.current().delegate = self
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in

@@ -13,7 +13,11 @@ import UserNotifications
 class TranscriptionViewModel: ObservableObject {
     static let shared = TranscriptionViewModel()
 
-    @Published var activeTasks: [TranscriptionTask] = []
+    @Published var activeTasks: [TranscriptionTask] = [] {
+        didSet {
+            MenuBarManager.shared.updateIcon(isTranscribing: !activeTasks.isEmpty)
+        }
+    }
     @Published var completedTasks: [TranscriptionTask] = []
     @Published var currentTask: TranscriptionTask?
 

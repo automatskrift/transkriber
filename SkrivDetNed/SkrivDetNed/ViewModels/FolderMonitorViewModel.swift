@@ -10,7 +10,13 @@ import SwiftUI
 
 @MainActor
 class FolderMonitorViewModel: ObservableObject {
-    @Published var isMonitoring = false
+    static let shared = FolderMonitorViewModel()
+
+    @Published var isMonitoring = false {
+        didSet {
+            MenuBarManager.shared.isMonitoring = isMonitoring
+        }
+    }
     @Published var selectedFolderURL: URL?
     @Published var pendingFiles: [URL] = []
     @Published var recentlyCompleted: [TranscriptionTask] = []
@@ -19,7 +25,7 @@ class FolderMonitorViewModel: ObservableObject {
     private let transcriptionVM = TranscriptionViewModel.shared
     private let settings = AppSettings.shared
 
-    init() {
+    private init() {
         setupObservers()
         loadSavedFolder()
     }

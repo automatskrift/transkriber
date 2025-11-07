@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct FolderMonitorView: View {
-    @StateObject private var viewModel = FolderMonitorViewModel()
+    @ObservedObject private var viewModel = FolderMonitorViewModel.shared
     @ObservedObject private var transcriptionVM = TranscriptionViewModel.shared
 
     var body: some View {
