@@ -6,8 +6,6 @@
 //
 
 import SwiftUI
-import WidgetKit
-import ActivityKit
 
 @main
 struct SkrivDetNedApp: App {

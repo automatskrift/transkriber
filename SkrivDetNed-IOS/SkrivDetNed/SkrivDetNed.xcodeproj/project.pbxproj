@@ -6,15 +6,65 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		C39AA9E12EBF5D48003185E4 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C39AA9E02EBF5D48003185E4 /* WidgetKit.framework */; };
+		C39AA9E32EBF5D48003185E4 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C39AA9E22EBF5D48003185E4 /* SwiftUI.framework */; };
+		C39AA9F22EBF5D4D003185E4 /* SkrivDetNedWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C39AA9DE2EBF5D48003185E4 /* SkrivDetNedWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C39AA9F02EBF5D4D003185E4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C39AA8B22EBE9811003185E4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C39AA9DD2EBF5D48003185E4;
+			remoteInfo = SkrivDetNedWidgetsExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		C39AA9F72EBF5D4D003185E4 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				C39AA9F22EBF5D4D003185E4 /* SkrivDetNedWidgetsExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		C39AA8BA2EBE9811003185E4 /* SkrivDetNed.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkrivDetNed.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C39AA9DE2EBF5D48003185E4 /* SkrivDetNedWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SkrivDetNedWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		C39AA9E02EBF5D48003185E4 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		C39AA9E22EBF5D48003185E4 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		C39AA9D72EBF59E3003185E4 /* Exceptions for "SkrivDetNed" folder in "SkrivDetNed" target */ = {
+		C39AA9F62EBF5D4D003185E4 /* Exceptions for "SkrivDetNedWidgets" folder in "SkrivDetNedWidgetsExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
+				RecordingLiveActivityWidget.swift,
+			);
+			target = C39AA9DD2EBF5D48003185E4 /* SkrivDetNedWidgetsExtension */;
+		};
+		C39AA9FB2EBF5D7C003185E4 /* Exceptions for "SkrivDetNed" folder in "SkrivDetNedWidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Assets.xcassets,
+				Widgets/RecordingLiveActivityWidget.swift,
+			);
+			target = C39AA9DD2EBF5D48003185E4 /* SkrivDetNedWidgetsExtension */;
+		};
+		C39AAA002EBF5E43003185E4 /* Exceptions for "SkrivDetNed" folder in "SkrivDetNed" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+				Widgets/RecordingLiveActivityWidget.swift,
 			);
 			target = C39AA8B92EBE9811003185E4 /* SkrivDetNed */;
 		};
@@ -24,9 +74,18 @@
 		C39AA8BC2EBE9811003185E4 /* SkrivDetNed */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				C39AA9D72EBF59E3003185E4 /* Exceptions for "SkrivDetNed" folder in "SkrivDetNed" target */,
+				C39AAA002EBF5E43003185E4 /* Exceptions for "SkrivDetNed" folder in "SkrivDetNed" target */,
+				C39AA9FB2EBF5D7C003185E4 /* Exceptions for "SkrivDetNed" folder in "SkrivDetNedWidgetsExtension" target */,
 			);
 			path = SkrivDetNed;
+			sourceTree = "<group>";
+		};
+		C39AA9E42EBF5D48003185E4 /* SkrivDetNedWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C39AA9F62EBF5D4D003185E4 /* Exceptions for "SkrivDetNedWidgets" folder in "SkrivDetNedWidgetsExtension" target */,
+			);
+			path = SkrivDetNedWidgets;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -39,6 +98,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C39AA9DB2EBF5D48003185E4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C39AA9E32EBF5D48003185E4 /* SwiftUI.framework in Frameworks */,
+				C39AA9E12EBF5D48003185E4 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -46,6 +114,8 @@
 			isa = PBXGroup;
 			children = (
 				C39AA8BC2EBE9811003185E4 /* SkrivDetNed */,
+				C39AA9E42EBF5D48003185E4 /* SkrivDetNedWidgets */,
+				C39AA9DF2EBF5D48003185E4 /* Frameworks */,
 				C39AA8BB2EBE9811003185E4 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -54,8 +124,18 @@
 			isa = PBXGroup;
 			children = (
 				C39AA8BA2EBE9811003185E4 /* SkrivDetNed.app */,
+				C39AA9DE2EBF5D48003185E4 /* SkrivDetNedWidgetsExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		C39AA9DF2EBF5D48003185E4 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				C39AA9E02EBF5D48003185E4 /* WidgetKit.framework */,
+				C39AA9E22EBF5D48003185E4 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -68,10 +148,12 @@
 				C39AA8B62EBE9811003185E4 /* Sources */,
 				C39AA8B72EBE9811003185E4 /* Frameworks */,
 				C39AA8B82EBE9811003185E4 /* Resources */,
+				C39AA9F72EBF5D4D003185E4 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				C39AA9F12EBF5D4D003185E4 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				C39AA8BC2EBE9811003185E4 /* SkrivDetNed */,
@@ -82,6 +164,28 @@
 			productName = SkrivDetNed;
 			productReference = C39AA8BA2EBE9811003185E4 /* SkrivDetNed.app */;
 			productType = "com.apple.product-type.application";
+		};
+		C39AA9DD2EBF5D48003185E4 /* SkrivDetNedWidgetsExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C39AA9F32EBF5D4D003185E4 /* Build configuration list for PBXNativeTarget "SkrivDetNedWidgetsExtension" */;
+			buildPhases = (
+				C39AA9DA2EBF5D48003185E4 /* Sources */,
+				C39AA9DB2EBF5D48003185E4 /* Frameworks */,
+				C39AA9DC2EBF5D48003185E4 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				C39AA9E42EBF5D48003185E4 /* SkrivDetNedWidgets */,
+			);
+			name = SkrivDetNedWidgetsExtension;
+			packageProductDependencies = (
+			);
+			productName = SkrivDetNedWidgetsExtension;
+			productReference = C39AA9DE2EBF5D48003185E4 /* SkrivDetNedWidgetsExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -94,6 +198,9 @@
 				LastUpgradeCheck = 2610;
 				TargetAttributes = {
 					C39AA8B92EBE9811003185E4 = {
+						CreatedOnToolsVersion = 26.1;
+					};
+					C39AA9DD2EBF5D48003185E4 = {
 						CreatedOnToolsVersion = 26.1;
 					};
 				};
@@ -113,12 +220,20 @@
 			projectRoot = "";
 			targets = (
 				C39AA8B92EBE9811003185E4 /* SkrivDetNed */,
+				C39AA9DD2EBF5D48003185E4 /* SkrivDetNedWidgetsExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		C39AA8B82EBE9811003185E4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C39AA9DC2EBF5D48003185E4 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -135,7 +250,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C39AA9DA2EBF5D48003185E4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		C39AA9F12EBF5D4D003185E4 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C39AA9DD2EBF5D48003185E4 /* SkrivDetNedWidgetsExtension */;
+			targetProxy = C39AA9F02EBF5D4D003185E4 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		C39AA8C32EBE9815003185E4 /* Debug */ = {
@@ -335,6 +465,66 @@
 			};
 			name = Release;
 		};
+		C39AA9F42EBF5D4D003185E4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 58S8C73Q5Z;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SkrivDetNedWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SkrivDetNedWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dk.omdethele.SkrivDetNed.SkrivDetNedWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C39AA9F52EBF5D4D003185E4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 58S8C73Q5Z;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SkrivDetNedWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SkrivDetNedWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dk.omdethele.SkrivDetNed.SkrivDetNedWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -352,6 +542,15 @@
 			buildConfigurations = (
 				C39AA8C62EBE9815003185E4 /* Debug */,
 				C39AA8C72EBE9815003185E4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C39AA9F32EBF5D4D003185E4 /* Build configuration list for PBXNativeTarget "SkrivDetNedWidgetsExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C39AA9F42EBF5D4D003185E4 /* Debug */,
+				C39AA9F52EBF5D4D003185E4 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

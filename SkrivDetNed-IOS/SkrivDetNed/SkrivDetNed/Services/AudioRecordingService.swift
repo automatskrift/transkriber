@@ -263,17 +263,25 @@ class AudioRecordingService: NSObject, ObservableObject {
             }
         }
 
-        // Monitor duration
-        durationTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-            guard let self else { return }
-            Task { @MainActor [weak self] in
-                guard let self, let recorder = self.audioRecorder else { return }
-                self.duration = recorder.currentTime
+        // Monitor duration and update Live Activity
+        durationTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timer in
+            guard let self else {
+                timer.invalidate()
+                return
+            }
 
-                // Update Live Activity every second
-                if Int(recorder.currentTime) % 1 == 0 {
-                    await self.updateLiveActivity()
-                }
+            guard let recorder = self.audioRecorder else {
+                timer.invalidate()
+                return
+            }
+
+            // Update duration on main thread
+            Task { @MainActor in
+                self.duration = recorder.currentTime
+                print("⏱️ Duration updated: \(Int(self.duration))s")
+
+                // Update Live Activity
+                await self.updateLiveActivity()
             }
         }
     }
@@ -288,8 +296,8 @@ class AudioRecordingService: NSObject, ObservableObject {
     // MARK: - Live Activity
 
     private func startLiveActivity(fileName: String) {
-        guard #available(iOS 16.1, *) else {
-            print("⚠️ Live Activities require iOS 16.1+")
+        guard #available(iOS 16.2, *) else {
+            print("⚠️ Live Activities require iOS 16.2+ for full features")
             return
         }
 
@@ -297,32 +305,60 @@ class AudioRecordingService: NSObject, ObservableObject {
         print("📊 Live Activities status:")
         print("   - Enabled: \(authInfo.areActivitiesEnabled)")
         print("   - Frequent pushes enabled: \(authInfo.frequentPushesEnabled)")
+        print("   - Are pushes enabled: \(authInfo.areActivitiesEnabled)")
 
         guard authInfo.areActivitiesEnabled else {
             print("⚠️ Live Activities not enabled by user")
-            print("   User needs to enable in Settings > [App Name] > Live Activities")
+            print("   User needs to enable in Settings > SkrivDetNed > Live Activities")
+            print("   OR Settings > Face ID & Passcode > Allow Access When Locked > Live Activities")
             return
         }
 
         let attributes = RecordingActivityAttributes(startTime: Date())
-        let contentState = RecordingActivityAttributes.ContentState(
+        let initialState = RecordingActivityAttributes.ContentState(
             duration: 0,
             isPaused: false,
             fileName: fileName
         )
 
         do {
-            currentActivity = try Activity<RecordingActivityAttributes>.request(
+            let content = ActivityContent(state: initialState, staleDate: nil)
+
+            currentActivity = try Activity.request(
                 attributes: attributes,
-                content: .init(state: contentState, staleDate: nil),
+                content: content,
                 pushType: nil
             )
-            print("✅ Live Activity started successfully!")
+
+            print("✅ Live Activity requested successfully!")
             print("   Activity ID: \(currentActivity?.id ?? "unknown")")
             print("   Activity state: \(String(describing: currentActivity?.activityState))")
+            print("   Content state: duration=\(initialState.duration), fileName=\(initialState.fileName)")
+
+            // Debug: Check all active activities
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 500_000_000) // Wait 0.5s
+                let activities = Activity<RecordingActivityAttributes>.activities
+                print("   📱 Total active activities: \(activities.count)")
+                for activity in activities {
+                    print("      - ID: \(activity.id)")
+                    print("        State: \(activity.activityState)")
+                    print("        Content: \(activity.content.state)")
+                }
+
+                if activities.isEmpty {
+                    print("   ⚠️ WARNING: No active activities found - Live Activity may have failed silently")
+                    print("   This usually means:")
+                    print("      1. Live Activities are disabled in Settings")
+                    print("      2. Widget Extension is not configured")
+                    print("      3. ActivityConfiguration is missing")
+                }
+            }
         } catch {
             print("❌ Failed to start Live Activity: \(error)")
             print("   Error details: \(error.localizedDescription)")
+            print("   Error type: \(type(of: error))")
+
             if let activityError = error as? ActivityAuthorizationError {
                 print("   Authorization error: \(activityError)")
             }
@@ -330,8 +366,20 @@ class AudioRecordingService: NSObject, ObservableObject {
     }
 
     private func updateLiveActivity() async {
-        guard #available(iOS 16.2, *) else { return }
-        guard let activity = currentActivity else { return }
+        guard #available(iOS 16.2, *) else {
+            print("⚠️ updateLiveActivity: iOS 16.2+ required")
+            return
+        }
+        guard let activity = currentActivity else {
+            print("⚠️ updateLiveActivity: No current activity")
+            return
+        }
+
+        // Check if activity is still active
+        guard activity.activityState == .active else {
+            print("⚠️ updateLiveActivity: Activity is not active (state: \(activity.activityState))")
+            return
+        }
 
         let contentState = RecordingActivityAttributes.ContentState(
             duration: duration,
@@ -339,7 +387,12 @@ class AudioRecordingService: NSObject, ObservableObject {
             fileName: currentRecordingURL?.lastPathComponent ?? "Recording"
         )
 
-        await activity.update(.init(state: contentState, staleDate: nil))
+        do {
+            await activity.update(.init(state: contentState, staleDate: nil))
+            print("🔄 Live Activity updated: \(Int(duration))s, paused: \(isPaused)")
+        } catch {
+            print("❌ Failed to update Live Activity: \(error)")
+        }
     }
 
     private func endLiveActivity() async {
