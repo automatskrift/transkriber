@@ -78,7 +78,7 @@ struct RecordButton: View {
         } else if isRecording {
             return .red
         } else {
-            return .red
+            return .green
         }
     }
 }

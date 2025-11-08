@@ -170,6 +170,25 @@ class TranscriptionViewModel: ObservableObject {
             activeTasks[index].status = .processing(progress: 0.0)
         }
 
+        // If file is from iCloud, update metadata to "transcribing"
+        if url.path.contains("Mobile Documents") {
+            do {
+                if let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL() {
+                    var metadata = try RecordingMetadata.load(for: url.lastPathComponent, from: recordingsFolder)
+                        ?? RecordingMetadata(audioFileName: url.lastPathComponent, createdOnDevice: "Unknown")
+
+                    metadata.status = .transcribing
+                    metadata.transcribedOnDevice = "macOS"
+                    metadata.updatedAt = Date()
+
+                    try metadata.save(to: recordingsFolder)
+                    print("🔄 Updated metadata to 'transcribing' status")
+                }
+            } catch {
+                print("⚠️ Failed to update metadata to transcribing: \(error)")
+            }
+        }
+
         do {
             // Get selected model
             let modelType = AppSettings.shared.selectedModelType

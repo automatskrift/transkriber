@@ -152,6 +152,12 @@ class FolderMonitorService: ObservableObject {
             return
         }
 
+        // Check if file is ignored
+        if AppSettings.shared.ignoredFiles.contains(url.path) {
+            print("⏭️ Skipping ignored file: \(url.lastPathComponent)")
+            return
+        }
+
         // Check if already processed
         guard !processedFiles.contains(url.path) else {
             return
@@ -221,6 +227,11 @@ class FolderMonitorService: ObservableObject {
         for case let fileURL as URL in enumerator {
             // Check if it's an audio file
             guard FileSystemHelper.shared.isAudioFile(fileURL) else {
+                continue
+            }
+
+            // Check if file is ignored
+            if AppSettings.shared.ignoredFiles.contains(fileURL.path) {
                 continue
             }
 

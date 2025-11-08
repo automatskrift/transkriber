@@ -10,18 +10,22 @@ import SwiftUI
 struct RecordingView: View {
     @StateObject private var viewModel = RecordingViewModel()
     @ObservedObject private var settings = AppSettings.shared
+    @State private var showingCancelConfirmation = false
+    @State private var showRecordingUI = false
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 30) {
-                Spacer()
+            ScrollView {
+                VStack(spacing: 30) {
+                    Spacer()
+                        .frame(height: 40)
 
-                // Large record button
-                RecordButton(
-                    isRecording: viewModel.isRecording,
-                    isPaused: viewModel.isPaused,
-                    action: { viewModel.toggleRecording() }
-                )
+                    // Large record button
+                    RecordButton(
+                        isRecording: viewModel.isRecording,
+                        isPaused: viewModel.isPaused,
+                        action: { viewModel.toggleRecording() }
+                    )
 
                 // Waveform visualization
                 if viewModel.isRecording || viewModel.isInitializingRecording {
@@ -29,6 +33,8 @@ struct RecordingView: View {
                         WaveformView(levels: viewModel.audioLevels)
                             .frame(height: 100)
                             .padding(.horizontal)
+                            .opacity(showRecordingUI ? 1 : 0)
+                            .animation(.easeIn(duration: 0.4), value: showRecordingUI)
                     } else {
                         // Show placeholder while initializing
                         ProgressView("Forbereder optagelse...")
@@ -42,9 +48,11 @@ struct RecordingView: View {
                         .font(.system(size: 48, weight: .thin, design: .rounded))
                         .monospacedDigit()
 
-                    Text(viewModel.estimatedFileSize)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    if viewModel.isRecording || viewModel.isInitializingRecording {
+                        Text(viewModel.estimatedFileSize)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 }
 
                 // Control buttons
@@ -62,16 +70,22 @@ struct RecordingView: View {
                         .disabled(viewModel.isInitializingRecording)
 
                         // Cancel button
-                        Button(role: .destructive, action: { viewModel.cancelRecording() }) {
+                        Button(role: .destructive, action: {
+                            if viewModel.duration > 3 {
+                                showingCancelConfirmation = true
+                            } else {
+                                viewModel.cancelRecording()
+                            }
+                        }) {
                             Label("Annuller", systemImage: "xmark")
                                 .font(.headline)
                         }
                         .buttonStyle(.bordered)
                         .disabled(viewModel.isInitializingRecording)
                     }
+                    .opacity(showRecordingUI ? 1 : 0)
+                    .animation(.easeIn(duration: 0.4).delay(0.1), value: showRecordingUI)
                 }
-
-                Spacer()
 
                 // Metadata input (when recording)
                 if viewModel.isRecording || viewModel.isInitializingRecording {
@@ -109,11 +123,28 @@ struct RecordingView: View {
                         }
                     }
                     .padding(.horizontal)
+                    .opacity(showRecordingUI ? 1 : 0)
+                    .animation(.easeIn(duration: 0.4).delay(0.2), value: showRecordingUI)
                 }
+
+                Spacer()
+                    .frame(height: 40)
             }
             .padding()
+        }
             .navigationTitle("Optag")
             .navigationBarTitleDisplayMode(.inline)
+            .onChange(of: viewModel.isRecording) { _, newValue in
+                if newValue {
+                    // When recording starts, trigger fade-in animation
+                    withAnimation {
+                        showRecordingUI = true
+                    }
+                } else {
+                    // Reset when recording stops
+                    showRecordingUI = false
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     NavigationLink(destination: SettingsView()) {
@@ -130,6 +161,14 @@ struct RecordingView: View {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text("Din optagelse er gemt og bliver nu uploadet til iCloud.")
+            }
+            .alert("Annuller optagelse?", isPresented: $showingCancelConfirmation) {
+                Button("Fortsæt optagelse", role: .cancel) {}
+                Button("Annuller", role: .destructive) {
+                    viewModel.cancelRecording()
+                }
+            } message: {
+                Text("Er du sikker på at du vil annullere denne optagelse? Dette kan ikke fortrydes.")
             }
         }
     }

@@ -27,7 +27,7 @@ struct RecordingRow: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(recording.title)
                     .font(.headline)
-                    .lineLimit(2)
+                    .lineLimit(1)
 
                 // Only show details if not actively transcribing
                 if recording.cloudStatus != .transcribing {

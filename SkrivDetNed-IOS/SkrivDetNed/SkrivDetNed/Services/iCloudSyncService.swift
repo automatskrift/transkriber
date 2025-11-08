@@ -21,11 +21,13 @@ class iCloudSyncService: ObservableObject {
     private let containerIdentifier = "iCloud.dk.omdethele.SkrivDetNed"
     private var transcriptionCallbacks: [String: (String) -> Void] = [:]
     private var activeUploads: [String: Recording] = [:]
+    private var statusCheckTimer: Timer?
 
     private init() {
         checkiCloudAvailability()
         setupBackgroundSupport()
         setupMetadataMonitoring()
+        setupPeriodicStatusCheck()
     }
 
     /// Setup background upload support
@@ -33,6 +35,126 @@ class iCloudSyncService: ObservableObject {
         // Enable ubiquitous item coordination for background uploads
         // iCloud Drive automatically handles background uploads
         print("🔧 Background upload support enabled via iCloud Drive")
+    }
+
+    /// Setup periodic status check for non-completed recordings
+    private func setupPeriodicStatusCheck() {
+        // Do an immediate check after a short delay to let iCloud availability check finish
+        Task {
+            try? await Task.sleep(nanoseconds: 2_000_000_000) // Wait 2 seconds
+            await checkPendingRecordingsStatus()
+        }
+
+        // Then check status every 10 seconds for recordings that are pending/transcribing
+        statusCheckTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                await self?.checkPendingRecordingsStatus()
+            }
+        }
+        print("⏰ Periodic status check timer started (every 10 seconds)")
+    }
+
+    /// Check status of recordings that are not completed
+    private func checkPendingRecordingsStatus() async {
+        // First check if we have local recordings that need status updates
+        let localRecordingsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("Recordings")
+
+        guard FileManager.default.fileExists(atPath: localRecordingsDir.path) else {
+            print("📂 No local recordings directory")
+            return
+        }
+
+        // Get list of local recordings that are not completed
+        var pendingRecordings: [String] = []
+
+        do {
+            let localFiles = try FileManager.default.contentsOfDirectory(at: localRecordingsDir, includingPropertiesForKeys: nil)
+            let localJsonFiles = localFiles.filter { $0.pathExtension == "json" }
+
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+
+            for file in localJsonFiles {
+                guard let data = try? Data(contentsOf: file),
+                      let recording = try? decoder.decode(Recording.self, from: data) else {
+                    continue
+                }
+
+                // Only check recordings that are synced to iCloud but not completed
+                if recording.cloudStatus != .local &&
+                   recording.cloudStatus != .completed &&
+                   recording.cloudStatus != .failed {
+                    pendingRecordings.append(recording.fileName)
+                }
+            }
+
+            if pendingRecordings.isEmpty {
+                return
+            }
+
+            print("🔍 Checking status for \(pendingRecordings.count) pending recording(s)")
+
+        } catch {
+            print("⚠️ Failed to read local recordings: \(error)")
+            return
+        }
+
+        // Now check iCloud for updated metadata
+        guard isAvailable else {
+            print("⚠️ iCloud not available - skipping status check")
+            return
+        }
+
+        guard let recordingsFolder = getRecordingsFolderURL() else {
+            print("⚠️ Cannot get iCloud recordings folder")
+            return
+        }
+
+        do {
+            let files = try FileManager.default.contentsOfDirectory(
+                at: recordingsFolder,
+                includingPropertiesForKeys: nil
+            )
+
+            let jsonFiles = files.filter { $0.pathExtension == "json" }
+
+            for jsonFile in jsonFiles {
+                let fileName = jsonFile.lastPathComponent.replacingOccurrences(of: ".json", with: ".m4a")
+
+                // Only check files that are in our pending list
+                guard pendingRecordings.contains(fileName) else { continue }
+
+                guard let data = try? Data(contentsOf: jsonFile) else { continue }
+
+                let decoder = JSONDecoder()
+                decoder.dateDecodingStrategy = .iso8601
+
+                guard let metadata = try? decoder.decode(RecordingMetadata.self, from: data) else {
+                    continue
+                }
+
+                print("🔍 \(metadata.audioFileName): \(metadata.status.rawValue)")
+
+                // Update local recording with latest status
+                await updateLocalRecordingStatus(audioFileName: metadata.audioFileName, metadata: metadata)
+
+                // If completed, check for transcription
+                if metadata.status == .completed,
+                   let transcriptionFileName = metadata.transcriptionFileName {
+                    let transcriptionURL = recordingsFolder.appendingPathComponent(transcriptionFileName)
+
+                    if FileManager.default.fileExists(atPath: transcriptionURL.path),
+                       let transcription = try? String(contentsOf: transcriptionURL, encoding: .utf8) {
+                        await updateLocalRecording(audioFileName: metadata.audioFileName, transcription: transcription)
+                        print("📥 Downloaded transcription for \(metadata.audioFileName)")
+                    }
+                }
+            }
+
+        } catch {
+            print("⚠️ Failed to check pending recordings in iCloud: \(error)")
+        }
     }
 
     /// Setup metadata monitoring for real-time updates
@@ -182,16 +304,53 @@ class iCloudSyncService: ObservableObject {
 
         let recordingsURL = documentsURL.appendingPathComponent("Recordings")
 
-        // Create directory if it doesn't exist
-        if !FileManager.default.fileExists(atPath: recordingsURL.path) {
-            do {
-                try FileManager.default.createDirectory(
-                    at: recordingsURL,
-                    withIntermediateDirectories: true,
-                    attributes: nil
-                )
-                print("📁 Created Recordings folder in iCloud")
-            } catch {
+        // Check if directory exists - need to check both local existence and iCloud status
+        var isDirectory: ObjCBool = false
+        let localExists = FileManager.default.fileExists(atPath: recordingsURL.path, isDirectory: &isDirectory)
+
+        if localExists && isDirectory.boolValue {
+            print("📁 Recordings folder exists locally")
+            return recordingsURL
+        }
+
+        // Check if it exists in iCloud but not downloaded yet
+        if localExists {
+            print("⚠️ Path exists but is not a directory!")
+            // Don't try to create - something is wrong
+            return recordingsURL
+        }
+
+        // Try to start downloading if it exists in iCloud
+        do {
+            try FileManager.default.startDownloadingUbiquitousItem(at: recordingsURL)
+            print("📥 Started downloading Recordings folder from iCloud")
+            // Check again after attempting download
+            if FileManager.default.fileExists(atPath: recordingsURL.path, isDirectory: &isDirectory) && isDirectory.boolValue {
+                print("📁 Recordings folder downloaded successfully")
+                return recordingsURL
+            }
+        } catch let error as NSError {
+            // If error is "file doesn't exist", we need to create it
+            if error.domain == NSCocoaErrorDomain && (error.code == NSFileReadNoSuchFileError || error.code == NSFileNoSuchFileError) {
+                print("📁 Recordings folder doesn't exist in iCloud, creating...")
+            } else {
+                print("⚠️ Download attempt error: \(error) - will try to create")
+            }
+        }
+
+        // Directory doesn't exist locally or in iCloud - create it
+        do {
+            try FileManager.default.createDirectory(
+                at: recordingsURL,
+                withIntermediateDirectories: true,
+                attributes: nil
+            )
+            print("📁 Created Recordings folder in iCloud")
+        } catch let error as NSError {
+            // Ignore "already exists" error (can happen with race conditions)
+            if error.domain == NSCocoaErrorDomain && error.code == NSFileWriteFileExistsError {
+                print("📁 Recordings folder already exists (created by another device)")
+            } else {
                 print("❌ Failed to create Recordings folder: \(error)")
                 return nil
             }
@@ -625,8 +784,14 @@ class iCloudSyncService: ObservableObject {
     func stopMonitoring() {
         metadataQuery?.stop()
         metadataQuery = nil
+        statusCheckTimer?.invalidate()
+        statusCheckTimer = nil
         NotificationCenter.default.removeObserver(self)
         print("⏹️ Stopped monitoring iCloud")
+    }
+
+    deinit {
+        statusCheckTimer?.invalidate()
     }
 
     /// Check for stuck transcriptions (files in "transcribing" state for too long)
@@ -747,5 +912,27 @@ enum iCloudError: LocalizedError {
         case .uploadFailed:
             return "Upload til iCloud fejlede"
         }
+    }
+}
+
+// MARK: - Heartbeat
+extension iCloudSyncService {
+    /// Read the last heartbeat from macOS
+    func getLastHeartbeat() -> Date? {
+        guard let recordingsFolder = getRecordingsFolderURL() else {
+            return nil
+        }
+
+        let heartbeatURL = recordingsFolder.appendingPathComponent(".mac_heartbeat.json")
+
+        guard FileManager.default.fileExists(atPath: heartbeatURL.path),
+              let jsonData = try? Data(contentsOf: heartbeatURL),
+              let heartbeatData = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
+              let timestampString = heartbeatData["timestamp"] as? String,
+              let timestamp = ISO8601DateFormatter().date(from: timestampString) else {
+            return nil
+        }
+
+        return timestamp
     }
 }

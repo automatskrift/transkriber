@@ -18,6 +18,7 @@ class iCloudSyncService: ObservableObject {
 
     private var metadataQuery: NSMetadataQuery?
     private let containerIdentifier = "iCloud.dk.omdethele.SkrivDetNed"
+    private var heartbeatTimer: Timer?
 
     private init() {
         Task {
@@ -61,16 +62,53 @@ class iCloudSyncService: ObservableObject {
 
         let recordingsURL = documentsURL.appendingPathComponent("Recordings")
 
-        // Create directory if it doesn't exist
-        if !FileManager.default.fileExists(atPath: recordingsURL.path) {
-            do {
-                try FileManager.default.createDirectory(
-                    at: recordingsURL,
-                    withIntermediateDirectories: true,
-                    attributes: nil
-                )
-                print("📁 Created Recordings folder in iCloud")
-            } catch {
+        // Check if directory exists - need to check both local existence and iCloud status
+        var isDirectory: ObjCBool = false
+        let localExists = FileManager.default.fileExists(atPath: recordingsURL.path, isDirectory: &isDirectory)
+
+        if localExists && isDirectory.boolValue {
+            print("📁 Recordings folder exists locally")
+            return recordingsURL
+        }
+
+        // Check if it exists in iCloud but not downloaded yet
+        if localExists {
+            print("⚠️ Path exists but is not a directory!")
+            // Don't try to create - something is wrong
+            return recordingsURL
+        }
+
+        // Try to start downloading if it exists in iCloud
+        do {
+            try FileManager.default.startDownloadingUbiquitousItem(at: recordingsURL)
+            print("📥 Started downloading Recordings folder from iCloud")
+            // Check again after attempting download
+            if FileManager.default.fileExists(atPath: recordingsURL.path, isDirectory: &isDirectory) && isDirectory.boolValue {
+                print("📁 Recordings folder downloaded successfully")
+                return recordingsURL
+            }
+        } catch let error as NSError {
+            // If error is "file doesn't exist", we need to create it
+            if error.domain == NSCocoaErrorDomain && (error.code == NSFileReadNoSuchFileError || error.code == NSFileNoSuchFileError) {
+                print("📁 Recordings folder doesn't exist in iCloud, creating...")
+            } else {
+                print("⚠️ Download attempt error: \(error) - will try to create")
+            }
+        }
+
+        // Directory doesn't exist locally or in iCloud - create it
+        do {
+            try FileManager.default.createDirectory(
+                at: recordingsURL,
+                withIntermediateDirectories: true,
+                attributes: nil
+            )
+            print("📁 Created Recordings folder in iCloud")
+        } catch let error as NSError {
+            // Ignore "already exists" error (can happen with race conditions)
+            if error.domain == NSCocoaErrorDomain && error.code == NSFileWriteFileExistsError {
+                print("📁 Recordings folder already exists (created by another device)")
+            } else {
                 print("❌ Failed to create Recordings folder: \(error)")
                 return nil
             }
@@ -569,5 +607,68 @@ enum iCloudError: LocalizedError {
         case .downloadFailed:
             return "Download fra iCloud fejlede"
         }
+    }
+}
+
+// MARK: - Heartbeat
+extension iCloudSyncService {
+    /// Start heartbeat - writes timestamp to iCloud every minute
+    func startHeartbeat() {
+        // Write initial heartbeat
+        writeHeartbeat()
+
+        // Schedule periodic heartbeat every 60 seconds
+        heartbeatTimer = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true) { [weak self] _ in
+            self?.writeHeartbeat()
+        }
+        print("💓 Heartbeat timer started (every 60 seconds)")
+    }
+
+    /// Stop heartbeat timer
+    func stopHeartbeat() {
+        heartbeatTimer?.invalidate()
+        heartbeatTimer = nil
+        print("💔 Heartbeat timer stopped")
+    }
+
+    /// Write current timestamp to heartbeat file
+    private func writeHeartbeat() {
+        guard let recordingsFolder = getRecordingsFolderURL() else {
+            print("⚠️ Cannot write heartbeat: recordings folder not available")
+            return
+        }
+
+        let heartbeatURL = recordingsFolder.appendingPathComponent(".mac_heartbeat.json")
+        let heartbeatData: [String: Any] = [
+            "timestamp": ISO8601DateFormatter().string(from: Date()),
+            "device": "macOS"
+        ]
+
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: heartbeatData, options: .prettyPrinted)
+            try jsonData.write(to: heartbeatURL)
+            print("💓 Heartbeat written: \(Date())")
+        } catch {
+            print("❌ Failed to write heartbeat: \(error)")
+        }
+    }
+
+    /// Read the last heartbeat from iCloud
+    func getLastHeartbeat() -> Date? {
+        guard let recordingsFolder = getRecordingsFolderURL() else {
+            return nil
+        }
+
+        let heartbeatURL = recordingsFolder.appendingPathComponent(".mac_heartbeat.json")
+
+        guard FileManager.default.fileExists(atPath: heartbeatURL.path),
+              let jsonData = try? Data(contentsOf: heartbeatURL),
+              let heartbeatData = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
+              let timestampString = heartbeatData["timestamp"] as? String,
+              let timestamp = ISO8601DateFormatter().date(from: timestampString) else {
+            return nil
+        }
+
+        return timestamp
     }
 }

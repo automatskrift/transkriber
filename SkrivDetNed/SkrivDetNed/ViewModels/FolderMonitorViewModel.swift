@@ -138,6 +138,9 @@ class FolderMonitorViewModel: ObservableObject {
         ignoredFiles.insert(fileURL.path)
         settings.ignoredFiles = ignoredFiles
 
+        // Mark as processed so it won't be picked up again
+        monitorService.markAsProcessed(fileURL)
+
         // Remove from pending queue
         monitorService.removePendingFile(fileURL)
 

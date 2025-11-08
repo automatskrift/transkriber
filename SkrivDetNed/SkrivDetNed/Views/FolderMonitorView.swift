@@ -126,6 +126,22 @@ struct FolderMonitorView: View {
                     }
                 }
 
+                // iCloud Folder Button (always visible when monitoring)
+                if viewModel.isMonitoring || !viewModel.recentlyCompleted.isEmpty {
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            if let recordingsURL = iCloudSyncService.shared.getRecordingsFolderURL() {
+                                NSWorkspace.shared.activateFileViewerSelecting([recordingsURL])
+                            }
+                        }) {
+                            Label("Åbn iCloud folder", systemImage: "folder.badge.icloud")
+                        }
+                        .buttonStyle(.bordered)
+                        Spacer()
+                    }
+                }
+
                 // Recent Completions
                 if !viewModel.recentlyCompleted.isEmpty {
                     GroupBox(label:

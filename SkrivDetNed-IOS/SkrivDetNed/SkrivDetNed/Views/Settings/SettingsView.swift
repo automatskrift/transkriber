@@ -10,6 +10,9 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject private var settings = AppSettings.shared
     @State private var showingAbout = false
+    @State private var showingClearCacheAlert = false
+    @State private var cacheCleared = false
+    @State private var lastMacHeartbeat: Date?
 
     var body: some View {
         NavigationStack {
@@ -46,11 +49,54 @@ struct SettingsView: View {
                             Text("Tilgængelig")
                                 .foregroundColor(.secondary)
                         }
+
+                        Divider()
+
+                        // Mac heartbeat status
+                        HStack {
+                            Text("Mac Status")
+                            Spacer()
+                            if let heartbeat = lastMacHeartbeat {
+                                VStack(alignment: .trailing, spacing: 4) {
+                                    if Date().timeIntervalSince(heartbeat) < 120 {
+                                        HStack(spacing: 4) {
+                                            Circle()
+                                                .fill(Color.green)
+                                                .frame(width: 8, height: 8)
+                                            Text("Online")
+                                                .foregroundColor(.green)
+                                        }
+                                    } else {
+                                        HStack(spacing: 4) {
+                                            Circle()
+                                                .fill(Color.orange)
+                                                .frame(width: 8, height: 8)
+                                            Text("Offline")
+                                                .foregroundColor(.orange)
+                                        }
+                                    }
+                                    Text(timeAgoString(from: heartbeat))
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
+                            } else {
+                                Text("Ukendt")
+                                    .foregroundColor(.secondary)
+                            }
+                            Button(action: refreshHeartbeat) {
+                                Image(systemName: "arrow.clockwise")
+                                    .font(.caption)
+                            }
+                            .buttonStyle(.borderless)
+                        }
                     }
                 } header: {
                     Label("iCloud Sync", systemImage: "icloud")
                 } footer: {
                     Text("Optagelser uploades automatisk til iCloud for transskribering på din Mac")
+                }
+                .onAppear {
+                    refreshHeartbeat()
                 }
 
                 // Transcription Settings
@@ -93,7 +139,7 @@ struct SettingsView: View {
                     }
 
                     Button("Ryd cache") {
-                        clearCache()
+                        showingClearCacheAlert = true
                     }
                     .foregroundColor(.red)
                 } header: {
@@ -124,32 +170,130 @@ struct SettingsView: View {
             .sheet(isPresented: $showingAbout) {
                 AboutView()
             }
+            .alert("Ryd cache", isPresented: $showingClearCacheAlert) {
+                Button("Annuller", role: .cancel) {}
+                Button("Ryd cache", role: .destructive) {
+                    clearCache()
+                }
+            } message: {
+                Text("Dette vil slette alle lokale optagelser og transskriptioner. Filer i iCloud påvirkes ikke.\n\nDenne handling kan ikke fortrydes.")
+            }
+            .alert("Cache ryddet", isPresented: $cacheCleared) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("Alle lokale filer er blevet slettet.")
+            }
         }
     }
 
     private var storageUsed: String {
-        let recordingsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Recordings")
+        let fileManager = FileManager.default
+        let documentsDir = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let recordingsDir = documentsDir.appendingPathComponent("Recordings")
+        var totalSize: Int64 = 0
 
-        guard FileManager.default.fileExists(atPath: recordingsDir.path),
-              let files = try? FileManager.default.contentsOfDirectory(at: recordingsDir, includingPropertiesForKeys: [.fileSizeKey]) else {
-            return "0 B"
+        // 1. Size of Recordings directory (metadata)
+        if fileManager.fileExists(atPath: recordingsDir.path),
+           let files = try? fileManager.contentsOfDirectory(at: recordingsDir, includingPropertiesForKeys: [.fileSizeKey]) {
+            totalSize += files.compactMap { url -> Int64? in
+                guard let values = try? url.resourceValues(forKeys: [.fileSizeKey]),
+                      let fileSize = values.fileSize else {
+                    return nil
+                }
+                return Int64(fileSize)
+            }.reduce(0, +)
         }
 
-        let totalSize = files.compactMap { url -> Int64? in
-            guard let values = try? url.resourceValues(forKeys: [.fileSizeKey]),
-                  let fileSize = values.fileSize else {
-                return nil
+        // 2. Size of audio files in Documents root
+        if let files = try? fileManager.contentsOfDirectory(at: documentsDir, includingPropertiesForKeys: [.fileSizeKey]) {
+            let audioFiles = files.filter { url in
+                url.lastPathComponent.hasPrefix("recording_") &&
+                (url.pathExtension == "m4a" || url.pathExtension == "mp3" || url.pathExtension == "wav")
             }
-            return Int64(fileSize)
-        }.reduce(0, +)
+
+            totalSize += audioFiles.compactMap { url -> Int64? in
+                guard let values = try? url.resourceValues(forKeys: [.fileSizeKey]),
+                      let fileSize = values.fileSize else {
+                    return nil
+                }
+                return Int64(fileSize)
+            }.reduce(0, +)
+        }
 
         return ByteCountFormatter.string(fromByteCount: totalSize, countStyle: .file)
     }
 
     private func clearCache() {
-        // TODO: Implement cache clearing
         print("🗑️ Clearing cache...")
+
+        let fileManager = FileManager.default
+        let documentsDir = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let recordingsDir = documentsDir.appendingPathComponent("Recordings")
+        var totalDeletedCount = 0
+
+        // 1. Clear Recordings directory (metadata JSON files)
+        if fileManager.fileExists(atPath: recordingsDir.path) {
+            do {
+                let files = try fileManager.contentsOfDirectory(at: recordingsDir, includingPropertiesForKeys: nil)
+
+                for fileURL in files {
+                    do {
+                        try fileManager.removeItem(at: fileURL)
+                        totalDeletedCount += 1
+                        print("🗑️ Deleted metadata: \(fileURL.lastPathComponent)")
+                    } catch {
+                        print("⚠️ Failed to delete \(fileURL.lastPathComponent): \(error)")
+                    }
+                }
+            } catch {
+                print("❌ Failed to clear Recordings directory: \(error)")
+            }
+        }
+
+        // 2. Delete audio files from Documents root (recording_*.m4a)
+        do {
+            let files = try fileManager.contentsOfDirectory(at: documentsDir, includingPropertiesForKeys: nil)
+            let audioFiles = files.filter { url in
+                url.lastPathComponent.hasPrefix("recording_") &&
+                (url.pathExtension == "m4a" || url.pathExtension == "mp3" || url.pathExtension == "wav")
+            }
+
+            for audioFile in audioFiles {
+                do {
+                    try fileManager.removeItem(at: audioFile)
+                    totalDeletedCount += 1
+                    print("🗑️ Deleted audio: \(audioFile.lastPathComponent)")
+                } catch {
+                    print("⚠️ Failed to delete audio file \(audioFile.lastPathComponent): \(error)")
+                }
+            }
+        } catch {
+            print("❌ Failed to scan Documents directory: \(error)")
+        }
+
+        print("✅ Cache cleared: \(totalDeletedCount) files deleted")
+        cacheCleared = true
+    }
+
+    private func refreshHeartbeat() {
+        lastMacHeartbeat = iCloudSyncService.shared.getLastHeartbeat()
+    }
+
+    private func timeAgoString(from date: Date) -> String {
+        let interval = Date().timeIntervalSince(date)
+
+        if interval < 60 {
+            return "Sidst set: nu"
+        } else if interval < 3600 {
+            let minutes = Int(interval / 60)
+            return "Sidst set: \(minutes) min siden"
+        } else if interval < 86400 {
+            let hours = Int(interval / 3600)
+            return "Sidst set: \(hours) time\(hours == 1 ? "" : "r") siden"
+        } else {
+            let days = Int(interval / 86400)
+            return "Sidst set: \(days) dag\(days == 1 ? "" : "e") siden"
+        }
     }
 }
 

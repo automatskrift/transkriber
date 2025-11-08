@@ -58,6 +58,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         } catch {
             print("Failed to create application support directories: \(error)")
         }
+
+        // Start heartbeat to let iOS know Mac is online
+        Task { @MainActor in
+            iCloudSyncService.shared.startHeartbeat()
+        }
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        // Stop heartbeat when app quits
+        Task { @MainActor in
+            iCloudSyncService.shared.stopHeartbeat()
+        }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {

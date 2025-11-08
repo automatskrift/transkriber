@@ -13,6 +13,7 @@ struct MainView: View {
 
     enum Tab {
         case monitor
+        case transcriptions
         case manual
         case settings
     }
@@ -24,6 +25,12 @@ struct MainView: View {
                     Label("Overvågning", systemImage: "folder.badge.gearshape")
                 }
                 .tag(Tab.monitor)
+
+            TranscriptionsView()
+                .tabItem {
+                    Label("Transskriptioner", systemImage: "doc.text.magnifyingglass")
+                }
+                .tag(Tab.transcriptions)
 
             ManualTranscriptionView()
                 .tabItem {

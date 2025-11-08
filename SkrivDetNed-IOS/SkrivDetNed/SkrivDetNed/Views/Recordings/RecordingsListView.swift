@@ -12,18 +12,24 @@ struct RecordingsListView: View {
     @State private var showingDeleteAlert = false
     @State private var recordingToDelete: Recording?
     @State private var recordingToShare: Recording?
+    @State private var searchText = ""
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         NavigationStack {
             Group {
-                if viewModel.recordings.isEmpty {
-                    emptyState
+                if filteredRecordings.isEmpty {
+                    if searchText.isEmpty {
+                        emptyState
+                    } else {
+                        searchEmptyState
+                    }
                 } else {
                     recordingsList
                 }
             }
             .navigationTitle("Optagelser")
+            .searchable(text: $searchText, prompt: "Søg i optagelser...")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
@@ -65,9 +71,23 @@ struct RecordingsListView: View {
         }
     }
 
+    private var filteredRecordings: [Recording] {
+        if searchText.isEmpty {
+            return viewModel.recordings
+        }
+
+        return viewModel.recordings.filter { recording in
+            recording.title.localizedCaseInsensitiveContains(searchText) ||
+            recording.fileName.localizedCaseInsensitiveContains(searchText) ||
+            (recording.notes?.localizedCaseInsensitiveContains(searchText) ?? false) ||
+            recording.tags.contains(where: { $0.localizedCaseInsensitiveContains(searchText) }) ||
+            (recording.transcriptionText?.localizedCaseInsensitiveContains(searchText) ?? false)
+        }
+    }
+
     private var recordingsList: some View {
         List {
-            ForEach(viewModel.recordings) { recording in
+            ForEach(filteredRecordings) { recording in
                 NavigationLink(destination: RecordingDetailView(recording: recording)) {
                     RecordingRow(recording: recording)
                 }
@@ -102,6 +122,25 @@ struct RecordingsListView: View {
                 .fontWeight(.semibold)
 
             Text("Gå til Optag-fanen for at lave din første optagelse")
+                .font(.body)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+        }
+        .padding()
+    }
+
+    private var searchEmptyState: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 80))
+                .foregroundColor(.secondary)
+
+            Text("Ingen resultater")
+                .font(.title2)
+                .fontWeight(.semibold)
+
+            Text("Prøv at søge efter noget andet")
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)

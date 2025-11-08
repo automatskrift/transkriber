@@ -13,6 +13,7 @@ struct RecordingDetailView: View {
     let recording: Recording
     @StateObject private var audioPlayer = AudioPlayerService()
     @State private var showingShareSheet = false
+    @State private var isRefreshing = false
 
     var body: some View {
         ScrollView {
@@ -22,6 +23,8 @@ struct RecordingDetailView: View {
                     Text(recording.title)
                         .font(.title2)
                         .fontWeight(.bold)
+                        .lineLimit(nil)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     HStack {
                         Label(recording.formattedDate, systemImage: "calendar")
@@ -203,17 +206,32 @@ struct RecordingDetailView: View {
                 .font(.headline)
 
             if let transcription = recording.transcriptionText {
-                Text(transcription)
-                    .font(.body)
-                    .textSelection(.enabled)
-
-                Button {
-                    UIPasteboard.general.string = transcription
-                } label: {
-                    Label("Kopier tekst", systemImage: "doc.on.doc")
-                        .frame(maxWidth: .infinity)
+                // Use ScrollView with Text for better performance with long text
+                ScrollView {
+                    Text(transcription)
+                        .font(.body)
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .buttonStyle(.bordered)
+                .frame(maxHeight: 400) // Limit height for very long transcriptions
+                .background(Color(.systemGray6))
+                .cornerRadius(8)
+
+                HStack {
+                    // Word count
+                    Text("\(transcription.split(separator: " ").count) ord")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    Spacer()
+
+                    Button {
+                        UIPasteboard.general.string = transcription
+                    } label: {
+                        Label("Kopier tekst", systemImage: "doc.on.doc")
+                    }
+                    .buttonStyle(.bordered)
+                }
 
             } else if recording.cloudStatus == .transcribing {
                 HStack {
@@ -238,8 +256,19 @@ struct RecordingDetailView: View {
 
     private var statusSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("Status", systemImage: "info.circle")
-                .font(.headline)
+            HStack {
+                Label("Status", systemImage: "info.circle")
+                    .font(.headline)
+                Spacer()
+                Button(action: refreshStatus) {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.caption)
+                        .rotationEffect(.degrees(isRefreshing ? 360 : 0))
+                        .animation(isRefreshing ? .linear(duration: 1).repeatForever(autoreverses: false) : .default, value: isRefreshing)
+                }
+                .buttonStyle(.borderless)
+                .disabled(isRefreshing)
+            }
 
             HStack {
                 Image(systemName: recording.cloudStatus.icon)
@@ -280,6 +309,37 @@ struct RecordingDetailView: View {
         case "green": return .green
         case "red": return .red
         default: return .gray
+        }
+    }
+
+    private func refreshStatus() {
+        isRefreshing = true
+
+        Task {
+            // Check iCloud for metadata updates
+            if iCloudSyncService.shared.getRecordingsFolderURL() != nil {
+                do {
+                    // Trigger a metadata query update
+                    try await Task.sleep(nanoseconds: 500_000_000) // 0.5 second delay for animation
+
+                    // The iCloud sync service will automatically detect changes
+                    // and update the recordings list via NSMetadataQuery
+                    print("🔄 Refreshing status for recording: \(recording.id)")
+
+                    await MainActor.run {
+                        isRefreshing = false
+                    }
+                } catch {
+                    print("⚠️ Error refreshing status: \(error)")
+                    await MainActor.run {
+                        isRefreshing = false
+                    }
+                }
+            } else {
+                await MainActor.run {
+                    isRefreshing = false
+                }
+            }
         }
     }
 
@@ -378,8 +438,8 @@ class AudioPlayerService: ObservableObject {
 
     private func startTimer() {
         timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-            guard let self = self, let player = self.player else { return }
             Task { @MainActor in
+                guard let self = self, let player = self.player else { return }
                 self.currentTime = player.currentTime
                 if !player.isPlaying {
                     self.isPlaying = false
