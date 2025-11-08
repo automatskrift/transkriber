@@ -10,9 +10,22 @@
 		C39AA8BA2EBE9811003185E4 /* SkrivDetNed.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkrivDetNed.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		C39AA9D72EBF59E3003185E4 /* Exceptions for "SkrivDetNed" folder in "SkrivDetNed" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = C39AA8B92EBE9811003185E4 /* SkrivDetNed */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		C39AA8BC2EBE9811003185E4 /* SkrivDetNed */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C39AA9D72EBF59E3003185E4 /* Exceptions for "SkrivDetNed" folder in "SkrivDetNed" target */,
+			);
 			path = SkrivDetNed;
 			sourceTree = "<group>";
 		};
@@ -257,6 +270,7 @@
 				DEVELOPMENT_TEAM = 58S8C73Q5Z;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SkrivDetNed/Info.plist;
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "SkrivDetNed kan tilføje din lokation til optagelser, så du nemt kan huske hvor de blev lavet.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "SkrivDetNed bruger mikrofonen til at optage lyd, som derefter kan transkriberes til tekst.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
@@ -294,6 +308,7 @@
 				DEVELOPMENT_TEAM = 58S8C73Q5Z;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SkrivDetNed/Info.plist;
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "SkrivDetNed kan tilføje din lokation til optagelser, så du nemt kan huske hvor de blev lavet.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "SkrivDetNed bruger mikrofonen til at optage lyd, som derefter kan transkriberes til tekst.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
