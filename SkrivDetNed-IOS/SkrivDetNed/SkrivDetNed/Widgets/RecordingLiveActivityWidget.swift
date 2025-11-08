@@ -41,15 +41,19 @@ struct RecordingLiveActivityWidget: Widget {
 
                 DynamicIslandExpandedRegion(.trailing) {
                     VStack(alignment: .trailing, spacing: 4) {
-                        Text(formatDuration(context.state.duration))
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .monospacedDigit()
-
                         if context.state.isPaused {
+                            Text(timerInterval: context.attributes.startTime...context.state.pausedAt!, pauseTime: context.state.pausedAt)
+                                .font(.title3)
+                                .fontWeight(.bold)
+                                .monospacedDigit()
                             Text("Pause")
                                 .font(.caption2)
                                 .foregroundColor(.orange)
+                        } else {
+                            Text(timerInterval: context.attributes.startTime...Date.distantFuture, countsDown: false)
+                                .font(.title3)
+                                .fontWeight(.bold)
+                                .monospacedDigit()
                         }
                     }
                 }
@@ -77,10 +81,17 @@ struct RecordingLiveActivityWidget: Widget {
 
             } compactTrailing: {
                 // Compact trailing (right side of notch)
-                Text(formatDuration(context.state.duration))
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundColor(.white)
+                if context.state.isPaused, let pausedAt = context.state.pausedAt {
+                    Text(timerInterval: context.attributes.startTime...pausedAt, pauseTime: pausedAt)
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundColor(.white)
+                } else {
+                    Text(timerInterval: context.attributes.startTime...Date.distantFuture, countsDown: false)
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundColor(.white)
+                }
 
             } minimal: {
                 // Minimal (when multiple activities)
@@ -136,9 +147,15 @@ struct RecordingLiveActivityView: View {
 
             // Duration
             VStack(alignment: .trailing, spacing: 2) {
-                Text(formatDuration(context.state.duration))
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
-                    .monospacedDigit()
+                if context.state.isPaused, let pausedAt = context.state.pausedAt {
+                    Text(timerInterval: context.attributes.startTime...pausedAt, pauseTime: pausedAt)
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                } else {
+                    Text(timerInterval: context.attributes.startTime...Date.distantFuture, countsDown: false)
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                }
 
                 Text(formatTime(context.attributes.startTime))
                     .font(.caption2)
@@ -168,24 +185,24 @@ struct RecordingLiveActivityView: View {
 }
 
 @available(iOS 16.1, *)
-#Preview("Dynamic Island Compact", as: .dynamicIsland(.compact), using: RecordingActivityAttributes(startTime: Date())) {
+#Preview("Dynamic Island Compact", as: .dynamicIsland(.compact), using: RecordingActivityAttributes(startTime: Date().addingTimeInterval(-125))) {
     RecordingLiveActivityWidget()
 } contentStates: {
-    RecordingActivityAttributes.ContentState(duration: 125, isPaused: false, fileName: "Møde.m4a")
-    RecordingActivityAttributes.ContentState(duration: 3665, isPaused: true, fileName: "Lang optagelse.m4a")
+    RecordingActivityAttributes.ContentState(isPaused: false, fileName: "Møde.m4a", pausedAt: nil, totalPausedDuration: 0)
+    RecordingActivityAttributes.ContentState(isPaused: true, fileName: "Lang optagelse.m4a", pausedAt: Date(), totalPausedDuration: 0)
 }
 
 @available(iOS 16.1, *)
-#Preview("Dynamic Island Expanded", as: .dynamicIsland(.expanded), using: RecordingActivityAttributes(startTime: Date())) {
+#Preview("Dynamic Island Expanded", as: .dynamicIsland(.expanded), using: RecordingActivityAttributes(startTime: Date().addingTimeInterval(-125))) {
     RecordingLiveActivityWidget()
 } contentStates: {
-    RecordingActivityAttributes.ContentState(duration: 125, isPaused: false, fileName: "Møde.m4a")
+    RecordingActivityAttributes.ContentState(isPaused: false, fileName: "Møde.m4a", pausedAt: nil, totalPausedDuration: 0)
 }
 
 @available(iOS 16.1, *)
-#Preview("Lock Screen", as: .content, using: RecordingActivityAttributes(startTime: Date())) {
+#Preview("Lock Screen", as: .content, using: RecordingActivityAttributes(startTime: Date().addingTimeInterval(-125))) {
     RecordingLiveActivityWidget()
 } contentStates: {
-    RecordingActivityAttributes.ContentState(duration: 125, isPaused: false, fileName: "Møde.m4a")
-    RecordingActivityAttributes.ContentState(duration: 3665, isPaused: true, fileName: "Lang optagelse.m4a")
+    RecordingActivityAttributes.ContentState(isPaused: false, fileName: "Møde.m4a", pausedAt: nil, totalPausedDuration: 0)
+    RecordingActivityAttributes.ContentState(isPaused: true, fileName: "Lang optagelse.m4a", pausedAt: Date(), totalPausedDuration: 0)
 }

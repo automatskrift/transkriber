@@ -37,7 +37,8 @@ class AudioRecordingService: NSObject, ObservableObject {
     private func setupAudioSession() {
         do {
             // Configure for background recording
-            try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
+            // Use .record mode specifically for recording in background
+            try audioSession.setCategory(.record, mode: .default, options: [])
             try audioSession.setActive(true)
             print("✅ Audio session configured for background recording")
         } catch {
@@ -200,7 +201,7 @@ class AudioRecordingService: NSObject, ObservableObject {
         audioRecorder?.pause()
         isPaused = true
         stopMonitoring()
-        Task { await updateLiveActivity() }
+        Task { await updateLiveActivity(pausedAt: Date()) }
 
         print("⏸️ Recording paused")
     }
@@ -212,7 +213,7 @@ class AudioRecordingService: NSObject, ObservableObject {
         audioRecorder?.record()
         isPaused = false
         startMonitoring()
-        Task { await updateLiveActivity() }
+        Task { await updateLiveActivity(pausedAt: nil) }
 
         print("▶️ Recording resumed")
     }
@@ -263,8 +264,8 @@ class AudioRecordingService: NSObject, ObservableObject {
             }
         }
 
-        // Monitor duration and update Live Activity
-        durationTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timer in
+        // Monitor duration
+        durationTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] timer in
             guard let self else {
                 timer.invalidate()
                 return
@@ -278,10 +279,6 @@ class AudioRecordingService: NSObject, ObservableObject {
             // Update duration on main thread
             Task { @MainActor in
                 self.duration = recorder.currentTime
-                print("⏱️ Duration updated: \(Int(self.duration))s")
-
-                // Update Live Activity
-                await self.updateLiveActivity()
             }
         }
     }
@@ -316,9 +313,10 @@ class AudioRecordingService: NSObject, ObservableObject {
 
         let attributes = RecordingActivityAttributes(startTime: Date())
         let initialState = RecordingActivityAttributes.ContentState(
-            duration: 0,
             isPaused: false,
-            fileName: fileName
+            fileName: fileName,
+            pausedAt: nil,
+            totalPausedDuration: 0
         )
 
         do {
@@ -333,7 +331,7 @@ class AudioRecordingService: NSObject, ObservableObject {
             print("✅ Live Activity requested successfully!")
             print("   Activity ID: \(currentActivity?.id ?? "unknown")")
             print("   Activity state: \(String(describing: currentActivity?.activityState))")
-            print("   Content state: duration=\(initialState.duration), fileName=\(initialState.fileName)")
+            print("   Content state: fileName=\(initialState.fileName), paused=\(initialState.isPaused)")
 
             // Debug: Check all active activities
             Task { @MainActor in
@@ -365,31 +363,21 @@ class AudioRecordingService: NSObject, ObservableObject {
         }
     }
 
-    private func updateLiveActivity() async {
-        guard #available(iOS 16.2, *) else {
-            print("⚠️ updateLiveActivity: iOS 16.2+ required")
-            return
-        }
-        guard let activity = currentActivity else {
-            print("⚠️ updateLiveActivity: No current activity")
-            return
-        }
-
-        // Check if activity is still active
-        guard activity.activityState == .active else {
-            print("⚠️ updateLiveActivity: Activity is not active (state: \(activity.activityState))")
-            return
-        }
+    private func updateLiveActivity(pausedAt: Date? = nil) async {
+        guard #available(iOS 16.2, *) else { return }
+        guard let activity = currentActivity else { return }
+        guard activity.activityState == .active else { return }
 
         let contentState = RecordingActivityAttributes.ContentState(
-            duration: duration,
             isPaused: isPaused,
-            fileName: currentRecordingURL?.lastPathComponent ?? "Recording"
+            fileName: currentRecordingURL?.lastPathComponent ?? "Recording",
+            pausedAt: pausedAt,
+            totalPausedDuration: 0 // TODO: Track total paused time if needed
         )
 
         do {
             await activity.update(.init(state: contentState, staleDate: nil))
-            print("🔄 Live Activity updated: \(Int(duration))s, paused: \(isPaused)")
+            print("🔄 Live Activity updated: paused: \(isPaused)")
         } catch {
             print("❌ Failed to update Live Activity: \(error)")
         }
@@ -400,9 +388,10 @@ class AudioRecordingService: NSObject, ObservableObject {
         guard let activity = currentActivity else { return }
 
         let finalState = RecordingActivityAttributes.ContentState(
-            duration: duration,
             isPaused: false,
-            fileName: currentRecordingURL?.lastPathComponent ?? "Recording"
+            fileName: currentRecordingURL?.lastPathComponent ?? "Recording",
+            pausedAt: nil,
+            totalPausedDuration: 0
         )
 
         await activity.end(.init(state: finalState, staleDate: nil), dismissalPolicy: .immediate)

@@ -10,11 +10,12 @@ import ActivityKit
 
 struct RecordingActivityAttributes: ActivityAttributes {
     public struct ContentState: Codable, Hashable {
-        var duration: TimeInterval
         var isPaused: Bool
         var fileName: String
+        var pausedAt: Date?
+        var totalPausedDuration: TimeInterval
     }
 
-    // Fixed properties
+    // Fixed properties - these don't change during the activity
     var startTime: Date
 }
