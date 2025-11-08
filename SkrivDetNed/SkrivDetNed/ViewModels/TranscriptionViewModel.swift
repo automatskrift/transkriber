@@ -39,15 +39,17 @@ class TranscriptionViewModel: ObservableObject {
         Task {
             await resetStuckTranscriptions()
             await loadExistingTranscriptions()
+            await processPendingFiles()
         }
 
-        // Start periodic check for stuck transcriptions (every 5 minutes)
+        // Start periodic check for stuck transcriptions and pending files (every 5 minutes)
         stuckCheckTimer = Timer.scheduledTimer(withTimeInterval: 300, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 await self?.resetStuckTranscriptions()
+                await self?.processPendingFiles()
             }
         }
-        print("⏰ Started periodic stuck transcription check (every 5 minutes)")
+        print("⏰ Started periodic check for stuck/pending transcriptions (every 5 minutes)")
     }
 
     deinit {
@@ -118,6 +120,90 @@ class TranscriptionViewModel: ObservableObject {
 
         } catch {
             print("❌ Failed to check for stuck transcriptions: \(error)")
+        }
+    }
+
+    /// Process pending files from iCloud that are waiting for transcription
+    private func processPendingFiles() async {
+        print("🔍 Checking for pending transcriptions in iCloud...")
+
+        guard AppSettings.shared.iCloudSyncEnabled else {
+            print("⏭️ iCloud sync not enabled, skipping pending files check")
+            return
+        }
+
+        guard let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL() else {
+            print("⚠️ Cannot access iCloud recordings folder")
+            return
+        }
+
+        print("📁 iCloud recordings folder: \(recordingsFolder.path)")
+
+        do {
+            let files = try FileManager.default.contentsOfDirectory(
+                at: recordingsFolder,
+                includingPropertiesForKeys: [.contentModificationDateKey],
+                options: [.skipsHiddenFiles]
+            )
+
+            print("📂 Found \(files.count) total files in iCloud folder")
+
+            let jsonFiles = files.filter { $0.pathExtension == "json" }
+            print("📄 Found \(jsonFiles.count) JSON metadata files")
+
+            var pendingCount = 0
+            var statusCounts: [String: Int] = [:]
+
+            for jsonFile in jsonFiles {
+                guard let data = try? Data(contentsOf: jsonFile) else {
+                    print("⚠️ Could not read: \(jsonFile.lastPathComponent)")
+                    continue
+                }
+
+                let decoder = JSONDecoder()
+                decoder.dateDecodingStrategy = .iso8601
+
+                guard let metadata = try? decoder.decode(RecordingMetadata.self, from: data) else {
+                    print("⚠️ Could not decode metadata: \(jsonFile.lastPathComponent)")
+                    continue
+                }
+
+                // Count status
+                let statusKey = metadata.status.rawValue
+                statusCounts[statusKey, default: 0] += 1
+
+                // Check if in pending state
+                if metadata.status == .pending {
+                    // Find the audio file
+                    let audioURL = recordingsFolder.appendingPathComponent(metadata.audioFileName)
+
+                    print("🔎 Checking pending file: \(metadata.audioFileName)")
+                    print("   Audio file exists: \(FileManager.default.fileExists(atPath: audioURL.path))")
+                    print("   Audio file path: \(audioURL.path)")
+
+                    if FileManager.default.fileExists(atPath: audioURL.path) {
+                        print("📥 Found pending file: \(metadata.audioFileName)")
+                        await addToQueue(audioURL)
+                        pendingCount += 1
+                    } else {
+                        print("⚠️ Pending file not found on disk: \(metadata.audioFileName)")
+                    }
+                }
+            }
+
+            print("📊 Status summary:")
+            for (status, count) in statusCounts.sorted(by: { $0.key < $1.key }) {
+                print("   \(status): \(count)")
+            }
+
+            if pendingCount > 0 {
+                print("✅ Found \(pendingCount) pending file(s) to transcribe")
+            } else {
+                print("✅ No pending files found")
+            }
+
+        } catch {
+            print("❌ Failed to check for pending files: \(error)")
         }
     }
 
@@ -406,11 +492,18 @@ class TranscriptionViewModel: ObservableObject {
     }
 
     private func processQueue() async {
-        guard !isProcessing else { return }
+        guard !isProcessing else {
+            print("⏸️ Already processing queue")
+            return
+        }
         isProcessing = true
+
+        print("🚀 Starting queue processing (\(taskQueue.count) files in queue)")
 
         while !taskQueue.isEmpty {
             let url = taskQueue.removeFirst()
+
+            print("🔄 Processing: \(url.lastPathComponent) (\(taskQueue.count) remaining)")
 
             // Check if file still exists
             guard FileManager.default.fileExists(atPath: url.path) else {
@@ -427,25 +520,31 @@ class TranscriptionViewModel: ObservableObject {
 
             // Skip if already processed
             guard !FolderMonitorService.shared.processedFiles.contains(url.path) else {
+                print("⏭️ Skipping already processed file: \(url.lastPathComponent)")
                 continue
             }
 
             // Skip if transcription already exists
             guard !FileSystemHelper.shared.transcriptionFileExists(for: url) else {
+                print("⏭️ Transcription already exists: \(url.lastPathComponent)")
                 FolderMonitorService.shared.markAsProcessed(url)
                 continue
             }
 
+            print("▶️ Starting transcription: \(url.lastPathComponent)")
+
             do {
                 try await transcribeFile(url)
+                print("✅ Completed transcription: \(url.lastPathComponent)")
             } catch {
-                print("Transcription failed for \(url.lastPathComponent): \(error)")
+                print("❌ Transcription failed for \(url.lastPathComponent): \(error)")
             }
 
             // Small delay between files
             try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
         }
 
+        print("🏁 Queue processing finished")
         isProcessing = false
     }
 

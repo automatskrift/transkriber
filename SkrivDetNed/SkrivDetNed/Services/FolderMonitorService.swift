@@ -168,6 +168,27 @@ class FolderMonitorService: ObservableObject {
             return
         }
 
+        // Check iCloud metadata if this is the iCloud recordings folder
+        if AppSettings.shared.iCloudSyncEnabled,
+           let iCloudFolder = await iCloudSyncService.shared.getRecordingsFolderURL(),
+           url.path.hasPrefix(iCloudFolder.path) {
+            // Try to load metadata
+            if let metadata = try? RecordingMetadata.load(for: url.lastPathComponent, from: iCloudFolder) {
+                // Skip if already completed
+                if metadata.status == .completed {
+                    print("⏭️ Skipping already completed file: \(url.lastPathComponent)")
+                    await markAsProcessed(url)
+                    return
+                }
+                // Skip if failed
+                if metadata.status == .failed {
+                    print("⏭️ Skipping previously failed file: \(url.lastPathComponent)")
+                    await markAsProcessed(url)
+                    return
+                }
+            }
+        }
+
         // Check if it's an iCloud placeholder
         if iCloudHelper.shared.isICloudPlaceholder(url) {
             // Try to start download
@@ -243,6 +264,27 @@ class FolderMonitorService: ObservableObject {
             // Check if transcription already exists
             guard !FileSystemHelper.shared.transcriptionFileExists(for: fileURL) else {
                 continue
+            }
+
+            // Check iCloud metadata if this is the iCloud recordings folder
+            if AppSettings.shared.iCloudSyncEnabled,
+               let iCloudFolder = await iCloudSyncService.shared.getRecordingsFolderURL(),
+               fileURL.path.hasPrefix(iCloudFolder.path) {
+                // Try to load metadata
+                if let metadata = try? RecordingMetadata.load(for: fileURL.lastPathComponent, from: iCloudFolder) {
+                    // Skip if already completed
+                    if metadata.status == .completed {
+                        print("⏭️ Skipping already completed file in scan: \(fileURL.lastPathComponent)")
+                        await markAsProcessed(fileURL)
+                        continue
+                    }
+                    // Skip if failed
+                    if metadata.status == .failed {
+                        print("⏭️ Skipping previously failed file in scan: \(fileURL.lastPathComponent)")
+                        await markAsProcessed(fileURL)
+                        continue
+                    }
+                }
             }
 
             // Add to pending queue
