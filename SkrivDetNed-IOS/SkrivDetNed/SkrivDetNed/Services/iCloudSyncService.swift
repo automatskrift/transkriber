@@ -434,11 +434,18 @@ class iCloudSyncService: ObservableObject {
             metadata.tags = recording.tags
             metadata.notes = recording.notes
             metadata.duration = recording.duration
+            metadata.promptPrefix = recording.promptPrefix
+
+            // Debug metadata
+            print("🔍 DEBUG Metadata before save:")
+            print("   recording.promptPrefix: \(String(describing: recording.promptPrefix))")
+            print("   metadata.promptPrefix: \(String(describing: metadata.promptPrefix))")
 
             try metadata.save(to: recordingsFolder)
             uploadProgress = 1.0
 
             print("✅ Successfully uploaded \(recording.fileName) to iCloud")
+            print("   Metadata saved with promptPrefix: \(String(describing: metadata.promptPrefix))")
 
             // Notify user if enabled
             if AppSettings.shared.showNotifications {

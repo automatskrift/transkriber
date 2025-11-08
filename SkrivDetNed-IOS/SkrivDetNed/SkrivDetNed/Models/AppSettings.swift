@@ -30,7 +30,47 @@ class AppSettings: ObservableObject {
     // App settings
     @AppStorage("addLocationToRecordings") var addLocationToRecordings: Bool = false
 
-    private init() {}
+    // LLM Prompt settings
+    @Published var transcriptionPrompts: [TranscriptionPrompt] = []
+    private let promptsKey = "transcriptionPrompts"
+
+    private init() {
+        loadPrompts()
+    }
+
+    func loadPrompts() {
+        if let data = UserDefaults.standard.data(forKey: promptsKey),
+           let prompts = try? JSONDecoder().decode([TranscriptionPrompt].self, from: data) {
+            transcriptionPrompts = prompts
+        } else {
+            // Initialize with default prompts
+            transcriptionPrompts = TranscriptionPrompt.defaultPrompts
+            savePrompts()
+        }
+    }
+
+    func savePrompts() {
+        if let data = try? JSONEncoder().encode(transcriptionPrompts) {
+            UserDefaults.standard.set(data, forKey: promptsKey)
+        }
+    }
+
+    func addPrompt(_ prompt: TranscriptionPrompt) {
+        transcriptionPrompts.append(prompt)
+        savePrompts()
+    }
+
+    func updatePrompt(_ prompt: TranscriptionPrompt) {
+        if let index = transcriptionPrompts.firstIndex(where: { $0.id == prompt.id }) {
+            transcriptionPrompts[index] = prompt
+            savePrompts()
+        }
+    }
+
+    func deletePrompt(_ prompt: TranscriptionPrompt) {
+        transcriptionPrompts.removeAll { $0.id == prompt.id }
+        savePrompts()
+    }
 }
 
 enum AudioQuality: String, CaseIterable, Identifiable {

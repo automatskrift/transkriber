@@ -74,15 +74,8 @@ struct RecordingDetailView: View {
                     }
                 }
 
-                // Tags
-                if !recording.tags.isEmpty {
-                    tagsSection
-                }
-
-                // Notes
-                if let notes = recording.notes, !notes.isEmpty {
-                    notesSection(notes)
-                }
+                // Metadata section (always visible)
+                metadataSection
 
                 // Location
                 if let locationName = recording.locationName {
@@ -159,6 +152,97 @@ struct RecordingDetailView: View {
                 }
             }
             .foregroundColor(.blue)
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+    }
+
+    private var metadataSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Label("Metadata", systemImage: "info.circle")
+                .font(.headline)
+                .onAppear {
+                    print("📋 Recording Metadata:")
+                    print("   Title: \(recording.title)")
+                    print("   Tags: \(recording.tags)")
+                    print("   Notes: \(recording.notes ?? "nil")")
+                    print("   PromptPrefix: \(recording.promptPrefix ?? "nil")")
+                }
+
+            VStack(alignment: .leading, spacing: 12) {
+                // Title
+                HStack(alignment: .top) {
+                    Text("Titel:")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .frame(width: 80, alignment: .leading)
+                    Text(recording.title)
+                        .font(.subheadline)
+                }
+
+                // Tags
+                HStack(alignment: .top) {
+                    Text("Tags:")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .frame(width: 80, alignment: .leading)
+
+                    if recording.tags.isEmpty {
+                        Text("Ingen")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    } else {
+                        FlowLayout(spacing: 6) {
+                            ForEach(recording.tags, id: \.self) { tag in
+                                Text("#\(tag)")
+                                    .font(.caption)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color.blue.opacity(0.2))
+                                    .foregroundColor(.blue)
+                                    .cornerRadius(12)
+                            }
+                        }
+                    }
+                }
+
+                // Notes
+                HStack(alignment: .top) {
+                    Text("Noter:")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .frame(width: 80, alignment: .leading)
+
+                    if let notes = recording.notes, !notes.isEmpty {
+                        Text(notes)
+                            .font(.subheadline)
+                    } else {
+                        Text("Ingen")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                // LLM Prompt
+                HStack(alignment: .top) {
+                    Text("LLM Prompt:")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .frame(width: 80, alignment: .leading)
+
+                    if let promptPrefix = recording.promptPrefix, !promptPrefix.isEmpty {
+                        Text(promptPrefix)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(3)
+                    } else {
+                        Text("Ingen")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
         }
         .padding()
         .background(Color(.systemGray6))

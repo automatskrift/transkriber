@@ -22,6 +22,7 @@ struct RecordingMetadata: Codable {
     var notes: String?
     var language: String?
     var duration: TimeInterval?
+    var promptPrefix: String?
 
     // Device info
     var createdOnDevice: String? // "iOS" or "macOS"

@@ -62,6 +62,31 @@ class iCloudSyncService: ObservableObject {
 
         let recordingsURL = documentsURL.appendingPathComponent("Recordings")
 
+        // Check for duplicate folders (Recordings 2, etc.) and warn
+        do {
+            let contents = try FileManager.default.contentsOfDirectory(
+                at: documentsURL,
+                includingPropertiesForKeys: [.isDirectoryKey],
+                options: [.skipsHiddenFiles]
+            )
+
+            let duplicateFolders = contents.filter { url in
+                let name = url.lastPathComponent
+                return name.hasPrefix("Recordings") && name != "Recordings"
+            }
+
+            if !duplicateFolders.isEmpty {
+                print("⚠️ WARNING: Found duplicate Recordings folders:")
+                for folder in duplicateFolders {
+                    print("   - \(folder.lastPathComponent)")
+                }
+                print("   This can happen due to iCloud sync conflicts.")
+                print("   Please manually merge and delete duplicates in iCloud Drive.")
+            }
+        } catch {
+            print("⚠️ Could not check for duplicate folders: \(error)")
+        }
+
         // Check if directory exists - need to check both local existence and iCloud status
         var isDirectory: ObjCBool = false
         let localExists = FileManager.default.fileExists(atPath: recordingsURL.path, isDirectory: &isDirectory)
@@ -97,17 +122,40 @@ class iCloudSyncService: ObservableObject {
         }
 
         // Directory doesn't exist locally or in iCloud - create it
-        do {
-            try FileManager.default.createDirectory(
-                at: recordingsURL,
-                withIntermediateDirectories: true,
-                attributes: nil
-            )
-            print("📁 Created Recordings folder in iCloud")
-        } catch let error as NSError {
+        // Use NSFileCoordinator to avoid conflicts during creation
+        let coordinator = NSFileCoordinator()
+        var coordinatorError: NSError?
+        var createError: Error?
+
+        coordinator.coordinate(
+            writingItemAt: recordingsURL,
+            options: .forMerging,
+            error: &coordinatorError
+        ) { url in
+            do {
+                // Double-check if it exists now (another process might have created it)
+                var isDir: ObjCBool = false
+                if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir) && isDir.boolValue {
+                    print("📁 Recordings folder already exists (created during coordination)")
+                    return
+                }
+
+                try FileManager.default.createDirectory(
+                    at: url,
+                    withIntermediateDirectories: true,
+                    attributes: nil
+                )
+                print("📁 Created Recordings folder in iCloud with coordination")
+            } catch {
+                createError = error
+            }
+        }
+
+        if let error = coordinatorError ?? createError {
+            let nsError = error as NSError
             // Ignore "already exists" error (can happen with race conditions)
-            if error.domain == NSCocoaErrorDomain && error.code == NSFileWriteFileExistsError {
-                print("📁 Recordings folder already exists (created by another device)")
+            if nsError.domain == NSCocoaErrorDomain && nsError.code == NSFileWriteFileExistsError {
+                print("📁 Recordings folder already exists")
             } else {
                 print("❌ Failed to create Recordings folder: \(error)")
                 return nil
@@ -501,19 +549,43 @@ class iCloudSyncService: ObservableObject {
             throw iCloudError.containerNotAvailable
         }
 
+        // Load metadata to check for promptPrefix
+        var metadata = try RecordingMetadata.load(for: audioFileName, from: recordingsFolder)
+            ?? RecordingMetadata(audioFileName: audioFileName, createdOnDevice: "macOS")
+
+        // Debug metadata
+        print("🔍 DEBUG Metadata loaded (macOS):")
+        print("   audioFileName: \(audioFileName)")
+        print("   metadata.promptPrefix: \(String(describing: metadata.promptPrefix))")
+        print("   metadata.title: \(String(describing: metadata.title))")
+
+        // Prepare final transcription text with prompt prefix if available
+        var finalTranscription = transcription
+        if let promptPrefix = metadata.promptPrefix, !promptPrefix.isEmpty {
+            finalTranscription = promptPrefix + transcription
+            print("✨ Prepending prompt prefix to transcription")
+            print("   Prompt: \(promptPrefix.prefix(100))...")
+            print("   Original transcription length: \(transcription.count)")
+            print("   Final transcription length: \(finalTranscription.count)")
+        } else {
+            print("📝 No prompt prefix to prepend")
+            if metadata.promptPrefix == nil {
+                print("   Reason: promptPrefix is nil")
+            } else if metadata.promptPrefix?.isEmpty == true {
+                print("   Reason: promptPrefix is empty")
+            }
+        }
+
         // Create .txt file name
         let baseName = (audioFileName as NSString).deletingPathExtension
         let transcriptionFileName = "\(baseName).txt"
         let transcriptionURL = recordingsFolder.appendingPathComponent(transcriptionFileName)
 
-        // Write transcription
-        try transcription.write(to: transcriptionURL, atomically: true, encoding: .utf8)
+        // Write transcription with prompt prefix
+        try finalTranscription.write(to: transcriptionURL, atomically: true, encoding: .utf8)
         print("💾 Saved transcription to iCloud: \(transcriptionFileName)")
 
         // Update metadata
-        var metadata = try RecordingMetadata.load(for: audioFileName, from: recordingsFolder)
-            ?? RecordingMetadata(audioFileName: audioFileName, createdOnDevice: "macOS")
-
         metadata.status = .completed
         metadata.transcriptionFileName = transcriptionFileName
         metadata.updatedAt = Date()

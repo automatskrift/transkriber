@@ -104,6 +104,7 @@ struct TranscriptionRow: View {
     let task: TranscriptionTask
     @State private var transcriptionText: String?
     @State private var isExpanded = false
+    @State private var showingTextWindow = false
 
     var body: some View {
         GroupBox {
@@ -128,6 +129,17 @@ struct TranscriptionRow: View {
 
                     // Actions
                     HStack(spacing: 8) {
+                        // Show text in window button
+                        if transcriptionText != nil {
+                            Button(action: {
+                                showingTextWindow = true
+                            }) {
+                                Label("Vis tekst", systemImage: "doc.text.magnifyingglass")
+                                    .font(.caption)
+                            }
+                            .buttonStyle(.borderless)
+                        }
+
                         // Copy text button
                         if let transcription = transcriptionText {
                             Button(action: {
@@ -145,7 +157,7 @@ struct TranscriptionRow: View {
                             Button(action: {
                                 NSWorkspace.shared.activateFileViewerSelecting([task.outputFileURL])
                             }) {
-                                Label("Vis fil", systemImage: "doc.text")
+                                Label("Vis fil", systemImage: "folder")
                                     .font(.caption)
                             }
                             .buttonStyle(.borderless)
@@ -210,6 +222,11 @@ struct TranscriptionRow: View {
         .onAppear {
             loadTranscription()
         }
+        .sheet(isPresented: $showingTextWindow) {
+            if let text = transcriptionText {
+                TranscriptionTextWindow(text: text, fileName: task.fileName)
+            }
+        }
     }
 
     private func loadTranscription() {
@@ -217,6 +234,61 @@ struct TranscriptionRow: View {
             return
         }
         transcriptionText = try? String(contentsOf: task.outputFileURL, encoding: .utf8)
+    }
+}
+
+struct TranscriptionTextWindow: View {
+    let text: String
+    let fileName: String
+    @Environment(\.dismiss) var dismiss
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(fileName)
+                        .font(.headline)
+                    Text("\(text.split(separator: " ").count) ord")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+
+                // Copy button
+                Button(action: {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(text, forType: .string)
+                }) {
+                    Label("Kopier", systemImage: "doc.on.doc")
+                }
+
+                // Close button
+                Button(action: {
+                    dismiss()
+                }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.borderless)
+            }
+            .padding()
+            .background(Color(NSColor.controlBackgroundColor))
+
+            Divider()
+
+            // Scrollable text content
+            ScrollView {
+                Text(text)
+                    .font(.body)
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .frame(width: 700, height: 500)
     }
 }
 

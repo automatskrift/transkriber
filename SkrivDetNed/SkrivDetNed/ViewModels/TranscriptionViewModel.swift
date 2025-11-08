@@ -24,6 +24,7 @@ class TranscriptionViewModel: ObservableObject {
 
     private var isProcessing = false
     private var taskQueue: [URL] = []
+    private var stuckCheckTimer: Timer?
 
     private init() {
         // Listen for new files from folder monitor
@@ -36,7 +37,87 @@ class TranscriptionViewModel: ObservableObject {
 
         // Load existing completed transcriptions on startup
         Task {
+            await resetStuckTranscriptions()
             await loadExistingTranscriptions()
+        }
+
+        // Start periodic check for stuck transcriptions (every 5 minutes)
+        stuckCheckTimer = Timer.scheduledTimer(withTimeInterval: 300, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                await self?.resetStuckTranscriptions()
+            }
+        }
+        print("⏰ Started periodic stuck transcription check (every 5 minutes)")
+    }
+
+    deinit {
+        stuckCheckTimer?.invalidate()
+    }
+
+    /// Reset transcriptions that are stuck in "transcribing" status
+    private func resetStuckTranscriptions() async {
+        print("🔍 Checking for stuck transcriptions...")
+
+        guard let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL() else {
+            print("⚠️ Cannot access iCloud recordings folder")
+            return
+        }
+
+        do {
+            let files = try FileManager.default.contentsOfDirectory(
+                at: recordingsFolder,
+                includingPropertiesForKeys: [.contentModificationDateKey],
+                options: [.skipsHiddenFiles]
+            )
+
+            let jsonFiles = files.filter { $0.pathExtension == "json" }
+            var resetCount = 0
+
+            for jsonFile in jsonFiles {
+                guard let data = try? Data(contentsOf: jsonFile) else { continue }
+
+                let decoder = JSONDecoder()
+                decoder.dateDecodingStrategy = .iso8601
+
+                guard var metadata = try? decoder.decode(RecordingMetadata.self, from: data) else {
+                    continue
+                }
+
+                // Check if stuck in transcribing state
+                if metadata.status == .transcribing {
+                    let timeSinceUpdate = Date().timeIntervalSince(metadata.updatedAt)
+
+                    // If transcribing for more than 2 minutes, consider it stuck
+                    if timeSinceUpdate > 120 {
+                        print("⚠️ Found stuck transcription: \(metadata.audioFileName)")
+                        print("   Time since update: \(Int(timeSinceUpdate)) seconds")
+
+                        // Reset to pending so it will be picked up again
+                        metadata.status = .pending
+                        metadata.updatedAt = Date()
+                        metadata.transcribedOnDevice = nil
+
+                        let encoder = JSONEncoder()
+                        encoder.dateEncodingStrategy = .iso8601
+                        encoder.outputFormatting = .prettyPrinted
+
+                        if let updatedData = try? encoder.encode(metadata) {
+                            try? updatedData.write(to: jsonFile)
+                            print("   ✅ Reset to pending status")
+                            resetCount += 1
+                        }
+                    }
+                }
+            }
+
+            if resetCount > 0 {
+                print("✅ Reset \(resetCount) stuck transcription(s)")
+            } else {
+                print("✅ No stuck transcriptions found")
+            }
+
+        } catch {
+            print("❌ Failed to check for stuck transcriptions: \(error)")
         }
     }
 
@@ -134,10 +215,43 @@ class TranscriptionViewModel: ObservableObject {
 
     func addToQueue(_ url: URL) async {
         // Check if already in queue
-        guard !taskQueue.contains(url) else { return }
-        guard !activeTasks.contains(where: { $0.audioFileURL == url }) else { return }
+        guard !taskQueue.contains(url) else {
+            print("⏭️ File already in queue: \(url.lastPathComponent)")
+            return
+        }
+        guard !activeTasks.contains(where: { $0.audioFileURL == url }) else {
+            print("⏭️ File already being transcribed: \(url.lastPathComponent)")
+            return
+        }
+
+        // Check if file has already been processed (completed or failed) in iCloud
+        if AppSettings.shared.iCloudSyncEnabled,
+           let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL() {
+            do {
+                if let metadata = try RecordingMetadata.load(for: url.lastPathComponent, from: recordingsFolder) {
+                    // Skip if already completed successfully
+                    if metadata.status == .completed {
+                        print("⏭️ File already transcribed (status: completed): \(url.lastPathComponent)")
+                        FolderMonitorService.shared.markAsProcessed(url)
+                        return
+                    }
+                    // Skip if failed (unless user explicitly retries)
+                    if metadata.status == .failed {
+                        print("⏭️ File previously failed transcription: \(url.lastPathComponent)")
+                        print("   Use 'Retry' button to transcribe again")
+                        FolderMonitorService.shared.markAsProcessed(url)
+                        return
+                    }
+                    // Allow pending and transcribing status (transcribing will be reset by resetStuckTranscriptions)
+                }
+            } catch {
+                // No metadata found, proceed with transcription
+                print("ℹ️ No existing metadata for: \(url.lastPathComponent)")
+            }
+        }
 
         taskQueue.append(url)
+        print("➕ Added to transcription queue: \(url.lastPathComponent)")
 
         // Start processing if not already
         if !isProcessing {

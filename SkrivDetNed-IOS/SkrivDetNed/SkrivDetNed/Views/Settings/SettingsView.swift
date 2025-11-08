@@ -120,6 +120,23 @@ struct SettingsView: View {
                     Text("Transskribering sker på din Mac via SkrivDetNed macOS appen")
                 }
 
+                // LLM Prompts Settings
+                Section {
+                    NavigationLink(destination: PromptsEditorView()) {
+                        HStack {
+                            Text("Rediger prompts")
+                            Spacer()
+                            Text("\(settings.transcriptionPrompts.count)")
+                                .foregroundColor(.secondary)
+                                .font(.caption)
+                        }
+                    }
+                } header: {
+                    Label("LLM Prompts", systemImage: "brain")
+                } footer: {
+                    Text("Forudindstillede prompts til at bearbejde transskriptioner med LLM'er")
+                }
+
                 // Privacy Settings
                 Section {
                     Toggle("Tilføj lokation til optagelser", isOn: $settings.addLocationToRecordings)

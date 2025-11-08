@@ -9,17 +9,27 @@ import SwiftUI
 
 struct TranscriptionsView: View {
     @State private var recordings: [Recording] = []
+    @State private var searchText: String = ""
 
     var body: some View {
         NavigationStack {
             Group {
-                if transcribedRecordings.isEmpty {
-                    emptyState
+                if filteredRecordings.isEmpty {
+                    if searchText.isEmpty {
+                        emptyState
+                    } else {
+                        searchEmptyState
+                    }
                 } else {
                     transcriptionsList
                 }
             }
             .navigationTitle("Transskriptioner")
+            .searchable(
+                text: $searchText,
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: "Søg i transskriptioner"
+            )
             .onAppear {
                 loadRecordings()
             }
@@ -33,9 +43,42 @@ struct TranscriptionsView: View {
         recordings.filter { $0.hasTranscription || $0.transcriptionText != nil }
     }
 
+    private var filteredRecordings: [Recording] {
+        if searchText.isEmpty {
+            return transcribedRecordings
+        }
+
+        let lowercasedSearch = searchText.lowercased()
+        return transcribedRecordings.filter { recording in
+            // Search in title
+            if recording.title.lowercased().contains(lowercasedSearch) {
+                return true
+            }
+
+            // Search in transcription text
+            if let transcription = recording.transcriptionText,
+               transcription.lowercased().contains(lowercasedSearch) {
+                return true
+            }
+
+            // Search in tags
+            if recording.tags.contains(where: { $0.lowercased().contains(lowercasedSearch) }) {
+                return true
+            }
+
+            // Search in notes
+            if let notes = recording.notes,
+               notes.lowercased().contains(lowercasedSearch) {
+                return true
+            }
+
+            return false
+        }
+    }
+
     private var transcriptionsList: some View {
         List {
-            ForEach(transcribedRecordings) { recording in
+            ForEach(filteredRecordings) { recording in
                 NavigationLink(destination: RecordingDetailView(recording: recording)) {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
@@ -50,10 +93,10 @@ struct TranscriptionsView: View {
                         }
 
                         if let transcription = recording.transcriptionText {
-                            Text(transcription)
+                            Text(highlightedText(transcription))
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
-                                .lineLimit(2)
+                                .lineLimit(3)
                         }
 
                         HStack {
@@ -82,6 +125,25 @@ struct TranscriptionsView: View {
                 .fontWeight(.semibold)
 
             Text("Dine optagelser vil automatisk blive transskriberet når de uploades til iCloud")
+                .font(.body)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+        }
+        .padding()
+    }
+
+    private var searchEmptyState: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 80))
+                .foregroundColor(.secondary)
+
+            Text("Ingen resultater")
+                .font(.title2)
+                .fontWeight(.semibold)
+
+            Text("Prøv at søge efter noget andet")
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -131,6 +193,44 @@ struct TranscriptionsView: View {
         case "red": return .red
         default: return .gray
         }
+    }
+
+    private func highlightedText(_ text: String) -> String {
+        guard !searchText.isEmpty else { return text }
+
+        let lowercasedText = text.lowercased()
+        let lowercasedSearch = searchText.lowercased()
+
+        // Find first occurrence of search text
+        guard let range = lowercasedText.range(of: lowercasedSearch) else {
+            return text
+        }
+
+        // Get context around the match (50 chars before and after)
+        let contextLength = 50
+        let startIndex = text.index(
+            range.lowerBound,
+            offsetBy: -contextLength,
+            limitedBy: text.startIndex
+        ) ?? text.startIndex
+
+        let endIndex = text.index(
+            range.upperBound,
+            offsetBy: contextLength,
+            limitedBy: text.endIndex
+        ) ?? text.endIndex
+
+        var result = String(text[startIndex..<endIndex])
+
+        // Add ellipsis if needed
+        if startIndex != text.startIndex {
+            result = "..." + result
+        }
+        if endIndex != text.endIndex {
+            result = result + "..."
+        }
+
+        return result
     }
 }
 

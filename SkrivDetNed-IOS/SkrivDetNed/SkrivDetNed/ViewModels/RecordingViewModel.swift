@@ -25,6 +25,7 @@ class RecordingViewModel: ObservableObject {
     @Published var recordingTitle: String = ""
     @Published var recordingTags: String = ""
     @Published var recordingNotes: String = ""
+    @Published var selectedPrompt: TranscriptionPrompt?
 
     private let audioService = AudioRecordingService.shared
     private let iCloudService = iCloudSyncService.shared
@@ -108,7 +109,23 @@ class RecordingViewModel: ObservableObject {
                 recording.title = recordingTitle.isEmpty ? recording.title : recordingTitle
                 recording.tags = parseTags(from: recordingTags)
                 recording.notes = recordingNotes.isEmpty ? nil : recordingNotes
+
+                // Debug selectedPrompt
+                print("🔍 DEBUG selectedPrompt:")
+                print("   selectedPrompt: \(String(describing: selectedPrompt))")
+                print("   selectedPrompt?.name: \(selectedPrompt?.name ?? "nil")")
+                print("   selectedPrompt?.text: \(selectedPrompt?.text ?? "nil")")
+                print("   selectedPrompt?.text.isEmpty: \(String(describing: selectedPrompt?.text.isEmpty))")
+
+                recording.promptPrefix = selectedPrompt?.text.isEmpty == false ? selectedPrompt?.text : nil
+
                 print("📝 Applied metadata - title: \(recording.title)")
+                if let prompt = recording.promptPrefix {
+                    print("✨ Prompt prefix set: \(prompt.prefix(50))...")
+                    print("   Full promptPrefix: \(prompt)")
+                } else {
+                    print("📝 No prompt prefix selected")
+                }
 
                 // Add location if enabled
                 if settings.addLocationToRecordings {
@@ -185,6 +202,7 @@ class RecordingViewModel: ObservableObject {
         recordingTitle = ""
         recordingTags = ""
         recordingNotes = ""
+        selectedPrompt = nil
     }
 
     private func saveRecording(_ recording: Recording) async throws {
@@ -200,10 +218,23 @@ class RecordingViewModel: ObservableObject {
         let metadataURL = recordingsDir.appendingPathComponent("\(recording.id.uuidString).json")
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
+        encoder.outputFormatting = .prettyPrinted
         let data = try encoder.encode(recording)
         try data.write(to: metadataURL)
 
         print("💾 Recording metadata saved: \(metadataURL.lastPathComponent)")
+        if let promptPrefix = recording.promptPrefix {
+            print("   ✨ Saved with promptPrefix: \(promptPrefix.prefix(50))...")
+        }
+
+        // Debug: Print JSON contents to verify
+        if let jsonString = String(data: data, encoding: .utf8) {
+            print("📄 JSON contents preview:")
+            let lines = jsonString.split(separator: "\n").prefix(15)
+            for line in lines {
+                print("   \(line)")
+            }
+        }
 
         // Upload to iCloud if enabled
         print("🔍 Checking iCloud upload - enabled: \(settings.iCloudAutoUpload)")

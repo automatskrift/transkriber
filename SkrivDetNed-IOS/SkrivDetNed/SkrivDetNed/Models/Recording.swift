@@ -25,6 +25,7 @@ struct Recording: Identifiable, Codable {
     var locationName: String?
     var latitude: Double?
     var longitude: Double?
+    var promptPrefix: String?
 
     // Computed property that reconstructs the full URL
     var localURL: URL {
@@ -67,6 +68,7 @@ struct Recording: Identifiable, Codable {
         self.locationName = nil
         self.latitude = nil
         self.longitude = nil
+        self.promptPrefix = nil
     }
 
     var formattedDuration: String {

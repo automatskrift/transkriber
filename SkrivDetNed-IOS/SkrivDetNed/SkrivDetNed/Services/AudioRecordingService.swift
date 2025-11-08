@@ -30,11 +30,10 @@ class AudioRecordingService: NSObject, ObservableObject {
 
     private override init() {
         super.init()
-        setupAudioSession()
         setupInterruptionObserver()
     }
 
-    private func setupAudioSession() {
+    private func setupAudioSession() throws {
         do {
             // Configure for background recording
             // Use .record mode specifically for recording in background
@@ -43,6 +42,7 @@ class AudioRecordingService: NSObject, ObservableObject {
             print("✅ Audio session configured for background recording")
         } catch {
             print("❌ Failed to setup audio session: \(error)")
+            throw error
         }
     }
 
@@ -96,11 +96,14 @@ class AudioRecordingService: NSObject, ObservableObject {
 
     /// Request microphone permission
     func requestPermission() async -> Bool {
-        await withCheckedContinuation { continuation in
+        print("🎤 Requesting microphone permission...")
+        let granted = await withCheckedContinuation { continuation in
             audioSession.requestRecordPermission { granted in
                 continuation.resume(returning: granted)
             }
         }
+        print(granted ? "✅ Microphone permission granted" : "❌ Microphone permission denied")
+        return granted
     }
 
     /// Start recording
@@ -109,6 +112,9 @@ class AudioRecordingService: NSObject, ObservableObject {
         guard await requestPermission() else {
             throw RecordingError.permissionDenied
         }
+
+        // Setup audio session after permission is granted
+        try setupAudioSession()
 
         // Generate unique filename
         let fileName = "recording_\(Date().timeIntervalSince1970).m4a"
@@ -126,13 +132,27 @@ class AudioRecordingService: NSObject, ObservableObject {
 
         do {
             // Create and configure recorder
+            print("📝 Creating audio recorder with URL: \(audioURL)")
+            print("📝 Settings: \(settings)")
             audioRecorder = try AVAudioRecorder(url: audioURL, settings: settings)
             audioRecorder?.delegate = self
             audioRecorder?.isMeteringEnabled = true
-            audioRecorder?.prepareToRecord()
+
+            // Prepare to record
+            print("📝 Preparing to record...")
+            guard audioRecorder?.prepareToRecord() == true else {
+                print("❌ Failed to prepare recorder")
+                throw RecordingError.failedToStart
+            }
+            print("✅ Recorder prepared successfully")
 
             // Start recording
+            print("📝 Starting recording...")
             guard audioRecorder?.record() == true else {
+                print("❌ Failed to start recording - record() returned false")
+                if let error = audioRecorder?.url {
+                    print("   Recorder URL: \(error)")
+                }
                 throw RecordingError.failedToStart
             }
 
@@ -151,8 +171,13 @@ class AudioRecordingService: NSObject, ObservableObject {
 
             print("✅ Recording started: \(fileName)")
 
+        } catch let error as RecordingError {
+            print("❌ Recording error: \(error.localizedDescription)")
+            throw error
         } catch {
             print("❌ Failed to start recording: \(error)")
+            print("   Error type: \(type(of: error))")
+            print("   Error description: \(error.localizedDescription)")
             throw RecordingError.failedToStart
         }
     }
