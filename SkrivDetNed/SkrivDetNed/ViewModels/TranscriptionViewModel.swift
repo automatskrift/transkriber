@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import UserNotifications
+import Combine
 
 @MainActor
 class TranscriptionViewModel: ObservableObject {
@@ -32,6 +33,96 @@ class TranscriptionViewModel: ObservableObject {
             name: NSNotification.Name("NewAudioFileDetected"),
             object: nil
         )
+
+        // Load existing completed transcriptions on startup
+        Task {
+            await loadExistingTranscriptions()
+        }
+    }
+
+    /// Load existing transcription files from monitored folder and iCloud
+    private func loadExistingTranscriptions() async {
+        var foundTasks: [TranscriptionTask] = []
+
+        // Check local monitored folder
+        if let folderURL = AppSettings.shared.monitoredFolderURL {
+            await scanFolderForTranscriptions(folderURL, into: &foundTasks)
+        }
+
+        // Check iCloud folder
+        if AppSettings.shared.iCloudSyncEnabled,
+           let iCloudFolder = iCloudSyncService.shared.getRecordingsFolderURL() {
+            await scanFolderForTranscriptions(iCloudFolder, into: &foundTasks)
+        }
+
+        // Sort by modification date (newest first) and take the 50 most recent
+        foundTasks.sort { task1, task2 in
+            guard let date1 = task1.completedAt, let date2 = task2.completedAt else {
+                return false
+            }
+            return date1 > date2
+        }
+
+        completedTasks = Array(foundTasks.prefix(50))
+
+        if !completedTasks.isEmpty {
+            print("📋 Loaded \(completedTasks.count) existing transcription(s)")
+        }
+    }
+
+    /// Scan a folder for completed transcriptions
+    private func scanFolderForTranscriptions(_ folderURL: URL, into tasks: inout [TranscriptionTask]) async {
+        do {
+            let files = try FileManager.default.contentsOfDirectory(
+                at: folderURL,
+                includingPropertiesForKeys: [.contentModificationDateKey, .isRegularFileKey],
+                options: [.skipsHiddenFiles]
+            )
+
+            // Find all .txt transcription files
+            let transcriptionFiles = files.filter { $0.pathExtension == "txt" }
+
+            for txtFile in transcriptionFiles {
+                // Find corresponding audio file
+                let baseName = txtFile.deletingPathExtension().lastPathComponent
+                let audioExtensions = ["m4a", "mp3", "wav", "aiff", "caf", "aac", "flac"]
+
+                var audioFileURL: URL?
+                for ext in audioExtensions {
+                    let possibleAudioFile = folderURL.appendingPathComponent("\(baseName).\(ext)")
+                    if FileManager.default.fileExists(atPath: possibleAudioFile.path) {
+                        audioFileURL = possibleAudioFile
+                        break
+                    }
+                }
+
+                // If we found the audio file, create a completed task
+                if let audioURL = audioFileURL {
+                    // Skip if file is ignored
+                    if AppSettings.shared.ignoredFiles.contains(audioURL.path) {
+                        continue
+                    }
+
+                    // Get creation date of audio file and modification date of transcription
+                    let audioAttributes = try? FileManager.default.attributesOfItem(atPath: audioURL.path)
+                    let txtAttributes = try? FileManager.default.attributesOfItem(atPath: txtFile.path)
+
+                    let audioCreationDate = audioAttributes?[.creationDate] as? Date ?? Date()
+                    let txtModificationDate = txtAttributes?[.modificationDate] as? Date ?? Date()
+
+                    var task = TranscriptionTask(audioFileURL: audioURL, outputFileURL: txtFile, createdAt: audioCreationDate)
+                    task.status = .completed
+                    task.completedAt = txtModificationDate
+
+                    // Avoid duplicates
+                    if !tasks.contains(where: { $0.outputFileURL.path == txtFile.path }) {
+                        tasks.append(task)
+                    }
+                }
+            }
+        } catch {
+            print("⚠️ Failed to scan folder \(folderURL.path): \(error)")
+        }
     }
 
     @objc private func handleNewAudioFile(_ notification: Notification) {
@@ -55,6 +146,14 @@ class TranscriptionViewModel: ObservableObject {
     }
 
     func transcribeFile(_ url: URL) async throws {
+        // Check if file still exists
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            print("⚠️ File no longer exists: \(url.lastPathComponent)")
+            // Remove from pending if it was there
+            FolderMonitorService.shared.removeFromPending(url)
+            throw TranscriptionError.fileNotFound
+        }
+
         let task = TranscriptionTask(audioFileURL: url)
         activeTasks.append(task)
         currentTask = task
@@ -87,6 +186,19 @@ class TranscriptionViewModel: ObservableObject {
 
             // Save transcription to file
             try transcription.write(to: task.outputFileURL, atomically: true, encoding: .utf8)
+
+            // If file is from iCloud, save transcription back to iCloud
+            if url.path.contains("Mobile Documents") {
+                do {
+                    try await iCloudSyncService.shared.saveTranscriptionToiCloud(
+                        audioFileName: url.lastPathComponent,
+                        transcription: transcription
+                    )
+                    print("✅ Successfully saved transcription and metadata to iCloud")
+                } catch {
+                    print("❌ Failed to save to iCloud: \(error)")
+                }
+            }
 
             // Update task status
             if let index = activeTasks.firstIndex(where: { $0.id == task.id }) {
@@ -127,6 +239,26 @@ class TranscriptionViewModel: ObservableObject {
                 completedTasks.insert(failedTask, at: 0)
             }
 
+            // If file is from iCloud, save error status to metadata
+            if url.path.contains("Mobile Documents") {
+                do {
+                    if let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL() {
+                        var metadata = try RecordingMetadata.load(for: url.lastPathComponent, from: recordingsFolder)
+                            ?? RecordingMetadata(audioFileName: url.lastPathComponent, createdOnDevice: "Unknown")
+
+                        metadata.status = .failed
+                        metadata.errorMessage = error.localizedDescription
+                        metadata.lastAttemptedAt = Date()
+                        metadata.updatedAt = Date()
+
+                        try metadata.save(to: recordingsFolder)
+                        print("❌ Saved error status to iCloud metadata: \(error.localizedDescription)")
+                    }
+                } catch {
+                    print("⚠️ Failed to save error status to iCloud: \(error)")
+                }
+            }
+
             throw error
         }
 
@@ -139,6 +271,19 @@ class TranscriptionViewModel: ObservableObject {
 
         while !taskQueue.isEmpty {
             let url = taskQueue.removeFirst()
+
+            // Check if file still exists
+            guard FileManager.default.fileExists(atPath: url.path) else {
+                print("⏭️ Skipping deleted file: \(url.lastPathComponent)")
+                FolderMonitorService.shared.removeFromPending(url)
+                continue
+            }
+
+            // Skip if file is ignored
+            if AppSettings.shared.ignoredFiles.contains(url.path) {
+                print("⏭️ Skipping ignored file: \(url.lastPathComponent)")
+                continue
+            }
 
             // Skip if already processed
             guard !FolderMonitorService.shared.processedFiles.contains(url.path) else {
@@ -195,6 +340,30 @@ class TranscriptionViewModel: ObservableObject {
 
     func clearCompletedTasks() {
         completedTasks.removeAll()
+    }
+
+    /// Retry a failed transcription task
+    func retryTask(_ task: TranscriptionTask) async {
+        // Remove from completed tasks
+        completedTasks.removeAll { $0.id == task.id }
+
+        // Add to queue for retry
+        await addToQueue(task.audioFileURL)
+
+        print("🔄 Retrying transcription for: \(task.fileName)")
+    }
+
+    /// Ignore a failed task permanently
+    func ignoreTask(_ task: TranscriptionTask) {
+        // Add to ignored files list
+        var ignoredFiles = AppSettings.shared.ignoredFiles
+        ignoredFiles.insert(task.audioFileURL.path)
+        AppSettings.shared.ignoredFiles = ignoredFiles
+
+        // Remove from completed tasks list
+        completedTasks.removeAll { $0.id == task.id }
+
+        print("🚫 Ignoring file: \(task.fileName)")
     }
 }
 

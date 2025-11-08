@@ -9,6 +9,7 @@ import SwiftUI
 
 struct MainView: View {
     @State private var selectedTab: Tab = .monitor
+    @StateObject private var folderMonitorVM = FolderMonitorViewModel.shared
 
     enum Tab {
         case monitor
@@ -37,6 +38,16 @@ struct MainView: View {
                 .tag(Tab.settings)
         }
         .frame(minWidth: 700, minHeight: 600)
+        .alert("Eksisterende filer fundet", isPresented: $folderMonitorVM.showExistingFilesPrompt) {
+            Button("Proces alle (\(folderMonitorVM.existingFilesCount))") {
+                folderMonitorVM.processExistingFiles()
+            }
+            Button("Spring over", role: .cancel) {
+                folderMonitorVM.skipExistingFiles()
+            }
+        } message: {
+            Text("Der blev fundet \(folderMonitorVM.existingFilesCount) eksisterende lydfil(er) i iCloud. Vil du transskribere dem nu?")
+        }
     }
 }
 

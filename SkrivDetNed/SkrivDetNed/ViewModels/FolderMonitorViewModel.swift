@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import Combine
 
 @MainActor
 class FolderMonitorViewModel: ObservableObject {
@@ -20,14 +21,70 @@ class FolderMonitorViewModel: ObservableObject {
     @Published var selectedFolderURL: URL?
     @Published var pendingFiles: [URL] = []
     @Published var recentlyCompleted: [TranscriptionTask] = []
+    @Published var showExistingFilesPrompt = false
+    @Published var existingFilesCount = 0
 
     private let monitorService = FolderMonitorService.shared
     private let transcriptionVM = TranscriptionViewModel.shared
+    private let iCloudService = iCloudSyncService.shared
     private let settings = AppSettings.shared
 
     private init() {
         setupObservers()
         loadSavedFolder()
+        setupiCloudMonitoring()
+    }
+
+    private func setupiCloudMonitoring() {
+        // Start iCloud monitoring if enabled
+        print("🔧 setupiCloudMonitoring called, iCloudSyncEnabled: \(settings.iCloudSyncEnabled)")
+
+        if settings.iCloudSyncEnabled {
+            Task {
+                // Check availability first
+                print("🔍 Checking iCloud availability...")
+                await iCloudService.checkiCloudAvailability()
+
+                // Wait a moment for iCloud to be ready
+                try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+
+                // Start monitoring
+                await MainActor.run {
+                    print("🚀 Starting iCloud monitoring...")
+                    iCloudService.startMonitoring { [weak self] url in
+                        Task { @MainActor in
+                            await self?.handleiCloudFile(url)
+                        }
+                    }
+                }
+
+                // Check for pending files that need retry
+                let pendingFiles = await iCloudService.checkForPendingFiles()
+                if !pendingFiles.isEmpty {
+                    await MainActor.run {
+                        print("🔄 Processing \(pendingFiles.count) pending file(s) for retry")
+                    }
+                    for url in pendingFiles {
+                        await handleiCloudFile(url)
+                    }
+                }
+            }
+        } else {
+            print("⏭️ iCloud monitoring disabled in settings")
+        }
+    }
+
+    private func handleiCloudFile(_ url: URL) async {
+        print("📱 New file from iCloud: \(url.lastPathComponent)")
+
+        // Update metadata status
+        try? await iCloudService.updateMetadataStatus(
+            audioFileName: url.lastPathComponent,
+            status: .transcribing
+        )
+
+        // Add to transcription queue
+        await transcriptionVM.addToQueue(url)
     }
 
     private func setupObservers() {
@@ -45,6 +102,46 @@ class FolderMonitorViewModel: ObservableObject {
         transcriptionVM.$completedTasks
             .map { Array($0.prefix(10)) }
             .assign(to: &$recentlyCompleted)
+
+        // Observe existing files found
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("ExistingFilesFound"),
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let count = notification.userInfo?["count"] as? Int else { return }
+            self?.existingFilesCount = count
+            self?.showExistingFilesPrompt = true
+        }
+    }
+
+    func processExistingFiles() {
+        iCloudService.processExistingFiles()
+        showExistingFilesPrompt = false
+    }
+
+    func skipExistingFiles() {
+        showExistingFilesPrompt = false
+    }
+
+    func clearPendingQueue() {
+        monitorService.clearPendingQueue()
+    }
+
+    func clearCompletedTasks() {
+        transcriptionVM.clearCompletedTasks()
+    }
+
+    func ignorePendingFile(_ fileURL: URL) {
+        // Add to ignored files list
+        var ignoredFiles = settings.ignoredFiles
+        ignoredFiles.insert(fileURL.path)
+        settings.ignoredFiles = ignoredFiles
+
+        // Remove from pending queue
+        monitorService.removePendingFile(fileURL)
+
+        print("🚫 Ignoring pending file: \(fileURL.lastPathComponent)")
     }
 
     private func loadSavedFolder() {

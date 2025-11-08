@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import AppKit
+import Combine
 
 @MainActor
 class ErrorHandler: ObservableObject {

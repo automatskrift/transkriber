@@ -26,14 +26,14 @@ struct TranscriptionTask: Identifiable {
     let audioFileURL: URL
     let outputFileURL: URL
     var status: TranscriptionStatus
-    let createdAt: Date
+    var createdAt: Date
     var completedAt: Date?
 
-    init(audioFileURL: URL, outputFileURL: URL? = nil) {
+    init(audioFileURL: URL, outputFileURL: URL? = nil, createdAt: Date? = nil) {
         self.audioFileURL = audioFileURL
         self.outputFileURL = outputFileURL ?? audioFileURL.deletingPathExtension().appendingPathExtension("txt")
         self.status = .pending
-        self.createdAt = Date()
+        self.createdAt = createdAt ?? Date()
     }
 
     var fileName: String {

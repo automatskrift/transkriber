@@ -7,6 +7,7 @@
 
 import Foundation
 import Speech
+import Combine
 
 @MainActor
 class WhisperService: ObservableObject {

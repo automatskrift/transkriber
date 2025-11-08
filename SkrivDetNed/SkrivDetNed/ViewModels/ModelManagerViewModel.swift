@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import Combine
 
 @MainActor
 class ModelManagerViewModel: ObservableObject {
@@ -15,9 +16,25 @@ class ModelManagerViewModel: ObservableObject {
 
     private let downloadService = ModelDownloadService.shared
     private let fileHelper = FileSystemHelper.shared
+    private var cancellables = Set<AnyCancellable>()
 
     init() {
         refreshModels()
+
+        // Observe download progress changes with throttling
+        downloadService.$downloadProgress
+            .throttle(for: .milliseconds(100), scheduler: DispatchQueue.main, latest: true)
+            .sink { [weak self] _ in
+                self?.refreshModels()
+            }
+            .store(in: &cancellables)
+
+        // Observe download status changes
+        downloadService.$isDownloading
+            .sink { [weak self] _ in
+                self?.refreshModels()
+            }
+            .store(in: &cancellables)
     }
 
     func refreshModels() {

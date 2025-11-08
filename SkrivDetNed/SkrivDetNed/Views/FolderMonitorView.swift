@@ -85,7 +85,18 @@ struct FolderMonitorView: View {
 
                 // Pending Files
                 if !viewModel.pendingFiles.isEmpty {
-                    GroupBox(label: Label("I Kø", systemImage: "clock")) {
+                    GroupBox(label:
+                        HStack {
+                            Label("I Kø", systemImage: "clock")
+                            Spacer()
+                            Button(action: viewModel.clearPendingQueue) {
+                                Label("Ryd kø", systemImage: "trash")
+                                    .font(.caption)
+                            }
+                            .buttonStyle(.borderless)
+                            .foregroundColor(.red)
+                        }
+                    ) {
                         VStack(spacing: 8) {
                             ForEach(viewModel.pendingFiles, id: \.self) { fileURL in
                                 HStack {
@@ -94,6 +105,16 @@ struct FolderMonitorView: View {
                                     Text(fileURL.lastPathComponent)
                                         .font(.subheadline)
                                     Spacer()
+
+                                    Button(action: {
+                                        viewModel.ignorePendingFile(fileURL)
+                                    }) {
+                                        Label("Ignorer", systemImage: "xmark.circle")
+                                            .font(.caption)
+                                    }
+                                    .buttonStyle(.borderless)
+                                    .foregroundColor(.orange)
+
                                     Text("Venter...")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
@@ -107,7 +128,18 @@ struct FolderMonitorView: View {
 
                 // Recent Completions
                 if !viewModel.recentlyCompleted.isEmpty {
-                    GroupBox(label: Label("Seneste Færdige", systemImage: "checkmark.circle")) {
+                    GroupBox(label:
+                        HStack {
+                            Label("Seneste Færdige", systemImage: "checkmark.circle")
+                            Spacer()
+                            Button(action: viewModel.clearCompletedTasks) {
+                                Label("Ryd liste", systemImage: "trash")
+                                    .font(.caption)
+                            }
+                            .buttonStyle(.borderless)
+                            .foregroundColor(.secondary)
+                        }
+                    ) {
                         VStack(spacing: 8) {
                             ForEach(viewModel.recentlyCompleted) { task in
                                 CompletedTaskRow(task: task)
@@ -207,28 +239,73 @@ struct TranscriptionTaskRow: View {
 
 struct CompletedTaskRow: View {
     let task: TranscriptionTask
+    @ObservedObject private var transcriptionVM = TranscriptionViewModel.shared
 
     var body: some View {
-        HStack {
-            Image(systemName: statusIcon)
-                .foregroundColor(statusColor)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: statusIcon)
+                    .foregroundColor(statusColor)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(task.fileName)
-                    .font(.subheadline)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(task.fileName)
+                        .font(.subheadline)
 
-                if let completedAt = task.completedAt {
-                    Text(completedAt.timeAgoString())
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+                    if let completedAt = task.completedAt {
+                        Text(completedAt.timeAgoString())
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
                 }
+
+                Spacer()
+
+                // Show transcription file link if completed
+                if task.status == .completed && FileManager.default.fileExists(atPath: task.outputFileURL.path) {
+                    Button(action: {
+                        NSWorkspace.shared.activateFileViewerSelecting([task.outputFileURL])
+                    }) {
+                        Label("Vis tekst", systemImage: "doc.text")
+                            .font(.caption)
+                    }
+                    .buttonStyle(.borderless)
+                }
+
+                // Show Retry and Ignore buttons if failed
+                if case .failed = task.status {
+                    Button(action: {
+                        Task {
+                            await transcriptionVM.retryTask(task)
+                        }
+                    }) {
+                        Label("Retry", systemImage: "arrow.clockwise")
+                            .font(.caption)
+                    }
+                    .buttonStyle(.borderless)
+                    .foregroundColor(.blue)
+
+                    Button(action: {
+                        transcriptionVM.ignoreTask(task)
+                    }) {
+                        Label("Ignorer", systemImage: "xmark.circle")
+                            .font(.caption)
+                    }
+                    .buttonStyle(.borderless)
+                    .foregroundColor(.orange)
+                }
+
+                Text(statusText)
+                    .font(.caption)
+                    .foregroundColor(statusColor)
             }
 
-            Spacer()
-
-            Text(statusText)
-                .font(.caption)
-                .foregroundColor(statusColor)
+            // Show error details if failed
+            if case .failed(let error) = task.status {
+                Text("Fejl: \(error)")
+                    .font(.caption2)
+                    .foregroundColor(.red)
+                    .padding(.leading, 24)
+            }
         }
         .padding(.vertical, 4)
     }

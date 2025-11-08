@@ -71,6 +71,28 @@ class FolderMonitorService: ObservableObject {
         monitorTask = nil
     }
 
+    func clearPendingQueue() {
+        // Cancel all pending timers
+        for (_, timer) in pendingFileTimers {
+            timer.cancel()
+        }
+        pendingFileTimers.removeAll()
+
+        // Clear pending files
+        pendingFiles.removeAll()
+        print("🗑️ Cleared pending queue")
+    }
+
+    func removePendingFile(_ url: URL) {
+        // Cancel timer for this file
+        pendingFileTimers[url]?.cancel()
+        pendingFileTimers[url] = nil
+
+        // Remove from pending files
+        pendingFiles.removeAll { $0 == url }
+        print("🗑️ Removed pending file: \(url.lastPathComponent)")
+    }
+
     private func setupFSEvents(for folder: URL) {
         let pathsToWatch = [folder.path] as CFArray
         let callback: FSEventStreamCallback = { streamRef, contextInfo, numEvents, eventPaths, eventFlags, eventIds in

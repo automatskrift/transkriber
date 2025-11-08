@@ -12,21 +12,27 @@ enum WhisperModelType: String, CaseIterable, Identifiable {
     case base = "base"
     case small = "small"
     case medium = "medium"
-    case large = "large"
+    case large = "large-v3"
 
     var id: String { rawValue }
 
     var displayName: String {
-        rawValue.capitalized
+        switch self {
+        case .tiny: return "Tiny"
+        case .base: return "Base"
+        case .small: return "Small"
+        case .medium: return "Medium"
+        case .large: return "Large"
+        }
     }
 
     var fileSize: Int64 {
         switch self {
-        case .tiny: return 75_000_000      // ~75 MB
-        case .base: return 142_000_000     // ~142 MB
-        case .small: return 466_000_000    // ~466 MB
-        case .medium: return 1_500_000_000 // ~1.5 GB
-        case .large: return 2_900_000_000  // ~2.9 GB
+        case .tiny: return 78_000_000      // ~78 MB
+        case .base: return 148_000_000     // ~148 MB
+        case .small: return 488_000_000    // ~488 MB
+        case .medium: return 1_530_000_000 // ~1.53 GB
+        case .large: return 3_100_000_000  // ~3.1 GB (v3)
         }
     }
 
@@ -45,14 +51,14 @@ enum WhisperModelType: String, CaseIterable, Identifiable {
         case .medium:
             return "Høj nøjagtighed for længere optagelser"
         case .large:
-            return "Bedste nøjagtighed, langsommere"
+            return "Bedste nøjagtighed (v3), langsommere"
         }
     }
 
     var downloadURL: URL {
-        // whisper.cpp model URLs
+        // whisper.cpp model URLs from Hugging Face
         let baseURL = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main"
-        return URL(string: "\(baseURL)/ggml-\(rawValue).bin")!
+        return URL(string: "\(baseURL)/ggml-\(rawValue).bin?download=true")!
     }
 }
 
