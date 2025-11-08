@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVFoundation
+import AVKit
 import Combine
 
 struct RecordingDetailView: View {
@@ -41,6 +42,36 @@ struct RecordingDetailView: View {
                 // Audio player
                 if FileManager.default.fileExists(atPath: recording.localURL.path) {
                     audioPlayerSection
+                } else {
+                    // Debug: Show why audio player is not available
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("Audio ikke tilgængelig", systemImage: "exclamationmark.triangle")
+                            .font(.headline)
+                            .foregroundColor(.orange)
+
+                        Text("Lydfil: \(recording.localURL.lastPathComponent)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        Text("Sti: \(recording.localURL.path)")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                            .lineLimit(nil)
+                    }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
+                    .onAppear {
+                        print("🔍 Audio file not found:")
+                        print("   Expected path: \(recording.localURL.path)")
+                        print("   File exists: \(FileManager.default.fileExists(atPath: recording.localURL.path))")
+
+                        // Check if file exists in Documents root
+                        let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+                        let alternativeURL = documentsDir.appendingPathComponent(recording.fileName)
+                        print("   Alternative path: \(alternativeURL.path)")
+                        print("   Alternative exists: \(FileManager.default.fileExists(atPath: alternativeURL.path))")
+                    }
                 }
 
                 // Tags
@@ -411,12 +442,35 @@ class AudioPlayerService: ObservableObject {
 
     func play(url: URL) {
         do {
+            // Configure audio session for playback
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(.playback, mode: .default)
+            try audioSession.setActive(true)
+
+            print("🎵 Attempting to play audio from: \(url.path)")
+            print("🎵 File exists: \(FileManager.default.fileExists(atPath: url.path))")
+
             player = try AVAudioPlayer(contentsOf: url)
-            player?.play()
-            isPlaying = true
-            startTimer()
+            player?.prepareToPlay()
+
+            guard let player = player else {
+                print("❌ Failed to create audio player")
+                return
+            }
+
+            print("🎵 Audio duration: \(player.duration) seconds")
+
+            let success = player.play()
+            if success {
+                print("✅ Audio playback started")
+                isPlaying = true
+                startTimer()
+            } else {
+                print("❌ Failed to start playback")
+            }
         } catch {
             print("❌ Failed to play audio: \(error)")
+            print("❌ Error details: \(error.localizedDescription)")
         }
     }
 

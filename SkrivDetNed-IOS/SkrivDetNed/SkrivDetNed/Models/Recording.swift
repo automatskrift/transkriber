@@ -10,7 +10,8 @@ import Foundation
 struct Recording: Identifiable, Codable {
     let id: UUID
     let fileName: String
-    let localURL: URL
+    private let _localURLPath: String? // Not used - kept for backwards compatibility
+    private var _transcriptionFileName: String?
     var title: String
     var tags: [String]
     var notes: String?
@@ -20,11 +21,28 @@ struct Recording: Identifiable, Codable {
     var cloudStatus: CloudStatus
     var hasTranscription: Bool
     var transcriptionText: String?
-    var transcriptionURL: URL?
     var errorMessage: String?
     var locationName: String?
     var latitude: Double?
     var longitude: Double?
+
+    // Computed property that reconstructs the full URL
+    var localURL: URL {
+        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        return documentsPath.appendingPathComponent(fileName)
+    }
+
+    // Computed property for transcription URL
+    var transcriptionURL: URL? {
+        guard let transcriptionFileName = _transcriptionFileName else { return nil }
+        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        return documentsPath.appendingPathComponent(transcriptionFileName)
+    }
+
+    // Helper to set transcription filename
+    mutating func setTranscriptionFileName(_ fileName: String?) {
+        _transcriptionFileName = fileName
+    }
 
     init(
         fileName: String,
@@ -34,7 +52,8 @@ struct Recording: Identifiable, Codable {
     ) {
         self.id = UUID()
         self.fileName = fileName
-        self.localURL = localURL
+        self._localURLPath = nil // Not used anymore, we compute it
+        self._transcriptionFileName = nil
         self.title = fileName.replacingOccurrences(of: ".m4a", with: "")
         self.tags = []
         self.notes = nil
@@ -44,7 +63,6 @@ struct Recording: Identifiable, Codable {
         self.cloudStatus = .local
         self.hasTranscription = false
         self.transcriptionText = nil
-        self.transcriptionURL = nil
         self.errorMessage = nil
         self.locationName = nil
         self.latitude = nil
