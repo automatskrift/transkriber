@@ -146,6 +146,13 @@ class TranscriptionViewModel: ObservableObject {
     }
 
     func transcribeFile(_ url: URL) async throws {
+        // Check if file is ignored
+        if AppSettings.shared.ignoredFiles.contains(url.path) {
+            print("⏭️ Skipping ignored file in transcribeFile: \(url.lastPathComponent)")
+            FolderMonitorService.shared.removeFromPending(url)
+            throw TranscriptionError.fileNotFound
+        }
+
         // Check if file still exists
         guard FileManager.default.fileExists(atPath: url.path) else {
             print("⚠️ File no longer exists: \(url.lastPathComponent)")
@@ -340,6 +347,22 @@ class TranscriptionViewModel: ObservableObject {
 
     func clearCompletedTasks() {
         completedTasks.removeAll()
+    }
+
+    /// Remove file from queue and active tasks (used when ignoring a file)
+    func removeFileFromProcessing(_ url: URL) {
+        // Remove from task queue
+        taskQueue.removeAll { $0.path == url.path }
+
+        // Remove from active tasks
+        activeTasks.removeAll { $0.audioFileURL.path == url.path }
+
+        // Update current task if needed
+        if currentTask?.audioFileURL.path == url.path {
+            currentTask = nil
+        }
+
+        print("🗑️ Removed \(url.lastPathComponent) from transcription processing")
     }
 
     /// Retry a failed transcription task

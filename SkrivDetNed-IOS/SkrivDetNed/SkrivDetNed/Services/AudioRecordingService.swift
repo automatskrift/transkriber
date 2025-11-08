@@ -8,6 +8,7 @@
 import Foundation
 import AVFoundation
 import Combine
+import ActivityKit
 
 @MainActor
 class AudioRecordingService: NSObject, ObservableObject {
@@ -24,19 +25,71 @@ class AudioRecordingService: NSObject, ObservableObject {
     private var levelTimer: Timer?
     private var durationTimer: Timer?
     private var currentRecordingURL: URL?
+    private var wasInterrupted = false
+    private var currentActivity: Activity<RecordingActivityAttributes>?
 
     private override init() {
         super.init()
         setupAudioSession()
+        setupInterruptionObserver()
     }
 
     private func setupAudioSession() {
         do {
-            try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
+            // Configure for background recording
+            try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
             try audioSession.setActive(true)
-            print("✅ Audio session configured")
+            print("✅ Audio session configured for background recording")
         } catch {
             print("❌ Failed to setup audio session: \(error)")
+        }
+    }
+
+    private func setupInterruptionObserver() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleInterruption),
+            name: AVAudioSession.interruptionNotification,
+            object: audioSession
+        )
+        print("✅ Audio interruption observer setup")
+    }
+
+    @objc private func handleInterruption(notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+              let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
+            return
+        }
+
+        Task { @MainActor in
+            switch type {
+            case .began:
+                // Interruption began (phone call, etc.)
+                if self.isRecording && !self.isPaused && AppSettings.shared.pauseOnCall {
+                    print("📞 Interruption began - pausing recording")
+                    self.pauseRecording()
+                    self.wasInterrupted = true
+                }
+
+            case .ended:
+                // Interruption ended
+                guard let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt else {
+                    return
+                }
+
+                let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+                if options.contains(.shouldResume) && self.wasInterrupted && AppSettings.shared.pauseOnCall {
+                    print("📞 Interruption ended - resuming recording")
+                    // Wait a bit before resuming
+                    try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+                    self.resumeRecording()
+                    self.wasInterrupted = false
+                }
+
+            @unknown default:
+                break
+            }
         }
     }
 
@@ -89,6 +142,7 @@ class AudioRecordingService: NSObject, ObservableObject {
             audioLevels = []
 
             startMonitoring()
+            startLiveActivity(fileName: fileName)
 
             print("✅ Recording started: \(fileName)")
 
@@ -106,6 +160,7 @@ class AudioRecordingService: NSObject, ObservableObject {
 
         recorder.stop()
         stopMonitoring()
+        await endLiveActivity()
 
         isRecording = false
         isPaused = false
@@ -141,6 +196,7 @@ class AudioRecordingService: NSObject, ObservableObject {
         audioRecorder?.pause()
         isPaused = true
         stopMonitoring()
+        Task { await updateLiveActivity() }
 
         print("⏸️ Recording paused")
     }
@@ -152,6 +208,7 @@ class AudioRecordingService: NSObject, ObservableObject {
         audioRecorder?.record()
         isPaused = false
         startMonitoring()
+        Task { await updateLiveActivity() }
 
         print("▶️ Recording resumed")
     }
@@ -162,6 +219,7 @@ class AudioRecordingService: NSObject, ObservableObject {
 
         recorder.stop()
         stopMonitoring()
+        Task { await endLiveActivity() }
 
         // Delete file
         try? FileManager.default.removeItem(at: url)
@@ -207,6 +265,11 @@ class AudioRecordingService: NSObject, ObservableObject {
             Task { @MainActor [weak self] in
                 guard let self, let recorder = self.audioRecorder else { return }
                 self.duration = recorder.currentTime
+
+                // Update Live Activity every second
+                if Int(recorder.currentTime) % 1 == 0 {
+                    await self.updateLiveActivity()
+                }
             }
         }
     }
@@ -216,6 +279,62 @@ class AudioRecordingService: NSObject, ObservableObject {
         levelTimer = nil
         durationTimer?.invalidate()
         durationTimer = nil
+    }
+
+    // MARK: - Live Activity
+
+    private func startLiveActivity(fileName: String) {
+        guard #available(iOS 16.1, *) else { return }
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else {
+            print("⚠️ Live Activities not enabled")
+            return
+        }
+
+        let attributes = RecordingActivityAttributes(startTime: Date())
+        let contentState = RecordingActivityAttributes.ContentState(
+            duration: 0,
+            isPaused: false,
+            fileName: fileName
+        )
+
+        do {
+            currentActivity = try Activity<RecordingActivityAttributes>.request(
+                attributes: attributes,
+                content: .init(state: contentState, staleDate: nil),
+                pushType: nil
+            )
+            print("✅ Live Activity started")
+        } catch {
+            print("❌ Failed to start Live Activity: \(error)")
+        }
+    }
+
+    private func updateLiveActivity() async {
+        guard #available(iOS 16.2, *) else { return }
+        guard let activity = currentActivity else { return }
+
+        let contentState = RecordingActivityAttributes.ContentState(
+            duration: duration,
+            isPaused: isPaused,
+            fileName: currentRecordingURL?.lastPathComponent ?? "Recording"
+        )
+
+        await activity.update(.init(state: contentState, staleDate: nil))
+    }
+
+    private func endLiveActivity() async {
+        guard #available(iOS 16.2, *) else { return }
+        guard let activity = currentActivity else { return }
+
+        let finalState = RecordingActivityAttributes.ContentState(
+            duration: duration,
+            isPaused: false,
+            fileName: currentRecordingURL?.lastPathComponent ?? "Recording"
+        )
+
+        await activity.end(.init(state: finalState, staleDate: nil), dismissalPolicy: .immediate)
+        currentActivity = nil
+        print("✅ Live Activity ended")
     }
 
     nonisolated deinit {

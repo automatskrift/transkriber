@@ -27,27 +27,46 @@ struct RecordingRow: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(recording.title)
                     .font(.headline)
-                    .lineLimit(1)
+                    .lineLimit(2)
 
-                // Duration and file size on one line
-                HStack(spacing: 8) {
-                    Label(recording.formattedDuration, systemImage: "clock")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                // Only show details if not actively transcribing
+                if recording.cloudStatus != .transcribing {
+                    // Duration and file size on one line
+                    HStack(spacing: 8) {
+                        Label(recording.formattedDuration, systemImage: "clock")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
 
-                    Text("•")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        Text("•")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
 
-                    Label(recording.formattedFileSize, systemImage: "doc")
+                        Label(recording.formattedFileSize, systemImage: "doc")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
+                    // Time ago on separate line
+                    Text(timeAgoString)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
 
-                // Time ago on separate line
-                Text(timeAgoString)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                // Status on separate line with icon
+                HStack(spacing: 6) {
+                    Image(systemName: recording.cloudStatus.icon)
+                        .foregroundColor(statusColor)
+                        .font(.caption)
+
+                    Text(recording.cloudStatus.displayName)
+                        .font(.caption)
+                        .foregroundColor(statusColor)
+
+                    if recording.cloudStatus == .uploading || recording.cloudStatus == .transcribing {
+                        ProgressView()
+                            .scaleEffect(0.7)
+                    }
+                }
 
                 if !recording.tags.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -68,25 +87,10 @@ struct RecordingRow: View {
 
             Spacer()
 
-            // Status badges
-            VStack(alignment: .trailing, spacing: 4) {
-                // iCloud upload status
-                HStack(spacing: 4) {
-                    Image(systemName: iCloudIconName)
-                        .foregroundColor(iCloudIconColor)
-                        .font(.caption)
-
-                    if recording.cloudStatus == .uploading {
-                        ProgressView()
-                            .scaleEffect(0.7)
-                    }
-                }
-
-                // Transcription status
-                Text(recording.cloudStatus.displayName)
-                    .font(.caption2)
-                    .foregroundColor(statusColor)
-            }
+            // iCloud status icon (smaller, on the side)
+            Image(systemName: iCloudIconName)
+                .foregroundColor(iCloudIconColor)
+                .font(.title3)
         }
         .padding(.vertical, 8)
     }

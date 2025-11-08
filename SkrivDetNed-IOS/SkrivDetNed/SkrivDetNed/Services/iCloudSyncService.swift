@@ -25,6 +25,7 @@ class iCloudSyncService: ObservableObject {
     private init() {
         checkiCloudAvailability()
         setupBackgroundSupport()
+        setupMetadataMonitoring()
     }
 
     /// Setup background upload support
@@ -32,6 +33,106 @@ class iCloudSyncService: ObservableObject {
         // Enable ubiquitous item coordination for background uploads
         // iCloud Drive automatically handles background uploads
         print("🔧 Background upload support enabled via iCloud Drive")
+    }
+
+    /// Setup metadata monitoring for real-time updates
+    private func setupMetadataMonitoring() {
+        guard isAvailable else {
+            print("⚠️ Cannot setup metadata monitoring - iCloud not available")
+            return
+        }
+
+        metadataQuery = NSMetadataQuery()
+        guard let query = metadataQuery else { return }
+
+        // Search for .json metadata files in iCloud
+        query.searchScopes = [NSMetadataQueryUbiquitousDocumentsScope]
+        query.predicate = NSPredicate(format: "%K LIKE '*.json'", NSMetadataItemFSNameKey)
+
+        // Observe for updates
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(metadataQueryDidUpdate),
+            name: NSNotification.Name.NSMetadataQueryDidUpdate,
+            object: query
+        )
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(metadataQueryDidFinishGathering),
+            name: NSNotification.Name.NSMetadataQueryDidFinishGathering,
+            object: query
+        )
+
+        query.start()
+        print("✅ Metadata monitoring started - listening for changes")
+    }
+
+    @objc private func metadataQueryDidFinishGathering(_ notification: Notification) {
+        print("📊 Metadata query finished initial gathering")
+        Task { @MainActor in
+            await processMetadataUpdates()
+        }
+    }
+
+    @objc private func metadataQueryDidUpdate(_ notification: Notification) {
+        print("🔄 Metadata query detected changes")
+        Task { @MainActor in
+            await processMetadataUpdates()
+        }
+    }
+
+    private func processMetadataUpdates() async {
+        guard let query = metadataQuery else { return }
+        guard let recordingsFolder = getRecordingsFolderURL() else { return }
+
+        query.disableUpdates()
+        defer { query.enableUpdates() }
+
+        print("📝 Processing \(query.resultCount) metadata files")
+
+        for i in 0..<query.resultCount {
+            guard let item = query.result(at: i) as? NSMetadataItem,
+                  let fileName = item.value(forAttribute: NSMetadataItemFSNameKey) as? String,
+                  let url = item.value(forAttribute: NSMetadataItemURLKey) as? URL else {
+                continue
+            }
+
+            // Only process .json files in Recordings folder
+            guard fileName.hasSuffix(".json"),
+                  url.path.contains("Recordings") else {
+                continue
+            }
+
+            // Load and check metadata
+            do {
+                let data = try Data(contentsOf: url)
+                let decoder = JSONDecoder()
+                decoder.dateDecodingStrategy = .iso8601
+
+                guard let metadata = try? decoder.decode(RecordingMetadata.self, from: data) else {
+                    continue
+                }
+
+                // Update local recording with new status/transcription
+                await updateLocalRecordingStatus(audioFileName: metadata.audioFileName, metadata: metadata)
+
+                // If completed and has transcription, download it
+                if metadata.status == .completed,
+                   let transcriptionFileName = metadata.transcriptionFileName {
+                    let transcriptionURL = recordingsFolder.appendingPathComponent(transcriptionFileName)
+
+                    if FileManager.default.fileExists(atPath: transcriptionURL.path),
+                       let transcription = try? String(contentsOf: transcriptionURL, encoding: .utf8) {
+                        await updateLocalRecording(audioFileName: metadata.audioFileName, transcription: transcription)
+                        print("📥 Downloaded transcription for \(metadata.audioFileName)")
+                    }
+                }
+
+            } catch {
+                print("⚠️ Failed to process metadata file \(fileName): \(error)")
+            }
+        }
     }
 
     /// Check if iCloud is available
@@ -504,6 +605,14 @@ class iCloudSyncService: ObservableObject {
                     if let errorMsg = recording.errorMessage {
                         print("   Error: \(errorMsg)")
                     }
+
+                    // Notify UI to refresh
+                    NotificationCenter.default.post(
+                        name: NSNotification.Name("RecordingStatusChanged"),
+                        object: nil,
+                        userInfo: ["fileName": audioFileName]
+                    )
+
                     break
                 }
             }

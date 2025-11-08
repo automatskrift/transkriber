@@ -27,6 +27,10 @@ struct RecordingMetadata: Codable {
     var createdOnDevice: String? // "iOS" or "macOS"
     var transcribedOnDevice: String?
 
+    // Error info
+    var errorMessage: String?
+    var lastAttemptedAt: Date?
+
     init(audioFileName: String, createdOnDevice: String = "Unknown") {
         self.id = UUID()
         self.audioFileName = audioFileName

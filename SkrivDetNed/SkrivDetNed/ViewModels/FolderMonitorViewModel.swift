@@ -141,6 +141,9 @@ class FolderMonitorViewModel: ObservableObject {
         // Remove from pending queue
         monitorService.removePendingFile(fileURL)
 
+        // Remove from transcription processing (queue and active tasks)
+        transcriptionVM.removeFileFromProcessing(fileURL)
+
         print("🚫 Ignoring pending file: \(fileURL.lastPathComponent)")
     }
 

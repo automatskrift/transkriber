@@ -50,6 +50,11 @@ struct RecordingDetailView: View {
                     notesSection(notes)
                 }
 
+                // Location
+                if let locationName = recording.locationName {
+                    locationSection(locationName)
+                }
+
                 // Transcription
                 transcriptionSection
 
@@ -155,6 +160,37 @@ struct RecordingDetailView: View {
 
             Text(notes)
                 .font(.body)
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+    }
+
+    private func locationSection(_ locationName: String) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Lokation", systemImage: "location")
+                .font(.headline)
+
+            HStack {
+                Text(locationName)
+                    .font(.body)
+
+                Spacer()
+
+                // Show map button if coordinates available
+                if let lat = recording.latitude, let lon = recording.longitude {
+                    Button {
+                        let urlString = "maps://?ll=\(lat),\(lon)"
+                        if let url = URL(string: urlString) {
+                            UIApplication.shared.open(url)
+                        }
+                    } label: {
+                        Label("Åbn i Kort", systemImage: "map")
+                            .font(.caption)
+                    }
+                    .buttonStyle(.bordered)
+                }
+            }
         }
         .padding()
         .background(Color(.systemGray6))

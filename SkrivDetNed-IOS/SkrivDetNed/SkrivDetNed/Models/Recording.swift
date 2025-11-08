@@ -22,6 +22,9 @@ struct Recording: Identifiable, Codable {
     var transcriptionText: String?
     var transcriptionURL: URL?
     var errorMessage: String?
+    var locationName: String?
+    var latitude: Double?
+    var longitude: Double?
 
     init(
         fileName: String,
@@ -43,6 +46,9 @@ struct Recording: Identifiable, Codable {
         self.transcriptionText = nil
         self.transcriptionURL = nil
         self.errorMessage = nil
+        self.locationName = nil
+        self.latitude = nil
+        self.longitude = nil
     }
 
     var formattedDuration: String {

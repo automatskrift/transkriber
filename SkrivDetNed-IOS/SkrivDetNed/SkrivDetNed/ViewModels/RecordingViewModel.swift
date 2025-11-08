@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import Combine
+import CoreLocation
 
 @MainActor
 class RecordingViewModel: ObservableObject {
@@ -18,6 +19,7 @@ class RecordingViewModel: ObservableObject {
     @Published var showError = false
     @Published var showSuccess = false
     @Published var errorMessage: String?
+    @Published var isInitializingRecording = false // For optimistic UI
 
     // Metadata fields
     @Published var recordingTitle: String = ""
@@ -26,6 +28,7 @@ class RecordingViewModel: ObservableObject {
 
     private let audioService = AudioRecordingService.shared
     private let iCloudService = iCloudSyncService.shared
+    private let locationService = LocationService.shared
     private let settings = AppSettings.shared
     private var cancellables = Set<AnyCancellable>()
 
@@ -43,6 +46,11 @@ class RecordingViewModel: ObservableObject {
             Task {
                 await iCloudService.checkForExistingTranscriptions()
             }
+        }
+
+        // Request location permission if enabled
+        if settings.addLocationToRecordings {
+            locationService.requestPermission()
         }
     }
 
@@ -72,11 +80,17 @@ class RecordingViewModel: ObservableObject {
     }
 
     func startRecording() {
+        // Show initializing state immediately for better UX
+        isInitializingRecording = true
+
         Task {
             do {
                 try await audioService.startRecording(quality: settings.audioQuality)
+                isInitializingRecording = false
                 print("✅ Recording started")
             } catch {
+                // Revert UI state if recording fails
+                isInitializingRecording = false
                 handleError(error)
             }
         }
@@ -95,6 +109,16 @@ class RecordingViewModel: ObservableObject {
                 recording.tags = parseTags(from: recordingTags)
                 recording.notes = recordingNotes.isEmpty ? nil : recordingNotes
                 print("📝 Applied metadata - title: \(recording.title)")
+
+                // Add location if enabled
+                if settings.addLocationToRecordings {
+                    if let locationData = await locationService.getCurrentLocation() {
+                        recording.latitude = locationData.location?.coordinate.latitude
+                        recording.longitude = locationData.location?.coordinate.longitude
+                        recording.locationName = locationData.name
+                        print("📍 Added location: \(locationData.name ?? "Unknown")")
+                    }
+                }
 
                 // Save recording
                 print("💾 Saving recording...")

@@ -24,10 +24,16 @@ struct RecordingView: View {
                 )
 
                 // Waveform visualization
-                if viewModel.isRecording {
-                    WaveformView(levels: viewModel.audioLevels)
-                        .frame(height: 100)
-                        .padding(.horizontal)
+                if viewModel.isRecording || viewModel.isInitializingRecording {
+                    if viewModel.isRecording {
+                        WaveformView(levels: viewModel.audioLevels)
+                            .frame(height: 100)
+                            .padding(.horizontal)
+                    } else {
+                        // Show placeholder while initializing
+                        ProgressView("Forbereder optagelse...")
+                            .frame(height: 100)
+                    }
                 }
 
                 // Timer and file size
@@ -42,7 +48,7 @@ struct RecordingView: View {
                 }
 
                 // Control buttons
-                if viewModel.isRecording {
+                if viewModel.isRecording || viewModel.isInitializingRecording {
                     HStack(spacing: 40) {
                         // Pause/Resume button
                         Button(action: { viewModel.togglePause() }) {
@@ -53,6 +59,7 @@ struct RecordingView: View {
                             .font(.headline)
                         }
                         .buttonStyle(.bordered)
+                        .disabled(viewModel.isInitializingRecording)
 
                         // Cancel button
                         Button(role: .destructive, action: { viewModel.cancelRecording() }) {
@@ -60,13 +67,14 @@ struct RecordingView: View {
                                 .font(.headline)
                         }
                         .buttonStyle(.bordered)
+                        .disabled(viewModel.isInitializingRecording)
                     }
                 }
 
                 Spacer()
 
                 // Metadata input (when recording)
-                if viewModel.isRecording {
+                if viewModel.isRecording || viewModel.isInitializingRecording {
                     VStack(alignment: .leading, spacing: 16) {
                         Divider()
 

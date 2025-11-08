@@ -57,6 +57,14 @@ class RecordingsListViewModel: ObservableObject {
             name: NSNotification.Name("RecordingUploadStatusChanged"),
             object: nil
         )
+
+        // Refresh when recording status changes (from iCloud metadata updates)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleStatusUpdate),
+            name: NSNotification.Name("RecordingStatusChanged"),
+            object: nil
+        )
     }
 
     @objc private func handleTranscriptionUpdate(_ notification: Notification) {
@@ -67,6 +75,12 @@ class RecordingsListViewModel: ObservableObject {
     @objc private func handleUploadStatusUpdate(_ notification: Notification) {
         // Reload recordings to reflect updated upload status
         loadRecordings()
+    }
+
+    @objc private func handleStatusUpdate(_ notification: Notification) {
+        // Reload recordings to reflect updated status from iCloud
+        loadRecordings()
+        print("🔄 Reloading recordings due to status change from iCloud")
     }
 
     deinit {
