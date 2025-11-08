@@ -142,7 +142,11 @@ class AudioRecordingService: NSObject, ObservableObject {
             audioLevels = []
 
             startMonitoring()
-            startLiveActivity(fileName: fileName)
+
+            // Start Live Activity
+            Task { @MainActor in
+                self.startLiveActivity(fileName: fileName)
+            }
 
             print("✅ Recording started: \(fileName)")
 
@@ -284,9 +288,19 @@ class AudioRecordingService: NSObject, ObservableObject {
     // MARK: - Live Activity
 
     private func startLiveActivity(fileName: String) {
-        guard #available(iOS 16.1, *) else { return }
-        guard ActivityAuthorizationInfo().areActivitiesEnabled else {
-            print("⚠️ Live Activities not enabled")
+        guard #available(iOS 16.1, *) else {
+            print("⚠️ Live Activities require iOS 16.1+")
+            return
+        }
+
+        let authInfo = ActivityAuthorizationInfo()
+        print("📊 Live Activities status:")
+        print("   - Enabled: \(authInfo.areActivitiesEnabled)")
+        print("   - Frequent pushes enabled: \(authInfo.frequentPushesEnabled)")
+
+        guard authInfo.areActivitiesEnabled else {
+            print("⚠️ Live Activities not enabled by user")
+            print("   User needs to enable in Settings > [App Name] > Live Activities")
             return
         }
 
@@ -303,9 +317,15 @@ class AudioRecordingService: NSObject, ObservableObject {
                 content: .init(state: contentState, staleDate: nil),
                 pushType: nil
             )
-            print("✅ Live Activity started")
+            print("✅ Live Activity started successfully!")
+            print("   Activity ID: \(currentActivity?.id ?? "unknown")")
+            print("   Activity state: \(String(describing: currentActivity?.activityState))")
         } catch {
             print("❌ Failed to start Live Activity: \(error)")
+            print("   Error details: \(error.localizedDescription)")
+            if let activityError = error as? ActivityAuthorizationError {
+                print("   Authorization error: \(activityError)")
+            }
         }
     }
 
