@@ -19,34 +19,34 @@ struct SettingsView: View {
             Form {
                 // Recording Settings
                 Section {
-                    Picker("Lydkvalitet", selection: $settings.audioQuality) {
+                    Picker(NSLocalizedString("Lydkvalitet", comment: ""), selection: $settings.audioQuality) {
                         ForEach(AudioQuality.allCases) { quality in
                             Text(quality.displayName).tag(quality)
                         }
                     }
 
-                    Toggle("Pause ved opkald", isOn: $settings.pauseOnCall)
+                    Toggle(NSLocalizedString("Pause ved opkald", comment: ""), isOn: $settings.pauseOnCall)
 
-                    Toggle("Fortsæt i baggrund", isOn: $settings.backgroundRecording)
+                    Toggle(NSLocalizedString("Fortsæt i baggrund", comment: ""), isOn: $settings.backgroundRecording)
                 } header: {
-                    Label("Optagelse", systemImage: "mic")
+                    Label(NSLocalizedString("Optagelse", comment: ""), systemImage: "mic")
                 } footer: {
-                    Text("Højere kvalitet giver bedre transskriptioner men større filer")
+                    Text(NSLocalizedString("Højere kvalitet giver bedre transskriptioner men større filer", comment: ""))
                 }
 
                 // iCloud Settings
                 Section {
-                    Toggle("Auto-upload til iCloud", isOn: $settings.iCloudAutoUpload)
+                    Toggle(NSLocalizedString("Auto-upload til iCloud", comment: ""), isOn: $settings.iCloudAutoUpload)
 
-                    Toggle("Auto-download transskriptioner", isOn: $settings.iCloudAutoDownloadTranscriptions)
+                    Toggle(NSLocalizedString("Auto-download transskriptioner", comment: ""), isOn: $settings.iCloudAutoDownloadTranscriptions)
 
                     if settings.iCloudAutoUpload {
                         HStack {
-                            Text("iCloud Status")
+                            Text(NSLocalizedString("iCloud Status", comment: ""))
                             Spacer()
                             Image(systemName: "icloud")
                                 .foregroundColor(.blue)
-                            Text("Tilgængelig")
+                            Text(NSLocalizedString("Tilgængelig", comment: ""))
                                 .foregroundColor(.secondary)
                         }
 
@@ -54,7 +54,7 @@ struct SettingsView: View {
 
                         // Mac heartbeat status
                         HStack {
-                            Text("Mac Status")
+                            Text(NSLocalizedString("Mac Status", comment: ""))
                             Spacer()
                             if let heartbeat = lastMacHeartbeat {
                                 VStack(alignment: .trailing, spacing: 4) {
@@ -63,7 +63,7 @@ struct SettingsView: View {
                                             Circle()
                                                 .fill(Color.green)
                                                 .frame(width: 8, height: 8)
-                                            Text("Online")
+                                            Text(NSLocalizedString("Online", comment: ""))
                                                 .foregroundColor(.green)
                                         }
                                     } else {
@@ -71,7 +71,7 @@ struct SettingsView: View {
                                             Circle()
                                                 .fill(Color.orange)
                                                 .frame(width: 8, height: 8)
-                                            Text("Offline")
+                                            Text(NSLocalizedString("Offline", comment: ""))
                                                 .foregroundColor(.orange)
                                         }
                                     }
@@ -80,7 +80,7 @@ struct SettingsView: View {
                                         .foregroundColor(.secondary)
                                 }
                             } else {
-                                Text("Ukendt")
+                                Text(NSLocalizedString("Ukendt", comment: ""))
                                     .foregroundColor(.secondary)
                             }
                             Button(action: refreshHeartbeat) {
@@ -91,9 +91,9 @@ struct SettingsView: View {
                         }
                     }
                 } header: {
-                    Label("iCloud Sync", systemImage: "icloud")
+                    Label(NSLocalizedString("iCloud Sync", comment: ""), systemImage: "icloud")
                 } footer: {
-                    Text("Optagelser uploades automatisk til iCloud for transskribering på din Mac")
+                    Text(NSLocalizedString("Optagelser uploades automatisk til iCloud for transskribering på din Mac", comment: ""))
                 }
                 .onAppear {
                     refreshHeartbeat()
@@ -101,30 +101,30 @@ struct SettingsView: View {
 
                 // Transcription Settings
                 Section {
-                    Picker("Sprog", selection: $settings.selectedLanguage) {
-                        Text("Dansk").tag("da")
-                        Text("Engelsk").tag("en")
-                        Text("Svensk").tag("sv")
-                        Text("Norsk").tag("no")
-                        Text("Tysk").tag("de")
-                        Text("Fransk").tag("fr")
-                        Text("Spansk").tag("es")
+                    Picker(NSLocalizedString("Sprog", comment: ""), selection: $settings.selectedLanguage) {
+                        Text(NSLocalizedString("Dansk", comment: "")).tag("da")
+                        Text(NSLocalizedString("Engelsk", comment: "")).tag("en")
+                        Text(NSLocalizedString("Svensk", comment: "")).tag("sv")
+                        Text(NSLocalizedString("Norsk", comment: "")).tag("no")
+                        Text(NSLocalizedString("Tysk", comment: "")).tag("de")
+                        Text(NSLocalizedString("Fransk", comment: "")).tag("fr")
+                        Text(NSLocalizedString("Spansk", comment: "")).tag("es")
                     }
 
-                    Toggle("Vis notifikationer", isOn: $settings.showNotifications)
+                    Toggle(NSLocalizedString("Vis notifikationer", comment: ""), isOn: $settings.showNotifications)
 
-                    Toggle("Slet lyd efter transskribering", isOn: $settings.deleteAudioAfterTranscription)
+                    Toggle(NSLocalizedString("Slet lyd efter transskribering", comment: ""), isOn: $settings.deleteAudioAfterTranscription)
                 } header: {
-                    Label("Transskribering", systemImage: "doc.text")
+                    Label(NSLocalizedString("Transskribering", comment: ""), systemImage: "doc.text")
                 } footer: {
-                    Text("Transskribering sker på din Mac via SkrivDetNed macOS appen")
+                    Text(String(format: NSLocalizedString("Transskribering sker på din Mac via %@ macOS appen", comment: ""), NSLocalizedString("SkrivDetNed", comment: "")))
                 }
 
                 // LLM Prompts Settings
                 Section {
                     NavigationLink(destination: PromptsEditorView()) {
                         HStack {
-                            Text("Rediger prompts")
+                            Text(NSLocalizedString("Rediger prompts", comment: ""))
                             Spacer()
                             Text("\(settings.transcriptionPrompts.count)")
                                 .foregroundColor(.secondary)
@@ -132,73 +132,73 @@ struct SettingsView: View {
                         }
                     }
                 } header: {
-                    Label("LLM Prompts", systemImage: "brain")
+                    Label(NSLocalizedString("LLM Prompts", comment: ""), systemImage: "brain")
                 } footer: {
-                    Text("Forudindstillede prompts til at bearbejde transskriptioner med LLM'er")
+                    Text(NSLocalizedString("Forudindstillede prompts til at bearbejde transskriptioner med LLM'er", comment: ""))
                 }
 
                 // Privacy Settings
                 Section {
-                    Toggle("Tilføj lokation til optagelser", isOn: $settings.addLocationToRecordings)
+                    Toggle(NSLocalizedString("Tilføj lokation til optagelser", comment: ""), isOn: $settings.addLocationToRecordings)
                 } header: {
-                    Label("Privatliv", systemImage: "hand.raised")
+                    Label(NSLocalizedString("Privatliv", comment: ""), systemImage: "hand.raised")
                 } footer: {
-                    Text("Lokation kan hjælpe med at organisere optagelser")
+                    Text(NSLocalizedString("Lokation kan hjælpe med at organisere optagelser", comment: ""))
                 }
 
                 // Storage Info
                 Section {
                     HStack {
-                        Text("Optagelser")
+                        Text(NSLocalizedString("Optagelser", comment: ""))
                         Spacer()
                         Text(storageUsed)
                             .foregroundColor(.secondary)
                     }
 
-                    Button("Ryd cache") {
+                    Button(NSLocalizedString("Ryd cache", comment: "")) {
                         showingClearCacheAlert = true
                     }
                     .foregroundColor(.red)
                 } header: {
-                    Label("Lagerplads", systemImage: "internaldrive")
+                    Label(NSLocalizedString("Lagerplads", comment: ""), systemImage: "internaldrive")
                 }
 
                 // About Section
                 Section {
                     HStack {
-                        Text("Version")
+                        Text(NSLocalizedString("Version", comment: ""))
                         Spacer()
                         Text("1.0.0")
                             .foregroundColor(.secondary)
                     }
 
-                    Button("Om SkrivDetNed") {
+                    Button(String(format: NSLocalizedString("Om %@", comment: ""), NSLocalizedString("SkrivDetNed", comment: ""))) {
                         showingAbout = true
                     }
 
-                    Link("Support", destination: URL(string: "https://github.com")!)
+                    Link(NSLocalizedString("Support", comment: ""), destination: URL(string: "https://github.com")!)
 
-                    Link("Privatlivspolitik", destination: URL(string: "https://github.com")!)
+                    Link(NSLocalizedString("Privatlivspolitik", comment: ""), destination: URL(string: "https://github.com")!)
                 } header: {
-                    Label("Om", systemImage: "info.circle")
+                    Label(NSLocalizedString("Om", comment: ""), systemImage: "info.circle")
                 }
             }
-            .navigationTitle("Indstillinger")
+            .navigationTitle(NSLocalizedString("Indstillinger", comment: ""))
             .sheet(isPresented: $showingAbout) {
                 AboutView()
             }
-            .alert("Ryd cache", isPresented: $showingClearCacheAlert) {
-                Button("Annuller", role: .cancel) {}
-                Button("Ryd cache", role: .destructive) {
+            .alert(NSLocalizedString("Ryd cache", comment: ""), isPresented: $showingClearCacheAlert) {
+                Button(NSLocalizedString("Annuller", comment: ""), role: .cancel) {}
+                Button(NSLocalizedString("Ryd cache", comment: ""), role: .destructive) {
                     clearCache()
                 }
             } message: {
-                Text("Dette vil slette alle lokale optagelser og transskriptioner. Filer i iCloud påvirkes ikke.\n\nDenne handling kan ikke fortrydes.")
+                Text(NSLocalizedString("Dette vil slette alle lokale optagelser og transskriptioner. Filer i iCloud påvirkes ikke.\n\nDenne handling kan ikke fortrydes.", comment: ""))
             }
-            .alert("Cache ryddet", isPresented: $cacheCleared) {
-                Button("OK", role: .cancel) {}
+            .alert(NSLocalizedString("Cache ryddet", comment: ""), isPresented: $cacheCleared) {
+                Button(NSLocalizedString("OK", comment: ""), role: .cancel) {}
             } message: {
-                Text("Alle lokale filer er blevet slettet.")
+                Text(NSLocalizedString("Alle lokale filer er blevet slettet.", comment: ""))
             }
         }
     }
@@ -300,16 +300,24 @@ struct SettingsView: View {
         let interval = Date().timeIntervalSince(date)
 
         if interval < 60 {
-            return "Sidst set: nu"
+            return NSLocalizedString("Sidst set: nu", comment: "")
         } else if interval < 3600 {
             let minutes = Int(interval / 60)
-            return "Sidst set: \(minutes) min siden"
+            return String(format: NSLocalizedString("Sidst set: %lld min siden", comment: ""), minutes)
         } else if interval < 86400 {
             let hours = Int(interval / 3600)
-            return "Sidst set: \(hours) time\(hours == 1 ? "" : "r") siden"
+            if hours == 1 {
+                return String(format: NSLocalizedString("Sidst set: %lld time siden", comment: ""), hours)
+            } else {
+                return String(format: NSLocalizedString("Sidst set: %lld timer siden", comment: ""), hours)
+            }
         } else {
             let days = Int(interval / 86400)
-            return "Sidst set: \(days) dag\(days == 1 ? "" : "e") siden"
+            if days == 1 {
+                return String(format: NSLocalizedString("Sidst set: %lld dag siden", comment: ""), days)
+            } else {
+                return String(format: NSLocalizedString("Sidst set: %lld dage siden", comment: ""), days)
+            }
         }
     }
 }
@@ -325,11 +333,11 @@ struct AboutView: View {
                         .font(.system(size: 100))
                         .foregroundColor(.blue)
 
-                    Text("SkrivDetNed")
+                    Text(NSLocalizedString("SkrivDetNed", comment: ""))
                         .font(.title)
                         .fontWeight(.bold)
 
-                    Text("Version 1.0.0")
+                    Text(NSLocalizedString("Version 1.0.0", comment: ""))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
 
@@ -337,32 +345,32 @@ struct AboutView: View {
                         .padding(.vertical)
 
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("Om appen")
+                        Text(NSLocalizedString("Om appen", comment: ""))
                             .font(.headline)
 
-                        Text("SkrivDetNed gør det nemt at optage lyd på din iPhone og automatisk få det transskriberet til tekst via din Mac.")
+                        Text(String(format: NSLocalizedString("%@ gør det nemt at optage lyd på din iPhone og automatisk få det transskriberet til tekst via din Mac.", comment: ""), NSLocalizedString("SkrivDetNed", comment: "")))
                             .font(.body)
 
-                        Text("Funktioner")
+                        Text(NSLocalizedString("Funktioner", comment: ""))
                             .font(.headline)
                             .padding(.top)
 
                         VStack(alignment: .leading, spacing: 12) {
-                            FeatureRow(icon: "mic.circle", title: "Høj kvalitet optagelse", description: "Optag lyd i høj kvalitet")
-                            FeatureRow(icon: "icloud", title: "iCloud Sync", description: "Automatisk synkronisering")
-                            FeatureRow(icon: "doc.text", title: "Transskribering", description: "Præcis tale-til-tekst")
-                            FeatureRow(icon: "magnifyingglass", title: "Søgning", description: "Find hurtigt dine optagelser")
+                            FeatureRow(icon: "mic.circle", title: NSLocalizedString("Høj kvalitet optagelse", comment: ""), description: NSLocalizedString("Optag lyd i høj kvalitet", comment: ""))
+                            FeatureRow(icon: "icloud", title: NSLocalizedString("iCloud Sync", comment: ""), description: NSLocalizedString("Automatisk synkronisering", comment: ""))
+                            FeatureRow(icon: "doc.text", title: NSLocalizedString("Transskribering", comment: ""), description: NSLocalizedString("Præcis tale-til-tekst", comment: ""))
+                            FeatureRow(icon: "magnifyingglass", title: NSLocalizedString("Søgning", comment: ""), description: NSLocalizedString("Find hurtigt dine optagelser", comment: ""))
                         }
                     }
                     .padding(.horizontal)
                 }
                 .padding()
             }
-            .navigationTitle("Om")
+            .navigationTitle(NSLocalizedString("Om", comment: ""))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Luk") {
+                    Button(NSLocalizedString("Luk", comment: "")) {
                         dismiss()
                     }
                 }

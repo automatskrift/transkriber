@@ -15,35 +15,35 @@ struct MainTabView: View {
             // Tab 1: Recording
             RecordingView()
                 .tabItem {
-                    Label("Optag", systemImage: "mic.circle.fill")
+                    Label(NSLocalizedString("Optag", comment: ""), systemImage: "mic.circle.fill")
                 }
                 .tag(0)
 
             // Tab 2: Recordings List
             RecordingsListView()
                 .tabItem {
-                    Label("Optagelser", systemImage: "waveform")
+                    Label(NSLocalizedString("Optagelser", comment: ""), systemImage: "waveform")
                 }
                 .tag(1)
 
             // Tab 3: Search
             SearchView()
                 .tabItem {
-                    Label("Søg", systemImage: "magnifyingglass")
+                    Label(NSLocalizedString("Søg", comment: ""), systemImage: "magnifyingglass")
                 }
                 .tag(2)
 
             // Tab 4: Transcriptions
             TranscriptionsView()
                 .tabItem {
-                    Label("Transkrip.", systemImage: "doc.text")
+                    Label(NSLocalizedString("Transkrip.", comment: ""), systemImage: "doc.text")
                 }
                 .tag(3)
 
             // Tab 5: Settings
             SettingsView()
                 .tabItem {
-                    Label("Indstillinger", systemImage: "gearshape")
+                    Label(NSLocalizedString("Indstillinger", comment: ""), systemImage: "gearshape")
                 }
                 .tag(4)
         }

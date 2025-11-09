@@ -23,8 +23,8 @@ struct SearchView: View {
                     searchResultsList
                 }
             }
-            .navigationTitle("Søg")
-            .searchable(text: $searchText, prompt: "Søg i optagelser og transskriptioner")
+            .navigationTitle(NSLocalizedString("Søg", comment: ""))
+            .searchable(text: $searchText, prompt: NSLocalizedString("Søg i optagelser og transskriptioner", comment: ""))
             .onChange(of: searchText) { _, newValue in
                 performSearch(query: newValue)
             }
@@ -37,11 +37,11 @@ struct SearchView: View {
                 .font(.system(size: 80))
                 .foregroundColor(.secondary)
 
-            Text("Søg i dine optagelser")
+            Text(NSLocalizedString("Søg i dine optagelser", comment: ""))
                 .font(.title2)
                 .fontWeight(.semibold)
 
-            Text("Find optagelser baseret på titel, tags, noter eller transskriptionstekst")
+            Text(NSLocalizedString("Find optagelser baseret på titel, tags, noter eller transskriptionstekst", comment: ""))
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -56,11 +56,11 @@ struct SearchView: View {
                 .font(.system(size: 80))
                 .foregroundColor(.secondary)
 
-            Text("Ingen resultater")
+            Text(NSLocalizedString("Ingen resultater", comment: ""))
                 .font(.title2)
                 .fontWeight(.semibold)
 
-            Text("Prøv at søge efter noget andet")
+            Text(NSLocalizedString("Prøv at søge efter noget andet", comment: ""))
                 .font(.body)
                 .foregroundColor(.secondary)
         }

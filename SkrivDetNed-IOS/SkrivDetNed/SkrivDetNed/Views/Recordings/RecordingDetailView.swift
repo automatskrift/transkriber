@@ -46,15 +46,15 @@ struct RecordingDetailView: View {
                 } else {
                     // Debug: Show why audio player is not available
                     VStack(alignment: .leading, spacing: 8) {
-                        Label("Audio ikke tilgængelig", systemImage: "exclamationmark.triangle")
+                        Label(NSLocalizedString("Audio ikke tilgængelig", comment: ""), systemImage: "exclamationmark.triangle")
                             .font(.headline)
                             .foregroundColor(.orange)
 
-                        Text("Lydfil: \(recording.localURL.lastPathComponent)")
+                        Text(String(format: NSLocalizedString("Lydfil: %@", comment: ""), recording.localURL.lastPathComponent))
                             .font(.caption)
                             .foregroundColor(.secondary)
 
-                        Text("Sti: \(recording.localURL.path)")
+                        Text(String(format: NSLocalizedString("Sti: %@", comment: ""), recording.localURL.path))
                             .font(.caption2)
                             .foregroundColor(.secondary)
                             .lineLimit(nil)
@@ -96,7 +96,7 @@ struct RecordingDetailView: View {
             }
             .padding()
         }
-        .navigationTitle("Detaljer")
+        .navigationTitle(NSLocalizedString("Detaljer", comment: ""))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -169,7 +169,7 @@ struct RecordingDetailView: View {
 
     private var metadataSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Label("Metadata", systemImage: "info.circle")
+            Label(NSLocalizedString("Metadata", comment: ""), systemImage: "info.circle")
                 .font(.headline)
                 .onAppear {
                     print("📋 Recording Metadata:")
@@ -182,7 +182,7 @@ struct RecordingDetailView: View {
             VStack(alignment: .leading, spacing: 12) {
                 // Title
                 HStack(alignment: .top) {
-                    Text("Titel:")
+                    Text(NSLocalizedString("Titel:", comment: ""))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .frame(width: 80, alignment: .leading)
@@ -192,13 +192,13 @@ struct RecordingDetailView: View {
 
                 // Tags
                 HStack(alignment: .top) {
-                    Text("Tags:")
+                    Text(NSLocalizedString("Tags:", comment: ""))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .frame(width: 80, alignment: .leading)
 
                     if recording.tags.isEmpty {
-                        Text("Ingen")
+                        Text(NSLocalizedString("Ingen", comment: ""))
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     } else {
@@ -218,7 +218,7 @@ struct RecordingDetailView: View {
 
                 // Notes
                 HStack(alignment: .top) {
-                    Text("Noter:")
+                    Text(NSLocalizedString("Noter:", comment: ""))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .frame(width: 80, alignment: .leading)
@@ -227,7 +227,7 @@ struct RecordingDetailView: View {
                         Text(notes)
                             .font(.subheadline)
                     } else {
-                        Text("Ingen")
+                        Text(NSLocalizedString("Ingen", comment: ""))
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
@@ -235,7 +235,7 @@ struct RecordingDetailView: View {
 
                 // LLM Prompt
                 HStack(alignment: .top) {
-                    Text("LLM Prompt:")
+                    Text(NSLocalizedString("LLM Prompt:", comment: ""))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .frame(width: 80, alignment: .leading)
@@ -246,7 +246,7 @@ struct RecordingDetailView: View {
                             .foregroundColor(.secondary)
                             .lineLimit(3)
                     } else {
-                        Text("Ingen")
+                        Text(NSLocalizedString("Ingen", comment: ""))
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
@@ -260,7 +260,7 @@ struct RecordingDetailView: View {
 
     private var tagsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("Tags", systemImage: "tag")
+            Label(NSLocalizedString("Tags", comment: ""), systemImage: "tag")
                 .font(.headline)
 
             FlowLayout(spacing: 8) {
@@ -282,7 +282,7 @@ struct RecordingDetailView: View {
 
     private func notesSection(_ notes: String) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("Noter", systemImage: "note.text")
+            Label(NSLocalizedString("Noter", comment: ""), systemImage: "note.text")
                 .font(.headline)
 
             Text(notes)
@@ -295,13 +295,13 @@ struct RecordingDetailView: View {
 
     private func marksSection(_ marks: [Double]) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("Marks (\(marks.count))", systemImage: "flag.fill")
+            Label(String(format: NSLocalizedString("Marks (%lld)", comment: ""), marks.count), systemImage: "flag.fill")
                 .font(.headline)
 
             VStack(alignment: .leading, spacing: 8) {
                 ForEach(Array(marks.enumerated()), id: \.offset) { index, timestamp in
                     HStack {
-                        Text("Mark \(index + 1)")
+                        Text(String(format: NSLocalizedString("Mark %lld", comment: ""), index + 1))
                             .font(.subheadline)
                             .foregroundColor(.secondary)
 
@@ -339,7 +339,7 @@ struct RecordingDetailView: View {
 
     private func locationSection(_ locationName: String) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("Lokation", systemImage: "location")
+            Label(NSLocalizedString("Lokation", comment: ""), systemImage: "location")
                 .font(.headline)
 
             HStack {
@@ -356,7 +356,7 @@ struct RecordingDetailView: View {
                             UIApplication.shared.open(url)
                         }
                     } label: {
-                        Label("Åbn i Kort", systemImage: "map")
+                        Label(NSLocalizedString("Åbn i Kort", comment: ""), systemImage: "map")
                             .font(.caption)
                     }
                     .buttonStyle(.bordered)
@@ -370,7 +370,7 @@ struct RecordingDetailView: View {
 
     private var transcriptionSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("Transskription", systemImage: "doc.text")
+            Label(NSLocalizedString("Transskription", comment: ""), systemImage: "doc.text")
                 .font(.headline)
 
             if let transcription = recording.transcriptionText {
@@ -387,7 +387,7 @@ struct RecordingDetailView: View {
 
                 HStack {
                     // Word count
-                    Text("\(transcription.split(separator: " ").count) ord")
+                    Text(String(format: NSLocalizedString("%lld ord", comment: ""), transcription.split(separator: " ").count))
                         .font(.caption)
                         .foregroundColor(.secondary)
 
@@ -396,7 +396,7 @@ struct RecordingDetailView: View {
                     Button {
                         UIPasteboard.general.string = transcription
                     } label: {
-                        Label("Kopier tekst", systemImage: "doc.on.doc")
+                        Label(NSLocalizedString("Kopier tekst", comment: ""), systemImage: "doc.on.doc")
                     }
                     .buttonStyle(.bordered)
                 }
@@ -404,14 +404,14 @@ struct RecordingDetailView: View {
             } else if recording.cloudStatus == .transcribing {
                 HStack {
                     ProgressView()
-                    Text("Transkriberes...")
+                    Text(NSLocalizedString("Transkriberes...", comment: ""))
                         .foregroundColor(.secondary)
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
 
             } else {
-                Text("Ingen transskription endnu")
+                Text(NSLocalizedString("Ingen transskription endnu", comment: ""))
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity)
                     .padding()
@@ -425,7 +425,7 @@ struct RecordingDetailView: View {
     private var statusSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Label("Status", systemImage: "info.circle")
+                Label(NSLocalizedString("Status", comment: ""), systemImage: "info.circle")
                     .font(.headline)
                 Spacer()
                 Button(action: { showingMetadataJSON = true }) {
@@ -454,7 +454,7 @@ struct RecordingDetailView: View {
             // Show error message if failed
             if recording.cloudStatus == .failed, let errorMessage = recording.errorMessage {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Fejlbesked:")
+                    Text(NSLocalizedString("Fejlbesked:", comment: ""))
                         .font(.caption)
                         .fontWeight(.semibold)
                         .foregroundColor(.secondary)
@@ -680,7 +680,7 @@ struct MetadataJSONView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("Metadata JSON")
+                    Text(NSLocalizedString("Metadata JSON", comment: ""))
                         .font(.headline)
 
                     Text(metadataJSON)
@@ -692,17 +692,17 @@ struct MetadataJSONView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Metadata")
+            .navigationTitle(NSLocalizedString("Metadata", comment: ""))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Luk") {
+                    Button(NSLocalizedString("Luk", comment: "")) {
                         dismiss()
                     }
                 }
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: copyToClipboard) {
-                        Label("Kopier", systemImage: "doc.on.doc")
+                        Label(NSLocalizedString("Kopier", comment: ""), systemImage: "doc.on.doc")
                     }
                 }
             }

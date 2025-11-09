@@ -61,8 +61,8 @@ class NotificationService: ObservableObject {
         }
 
         let content = UNMutableNotificationContent()
-        content.title = "Transskription klar"
-        content.body = "'\(title)' er færdig transskriberet"
+        content.title = NSLocalizedString("Transskription klar", comment: "")
+        content.body = String(format: NSLocalizedString("'%@' er færdig transskriberet", comment: ""), title)
         content.sound = .default
         content.badge = 1
         content.userInfo = ["recordingId": recordingId.uuidString]
@@ -89,8 +89,8 @@ class NotificationService: ObservableObject {
         guard isAuthorized else { return }
 
         let content = UNMutableNotificationContent()
-        content.title = "Upload fuldført"
-        content.body = "'\(title)' er uploadet til iCloud"
+        content.title = NSLocalizedString("Upload fuldført", comment: "")
+        content.body = String(format: NSLocalizedString("'%@' er uploadet til iCloud", comment: ""), title)
         content.sound = .default
 
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
@@ -113,8 +113,8 @@ class NotificationService: ObservableObject {
         guard isAuthorized else { return }
 
         let content = UNMutableNotificationContent()
-        content.title = "Upload fejlede"
-        content.body = "'\(title)' kunne ikke uploades: \(error)"
+        content.title = NSLocalizedString("Upload fejlede", comment: "")
+        content.body = String(format: NSLocalizedString("'%@' kunne ikke uploades: %@", comment: ""), title, error)
         content.sound = .default
 
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)

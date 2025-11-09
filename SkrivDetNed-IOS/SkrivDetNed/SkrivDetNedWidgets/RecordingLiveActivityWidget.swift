@@ -28,7 +28,7 @@ struct RecordingLiveActivityWidget: Widget {
                             .font(.title2)
 
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Optager")
+                            Text(NSLocalizedString("Optager", comment: ""))
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
                             Text(context.state.fileName)
@@ -46,7 +46,7 @@ struct RecordingLiveActivityWidget: Widget {
                                 .font(.title3)
                                 .fontWeight(.bold)
                                 .monospacedDigit()
-                            Text("Pause")
+                            Text(NSLocalizedString("Pause", comment: ""))
                                 .font(.caption2)
                                 .foregroundColor(.orange)
                         } else {
@@ -133,7 +133,7 @@ struct RecordingLiveActivityView: View {
 
             // Info
             VStack(alignment: .leading, spacing: 4) {
-                Text(context.state.isPaused ? "Optagelse sat på pause" : "Optager...")
+                Text(context.state.isPaused ? NSLocalizedString("Optagelse sat på pause", comment: "") : NSLocalizedString("Optager...", comment: ""))
                     .font(.headline)
                     .foregroundColor(.primary)
 
@@ -180,7 +180,7 @@ struct RecordingLiveActivityView: View {
     private func formatTime(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.timeStyle = .short
-        return "Startede \(formatter.string(from: date))"
+        return String(format: NSLocalizedString("Startede %@", comment: ""), formatter.string(from: date))
     }
 }
 
@@ -188,21 +188,21 @@ struct RecordingLiveActivityView: View {
 #Preview("Dynamic Island Compact", as: .dynamicIsland(.compact), using: RecordingActivityAttributes(startTime: Date().addingTimeInterval(-125))) {
     RecordingLiveActivityWidget()
 } contentStates: {
-    RecordingActivityAttributes.ContentState(isPaused: false, fileName: "Møde.m4a", pausedAt: nil, totalPausedDuration: 0)
-    RecordingActivityAttributes.ContentState(isPaused: true, fileName: "Lang optagelse.m4a", pausedAt: Date(), totalPausedDuration: 0)
+    RecordingActivityAttributes.ContentState(isPaused: false, fileName: NSLocalizedString("Møde.m4a", comment: ""), pausedAt: nil, totalPausedDuration: 0)
+    RecordingActivityAttributes.ContentState(isPaused: true, fileName: NSLocalizedString("Lang optagelse.m4a", comment: ""), pausedAt: Date(), totalPausedDuration: 0)
 }
 
 @available(iOS 16.1, *)
 #Preview("Dynamic Island Expanded", as: .dynamicIsland(.expanded), using: RecordingActivityAttributes(startTime: Date().addingTimeInterval(-125))) {
     RecordingLiveActivityWidget()
 } contentStates: {
-    RecordingActivityAttributes.ContentState(isPaused: false, fileName: "Møde.m4a", pausedAt: nil, totalPausedDuration: 0)
+    RecordingActivityAttributes.ContentState(isPaused: false, fileName: NSLocalizedString("Møde.m4a", comment: ""), pausedAt: nil, totalPausedDuration: 0)
 }
 
 @available(iOS 16.1, *)
 #Preview("Lock Screen", as: .content, using: RecordingActivityAttributes(startTime: Date().addingTimeInterval(-125))) {
     RecordingLiveActivityWidget()
 } contentStates: {
-    RecordingActivityAttributes.ContentState(isPaused: false, fileName: "Møde.m4a", pausedAt: nil, totalPausedDuration: 0)
-    RecordingActivityAttributes.ContentState(isPaused: true, fileName: "Lang optagelse.m4a", pausedAt: Date(), totalPausedDuration: 0)
+    RecordingActivityAttributes.ContentState(isPaused: false, fileName: NSLocalizedString("Møde.m4a", comment: ""), pausedAt: nil, totalPausedDuration: 0)
+    RecordingActivityAttributes.ContentState(isPaused: true, fileName: NSLocalizedString("Lang optagelse.m4a", comment: ""), pausedAt: Date(), totalPausedDuration: 0)
 }

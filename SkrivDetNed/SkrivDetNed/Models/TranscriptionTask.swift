@@ -48,13 +48,13 @@ struct TranscriptionTask: Identifiable {
     var statusDescription: String {
         switch status {
         case .pending:
-            return "Venter..."
+            return NSLocalizedString("Venter...", comment: "")
         case .processing(let progress):
-            return "Transkriberer... \(Int(progress * 100))%"
+            return String(format: NSLocalizedString("Transkriberer... %lld%%", comment: ""), Int(progress * 100))
         case .completed:
-            return "Færdig"
+            return NSLocalizedString("Færdig", comment: "")
         case .failed(let error):
-            return "Fejl: \(error)"
+            return String(format: NSLocalizedString("Fejl: %@", comment: ""), error)
         }
     }
 }

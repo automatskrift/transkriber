@@ -468,11 +468,11 @@ enum RecordingError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .permissionDenied:
-            return "Mikrofon adgang nægtet. Gå til Indstillinger for at give tilladelse."
+            return NSLocalizedString("Mikrofon adgang nægtet. Gå til Indstillinger for at give tilladelse.", comment: "")
         case .failedToStart:
-            return "Kunne ikke starte optagelse. Prøv igen."
+            return NSLocalizedString("Kunne ikke starte optagelse. Prøv igen.", comment: "")
         case .noActiveRecording:
-            return "Ingen aktiv optagelse."
+            return NSLocalizedString("Ingen aktiv optagelse.", comment: "")
         }
     }
 }

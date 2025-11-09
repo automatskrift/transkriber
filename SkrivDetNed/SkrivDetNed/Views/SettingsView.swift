@@ -17,9 +17,9 @@ struct SettingsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 // Models Section
-                GroupBox(label: Label("WhisperKit Modeller", systemImage: "cpu")) {
+                GroupBox(label: Label(NSLocalizedString("WhisperKit Modeller", comment: ""), systemImage: "cpu")) {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Modeller downloades automatisk første gang de bruges")
+                        Text(NSLocalizedString("Modeller downloades automatisk første gang de bruges", comment: ""))
                             .font(.caption)
                             .foregroundColor(.secondary)
 
@@ -42,7 +42,7 @@ struct SettingsView: View {
                                         .foregroundColor(.green)
                                 }
 
-                                Button(settings.selectedModel == modelType.rawValue ? "Valgt" : "Vælg") {
+                                Button(settings.selectedModel == modelType.rawValue ? NSLocalizedString("Valgt", comment: "") : NSLocalizedString("Vælg", comment: "")) {
                                     settings.selectedModel = modelType.rawValue
                                 }
                                 .buttonStyle(.bordered)
@@ -57,14 +57,14 @@ struct SettingsView: View {
                 Divider()
 
                 // iCloud Sync
-                GroupBox(label: Label("iCloud Sync", systemImage: "icloud")) {
+                GroupBox(label: Label(NSLocalizedString("iCloud Sync", comment: ""), systemImage: "icloud")) {
                     VStack(alignment: .leading, spacing: 16) {
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
-                                Toggle("Synkronisér med iOS app via iCloud", isOn: $settings.iCloudSyncEnabled)
+                                Toggle(NSLocalizedString("Synkronisér med iOS app via iCloud", comment: ""), isOn: $settings.iCloudSyncEnabled)
                                     .font(.headline)
 
-                                Text("Overvåger automatisk iCloud mappe for optagelser fra iOS appen")
+                                Text(NSLocalizedString("Overvåger automatisk iCloud mappe for optagelser fra iOS appen", comment: ""))
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
@@ -72,11 +72,11 @@ struct SettingsView: View {
                             Spacer()
 
                             if iCloudSyncService.shared.isAvailable {
-                                Label("iCloud tilgængelig", systemImage: "checkmark.circle.fill")
+                                Label(NSLocalizedString("iCloud tilgængelig", comment: ""), systemImage: "checkmark.circle.fill")
                                     .font(.caption)
                                     .foregroundColor(.green)
                             } else {
-                                Label("iCloud ikke tilgængelig", systemImage: "xmark.circle.fill")
+                                Label(NSLocalizedString("iCloud ikke tilgængelig", comment: ""), systemImage: "xmark.circle.fill")
                                     .font(.caption)
                                     .foregroundColor(.red)
                             }
@@ -84,15 +84,15 @@ struct SettingsView: View {
 
                         Divider()
 
-                        Toggle("Overvåg også lokal mappe", isOn: $settings.monitorLocalFolderEnabled)
-                            .help("Overvåg både iCloud og en lokal mappe samtidig")
+                        Toggle(NSLocalizedString("Overvåg også lokal mappe", comment: ""), isOn: $settings.monitorLocalFolderEnabled)
+                            .help(NSLocalizedString("Overvåg både iCloud og en lokal mappe samtidig", comment: ""))
                             .disabled(!settings.iCloudSyncEnabled)
 
                         if let iCloudURL = iCloudSyncService.shared.getRecordingsFolderURL() {
                             HStack {
                                 Image(systemName: "folder.badge.gearshape")
                                     .foregroundColor(.secondary)
-                                Text("iCloud mappe:")
+                                Text(NSLocalizedString("iCloud mappe:", comment: ""))
                                     .foregroundColor(.secondary)
                                 Spacer()
                                 Text(iCloudURL.lastPathComponent)
@@ -108,33 +108,33 @@ struct SettingsView: View {
                 Divider()
 
                 // General Settings
-                GroupBox(label: Label("Indstillinger", systemImage: "gear")) {
+                GroupBox(label: Label(NSLocalizedString("Indstillinger", comment: ""), systemImage: "gear")) {
                     VStack(alignment: .leading, spacing: 16) {
                         // Start at login
-                        Toggle("Start ved login", isOn: $settings.startAtLogin)
+                        Toggle(NSLocalizedString("Start ved login", comment: ""), isOn: $settings.startAtLogin)
 
                         Divider()
 
                         // Show notifications
-                        Toggle("Vis notifikationer", isOn: $settings.showNotifications)
+                        Toggle(NSLocalizedString("Vis notifikationer", comment: ""), isOn: $settings.showNotifications)
 
                         Divider()
 
                         // Delete audio after transcription
-                        Toggle("Slet lydfil efter transskription", isOn: $settings.deleteAudioAfterTranscription)
-                            .help("Sletter automatisk lydfilerne efter de er blevet transkriberet")
+                        Toggle(NSLocalizedString("Slet lydfil efter transskription", comment: ""), isOn: $settings.deleteAudioAfterTranscription)
+                            .help(NSLocalizedString("Sletter automatisk lydfilerne efter de er blevet transkriberet", comment: ""))
 
                         Divider()
 
                         // Language selection
                         HStack {
-                            Text("Sprog:")
+                            Text(NSLocalizedString("Sprog:", comment: ""))
                             Spacer()
                             Picker("", selection: $settings.selectedLanguage) {
-                                Text("Dansk").tag("da")
-                                Text("English").tag("en")
-                                Text("Svensk").tag("sv")
-                                Text("Norsk").tag("no")
+                                Text(NSLocalizedString("Dansk", comment: "")).tag("da")
+                                Text(NSLocalizedString("English", comment: "")).tag("en")
+                                Text(NSLocalizedString("Svensk", comment: "")).tag("sv")
+                                Text(NSLocalizedString("Norsk", comment: "")).tag("no")
                             }
                             .pickerStyle(.menu)
                             .frame(width: 150)
@@ -145,7 +145,7 @@ struct SettingsView: View {
                         // Ignored files button
                         Button(action: { showingIgnoredFiles = true }) {
                             HStack {
-                                Label("Ignorerede lydfiler", systemImage: "xmark.circle")
+                                Label(NSLocalizedString("Ignorerede lydfiler", comment: ""), systemImage: "xmark.circle")
                                 Spacer()
                                 if !settings.ignoredFiles.isEmpty {
                                     Text("\(settings.ignoredFiles.count)")
@@ -169,7 +169,7 @@ struct SettingsView: View {
                         // Advanced settings button
                         Button(action: { showingAdvancedSettings = true }) {
                             HStack {
-                                Label("Avancerede indstillinger...", systemImage: "gearshape.2")
+                                Label(NSLocalizedString("Avancerede indstillinger...", comment: ""), systemImage: "gearshape.2")
                                 Spacer()
                                 Image(systemName: "chevron.right")
                                     .font(.caption)
@@ -232,7 +232,7 @@ struct ModelRow: View {
                         .foregroundColor(.secondary)
 
                     if isSelected {
-                        Text("• Aktiv")
+                        Text(NSLocalizedString("• Aktiv", comment: ""))
                             .font(.caption)
                             .foregroundColor(.green)
                             .fontWeight(.semibold)
@@ -258,18 +258,18 @@ struct ModelRow: View {
             // Action button
             if model.isDownloaded {
                 Button(action: onDelete) {
-                    Label("Slet", systemImage: "trash")
+                    Label(NSLocalizedString("Slet", comment: ""), systemImage: "trash")
                 }
                 .buttonStyle(.bordered)
                 .tint(.red)
             } else if isDownloading {
                 Button(action: onCancel) {
-                    Label("Annuller", systemImage: "xmark")
+                    Label(NSLocalizedString("Annuller", comment: ""), systemImage: "xmark")
                 }
                 .buttonStyle(.bordered)
             } else {
                 Button(action: onDownload) {
-                    Label("Download", systemImage: "arrow.down.circle")
+                    Label(NSLocalizedString("Download", comment: ""), systemImage: "arrow.down.circle")
                 }
                 .buttonStyle(.bordered)
                 .tint(.accentColor)

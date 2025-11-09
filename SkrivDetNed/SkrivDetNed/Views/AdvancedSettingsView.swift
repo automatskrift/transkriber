@@ -15,7 +15,7 @@ struct AdvancedSettingsView: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text("Avancerede Whisper Indstillinger")
+                Text(NSLocalizedString("Avancerede Whisper Indstillinger", comment: ""))
                     .font(.title2)
                     .fontWeight(.semibold)
 
@@ -38,13 +38,13 @@ struct AdvancedSettingsView: View {
                 VStack(alignment: .leading, spacing: 24) {
 
                     // Language Detection
-                    GroupBox(label: Label("Sprog", systemImage: "globe")) {
+                    GroupBox(label: Label(NSLocalizedString("Sprog", comment: ""), systemImage: "globe")) {
                         VStack(alignment: .leading, spacing: 12) {
-                            Toggle("Auto-detektér sprog", isOn: $settings.whisperAutoDetectLanguage)
+                            Toggle(NSLocalizedString("Auto-detektér sprog", comment: ""), isOn: $settings.whisperAutoDetectLanguage)
 
                             if !settings.whisperAutoDetectLanguage {
                                 HStack {
-                                    Text("Valgt sprog:")
+                                    Text(NSLocalizedString("Valgt sprog:", comment: ""))
                                         .foregroundColor(.secondary)
                                     Spacer()
                                     Text(languageName(for: settings.selectedLanguage))
@@ -52,7 +52,7 @@ struct AdvancedSettingsView: View {
                                 }
                             }
 
-                            Text("Når aktiveret, vil Whisper automatisk detektere sproget i lydoptagelsen.")
+                            Text(NSLocalizedString("Når aktiveret, vil Whisper automatisk detektere sproget i lydoptagelsen.", comment: ""))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -60,11 +60,11 @@ struct AdvancedSettingsView: View {
                     }
 
                     // Translation
-                    GroupBox(label: Label("Oversættelse", systemImage: "character.book.closed")) {
+                    GroupBox(label: Label(NSLocalizedString("Oversættelse", comment: ""), systemImage: "character.book.closed")) {
                         VStack(alignment: .leading, spacing: 12) {
-                            Toggle("Oversæt til engelsk", isOn: $settings.whisperTranslateToEnglish)
+                            Toggle(NSLocalizedString("Oversæt til engelsk", comment: ""), isOn: $settings.whisperTranslateToEnglish)
 
-                            Text("Transskriberer og oversætter automatisk alt indhold til engelsk.")
+                            Text(NSLocalizedString("Transskriberer og oversætter automatisk alt indhold til engelsk.", comment: ""))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -72,10 +72,10 @@ struct AdvancedSettingsView: View {
                     }
 
                     // Temperature
-                    GroupBox(label: Label("Temperatur", systemImage: "thermometer.medium")) {
+                    GroupBox(label: Label(NSLocalizedString("Temperatur", comment: ""), systemImage: "thermometer.medium")) {
                         VStack(alignment: .leading, spacing: 12) {
                             HStack {
-                                Text("Temperatur:")
+                                Text(NSLocalizedString("Temperatur:", comment: ""))
                                 Spacer()
                                 Text(String(format: "%.1f", settings.whisperTemperature))
                                     .foregroundColor(.secondary)
@@ -84,16 +84,16 @@ struct AdvancedSettingsView: View {
                             Slider(value: $settings.whisperTemperature, in: 0.0...1.0, step: 0.1)
 
                             HStack {
-                                Text("Konsistent (0.0)")
+                                Text(NSLocalizedString("Konsistent (0.0)", comment: ""))
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                 Spacer()
-                                Text("Kreativ (1.0)")
+                                Text(NSLocalizedString("Kreativ (1.0)", comment: ""))
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
 
-                            Text("Lavere værdier giver mere konsistente resultater. Højere værdier kan hjælpe ved dårlig lydkvalitet.")
+                            Text(NSLocalizedString("Lavere værdier giver mere konsistente resultater. Højere værdier kan hjælpe ved dårlig lydkvalitet.", comment: ""))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -101,9 +101,9 @@ struct AdvancedSettingsView: View {
                     }
 
                     // Initial Prompt
-                    GroupBox(label: Label("Kontekst", systemImage: "text.bubble")) {
+                    GroupBox(label: Label(NSLocalizedString("Kontekst", comment: ""), systemImage: "text.bubble")) {
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("Initial prompt (valgfri):")
+                            Text(NSLocalizedString("Initial prompt (valgfri):", comment: ""))
                                 .font(.subheadline)
 
                             TextEditor(text: $settings.whisperInitialPrompt)
@@ -113,7 +113,7 @@ struct AdvancedSettingsView: View {
                                 .background(Color(nsColor: .textBackgroundColor))
                                 .cornerRadius(6)
 
-                            Text("Hjælper Whisper med kontekst, f.eks. navne, fagtermer eller emnet for optagelsen. Eksempel: \"Dette er et møde om softwareudvikling med Tomas og Anders.\"")
+                            Text(NSLocalizedString("Hjælper Whisper med kontekst, f.eks. navne, fagtermer eller emnet for optagelsen. Eksempel: \"Dette er et møde om softwareudvikling med Tomas og Anders.\"", comment: ""))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -121,20 +121,20 @@ struct AdvancedSettingsView: View {
                     }
 
                     // Timestamps
-                    GroupBox(label: Label("Tidsstempler", systemImage: "clock")) {
+                    GroupBox(label: Label(NSLocalizedString("Tidsstempler", comment: ""), systemImage: "clock")) {
                         VStack(alignment: .leading, spacing: 12) {
-                            Toggle("Inkludér tidsstempler", isOn: $settings.whisperIncludeTimestamps)
+                            Toggle(NSLocalizedString("Inkludér tidsstempler", comment: ""), isOn: $settings.whisperIncludeTimestamps)
 
-                            Toggle("Ord-niveau tidsstempler", isOn: $settings.whisperWordLevelTimestamps)
+                            Toggle(NSLocalizedString("Ord-niveau tidsstempler", comment: ""), isOn: $settings.whisperWordLevelTimestamps)
                                 .disabled(!settings.whisperIncludeTimestamps)
 
                             if settings.whisperIncludeTimestamps {
-                                Text("Format: [00:01:23.456] Tekst her")
+                                Text(NSLocalizedString("Format: [00:01:23.456] Tekst her", comment: ""))
                                     .font(.caption)
                                     .foregroundColor(.secondary)
 
                                 if settings.whisperWordLevelTimestamps {
-                                    Text("Hvert ord får sit eget tidsstempel for præcis navigation.")
+                                    Text(NSLocalizedString("Hvert ord får sit eget tidsstempel for præcis navigation.", comment: ""))
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
@@ -144,10 +144,10 @@ struct AdvancedSettingsView: View {
                     }
 
                     // Performance
-                    GroupBox(label: Label("Ydeevne", systemImage: "cpu")) {
+                    GroupBox(label: Label(NSLocalizedString("Ydeevne", comment: ""), systemImage: "cpu")) {
                         VStack(alignment: .leading, spacing: 12) {
                             HStack {
-                                Text("Samtidige workers:")
+                                Text(NSLocalizedString("Samtidige workers:", comment: ""))
                                 Spacer()
                                 Text("\(settings.whisperThreadCount)")
                                     .foregroundColor(.secondary)
@@ -156,7 +156,7 @@ struct AdvancedSettingsView: View {
                             Stepper("", value: $settings.whisperThreadCount, in: 1...8)
                                 .labelsHidden()
 
-                            Text("Flere workers kan øge hastigheden på kraftige Macs, men bruger mere hukommelse.")
+                            Text(NSLocalizedString("Flere workers kan øge hastigheden på kraftige Macs, men bruger mere hukommelse.", comment: ""))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -167,7 +167,7 @@ struct AdvancedSettingsView: View {
                     HStack {
                         Spacer()
                         Button(action: resetToDefaults) {
-                            Label("Nulstil til standardværdier", systemImage: "arrow.counterclockwise")
+                            Label(NSLocalizedString("Nulstil til standardværdier", comment: ""), systemImage: "arrow.counterclockwise")
                         }
                         .buttonStyle(.bordered)
                     }

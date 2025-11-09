@@ -18,12 +18,12 @@ struct AboutView: View {
                 .foregroundStyle(.linearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing))
 
             // App Name
-            Text("SkrivDetNed")
+            Text(NSLocalizedString("SkrivDetNed", comment: ""))
                 .font(.largeTitle)
                 .fontWeight(.bold)
 
             // Version
-            Text("Version 1.0")
+            Text(NSLocalizedString("Version 1.0", comment: ""))
                 .font(.subheadline)
                 .foregroundColor(.secondary)
 
@@ -32,24 +32,24 @@ struct AboutView: View {
 
             // Description
             VStack(alignment: .leading, spacing: 12) {
-                Text("Om SkrivDetNed")
+                Text(String(format: NSLocalizedString("Om %@", comment: ""), NSLocalizedString("SkrivDetNed", comment: "")))
                     .font(.headline)
 
-                Text("SkrivDetNed er en intelligent macOS-applikation der automatisk transkriberer dine lydoptagelser ved hjælp af avanceret talegenkendelse.")
+                Text(String(format: NSLocalizedString("%@ er en intelligent macOS-applikation der automatisk transkriberer dine lydoptagelser ved hjælp af avanceret talegenkendelse.", comment: ""), NSLocalizedString("SkrivDetNed", comment: "")))
                     .font(.body)
                     .foregroundColor(.secondary)
 
-                Text("Funktioner:")
+                Text(NSLocalizedString("Funktioner:", comment: ""))
                     .font(.subheadline)
                     .fontWeight(.semibold)
                     .padding(.top, 8)
 
                 VStack(alignment: .leading, spacing: 6) {
-                    FeatureRow(icon: "folder.badge.gearshape", text: "Automatisk mappeovervågning")
-                    FeatureRow(icon: "waveform", text: "AI-baseret transskribering")
-                    FeatureRow(icon: "icloud", text: "iCloud Drive support")
-                    FeatureRow(icon: "bell", text: "Notifikationer")
-                    FeatureRow(icon: "lock.shield", text: "Lokal behandling - ingen cloud")
+                    FeatureRow(icon: "folder.badge.gearshape", text: NSLocalizedString("Automatisk mappeovervågning", comment: ""))
+                    FeatureRow(icon: "waveform", text: NSLocalizedString("AI-baseret transskribering", comment: ""))
+                    FeatureRow(icon: "icloud", text: NSLocalizedString("iCloud Drive support", comment: ""))
+                    FeatureRow(icon: "bell", text: NSLocalizedString("Notifikationer", comment: ""))
+                    FeatureRow(icon: "lock.shield", text: NSLocalizedString("Lokal behandling - ingen cloud", comment: ""))
                 }
                 .font(.caption)
             }
@@ -60,17 +60,17 @@ struct AboutView: View {
 
             // Copyright
             VStack(spacing: 4) {
-                Text("Copyright © 2025 Tomas Thøfner")
+                Text(NSLocalizedString("Copyright © 2025 Tomas Thøfner", comment: ""))
                     .font(.caption)
                     .foregroundColor(.secondary)
 
-                Text("Alle rettigheder forbeholdes")
+                Text(NSLocalizedString("Alle rettigheder forbeholdes", comment: ""))
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
 
             // Close button
-            Button("Luk") {
+            Button(NSLocalizedString("Luk", comment: "")) {
                 dismiss()
             }
             .keyboardShortcut(.defaultAction)

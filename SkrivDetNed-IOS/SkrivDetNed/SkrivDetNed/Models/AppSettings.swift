@@ -82,9 +82,9 @@ enum AudioQuality: String, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .low: return "Lav (32 kbps)"
-        case .medium: return "Medium (64 kbps)"
-        case .high: return "Høj (128 kbps)"
+        case .low: return NSLocalizedString("Lav (32 kbps)", comment: "")
+        case .medium: return NSLocalizedString("Medium (64 kbps)", comment: "")
+        case .high: return NSLocalizedString("Høj (128 kbps)", comment: "")
         }
     }
 

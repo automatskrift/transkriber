@@ -16,7 +16,7 @@ struct FolderMonitorView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 // MARK: - Overvåget Folder Section
-                GroupBox(label: Label("Overvåget Folder", systemImage: "folder")) {
+                GroupBox(label: Label(NSLocalizedString("Overvåget Folder", comment: ""), systemImage: "folder")) {
                     VStack(spacing: 12) {
                         HStack {
                             if let folderURL = viewModel.selectedFolderURL {
@@ -30,14 +30,14 @@ struct FolderMonitorView: View {
                                         .truncationMode(.middle)
                                 }
                             } else {
-                                Text("Ingen folder valgt")
+                                Text(NSLocalizedString("Ingen folder valgt", comment: ""))
                                     .foregroundColor(.secondary)
                             }
 
                             Spacer()
 
                             Button(action: viewModel.selectFolder) {
-                                Label("Vælg Folder", systemImage: "folder.badge.plus")
+                                Label(NSLocalizedString("Vælg Folder", comment: ""), systemImage: "folder.badge.plus")
                             }
                             .buttonStyle(.bordered)
                         }
@@ -45,7 +45,7 @@ struct FolderMonitorView: View {
                         // Status
                         HStack {
                             Label {
-                                Text("Status:")
+                                Text(NSLocalizedString("Status:", comment: ""))
                                     .foregroundColor(.secondary)
                             } icon: {
                                 Circle()
@@ -61,7 +61,7 @@ struct FolderMonitorView: View {
                             // Toggle monitoring button
                             if viewModel.selectedFolderURL != nil {
                                 Button(action: viewModel.toggleMonitoring) {
-                                    Text(viewModel.isMonitoring ? "Stop Overvågning" : "Start Overvågning")
+                                    Text(viewModel.isMonitoring ? NSLocalizedString("Stop Overvågning", comment: "") : NSLocalizedString("Start Overvågning", comment: ""))
                                         .frame(minWidth: 140)
                                 }
                                 .buttonStyle(.borderedProminent)
@@ -74,12 +74,12 @@ struct FolderMonitorView: View {
                             Divider()
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack {
-                                    Text("I Kø (\(viewModel.pendingFiles.count))")
+                                    Text(String(format: NSLocalizedString("I Kø (%lld)", comment: ""), viewModel.pendingFiles.count))
                                         .font(.subheadline)
                                         .foregroundColor(.secondary)
                                     Spacer()
                                     Button(action: viewModel.clearPendingQueue) {
-                                        Label("Ryd kø", systemImage: "trash")
+                                        Label(NSLocalizedString("Ryd kø", comment: ""), systemImage: "trash")
                                             .font(.caption)
                                     }
                                     .buttonStyle(.borderless)
@@ -107,14 +107,14 @@ struct FolderMonitorView: View {
                 // MARK: - iCloud Section
                 GroupBox(label:
                     HStack {
-                        Label("iCloud Optagelser", systemImage: "icloud")
+                        Label(NSLocalizedString("iCloud Optagelser", comment: ""), systemImage: "icloud")
                         Spacer()
                         Button(action: {
                             if let recordingsURL = iCloudSyncService.shared.getRecordingsFolderURL() {
                                 NSWorkspace.shared.activateFileViewerSelecting([recordingsURL])
                             }
                         }) {
-                            Label("Åbn folder", systemImage: "folder")
+                            Label(NSLocalizedString("Åbn folder", comment: ""), systemImage: "folder")
                                 .font(.caption)
                         }
                         .buttonStyle(.borderless)
@@ -132,7 +132,7 @@ struct FolderMonitorView: View {
                                         .imageScale(.large)
 
                                     VStack(alignment: .leading, spacing: 4) {
-                                        Text("Indlæser WhisperKit model")
+                                        Text(NSLocalizedString("Indlæser WhisperKit model", comment: ""))
                                             .font(.headline)
 
                                         if let modelName = whisperService.downloadingModelName {
@@ -159,7 +159,7 @@ struct FolderMonitorView: View {
                         // Currently transcribing
                         if !transcriptionVM.activeTasks.isEmpty {
                             VStack(alignment: .leading, spacing: 8) {
-                                Text("Under Transkribering")
+                                Text(NSLocalizedString("Under Transkribering", comment: ""))
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
 
@@ -173,7 +173,7 @@ struct FolderMonitorView: View {
                         // Queued files
                         if !viewModel.iCloudQueuedFiles.isEmpty {
                             VStack(alignment: .leading, spacing: 8) {
-                                Text("I Kø (\(viewModel.iCloudQueuedFiles.count))")
+                                Text(String(format: NSLocalizedString("I Kø (%lld)", comment: ""), viewModel.iCloudQueuedFiles.count))
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
 
@@ -192,7 +192,7 @@ struct FolderMonitorView: View {
                         // Completed files
                         if !viewModel.iCloudCompletedFiles.isEmpty {
                             VStack(alignment: .leading, spacing: 8) {
-                                Text("Færdige (\(viewModel.iCloudCompletedFiles.count))")
+                                Text(String(format: NSLocalizedString("Færdige (%lld)", comment: ""), viewModel.iCloudCompletedFiles.count))
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
 
@@ -211,7 +211,7 @@ struct FolderMonitorView: View {
                         // Failed files
                         if !viewModel.iCloudFailedFiles.isEmpty {
                             VStack(alignment: .leading, spacing: 8) {
-                                Text("Fejlede (\(viewModel.iCloudFailedFiles.count))")
+                                Text(String(format: NSLocalizedString("Fejlede (%lld)", comment: ""), viewModel.iCloudFailedFiles.count))
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
 
@@ -235,7 +235,7 @@ struct FolderMonitorView: View {
                                 Image(systemName: "icloud")
                                     .font(.system(size: 32))
                                     .foregroundColor(.secondary)
-                                Text("Ingen filer i iCloud")
+                                Text(NSLocalizedString("Ingen filer i iCloud", comment: ""))
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
@@ -253,11 +253,11 @@ struct FolderMonitorView: View {
                             .font(.system(size: 48))
                             .foregroundColor(.secondary)
 
-                        Text("Vælg en folder for at komme i gang")
+                        Text(NSLocalizedString("Vælg en folder for at komme i gang", comment: ""))
                             .font(.headline)
                             .foregroundColor(.secondary)
 
-                        Text("Appen vil automatisk overvåge folderen og transkribere nye lydfiler")
+                        Text(NSLocalizedString("Appen vil automatisk overvåge folderen og transkribere nye lydfiler", comment: ""))
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
@@ -278,11 +278,11 @@ struct FolderMonitorView: View {
                             .font(.system(size: 48))
                             .foregroundColor(.secondary)
 
-                        Text("Klar til at starte")
+                        Text(NSLocalizedString("Klar til at starte", comment: ""))
                             .font(.headline)
                             .foregroundColor(.secondary)
 
-                        Text("Tryk 'Start Overvågning' for at begynde at overvåge folderen")
+                        Text(NSLocalizedString("Tryk 'Start Overvågning' for at begynde at overvåge folderen", comment: ""))
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
@@ -364,7 +364,7 @@ struct FolderMonitorView: View {
                                 }
                             }
                         }) {
-                            Label("Transcrriber igen", systemImage: "arrow.clockwise")
+                            Label(NSLocalizedString("Transkribér igen", comment: ""), systemImage: "arrow.clockwise")
                         }
                     } label: {
                         Image(systemName: "ellipsis.circle")
@@ -382,14 +382,14 @@ struct FolderMonitorView: View {
                                 await transcriptionVM.addToQueue(url)
                             }
                         }) {
-                            Label("Start nu", systemImage: "play.fill")
+                            Label(NSLocalizedString("Start nu", comment: ""), systemImage: "play.fill")
                         }
 
                         Button(role: .destructive, action: {
                             // Ignore file
                             viewModel.ignorePendingFile(url)
                         }) {
-                            Label("Ignorer", systemImage: "xmark.circle")
+                            Label(NSLocalizedString("Ignorer", comment: ""), systemImage: "xmark.circle")
                         }
                     } label: {
                         Image(systemName: "ellipsis.circle")
@@ -433,14 +433,14 @@ struct FolderMonitorView: View {
                                 }
                             }
                         }) {
-                            Label("Retry", systemImage: "arrow.clockwise")
+                            Label(NSLocalizedString("Retry", comment: ""), systemImage: "arrow.clockwise")
                         }
 
                         Button(role: .destructive, action: {
                             // Ignore file
                             viewModel.ignorePendingFile(url)
                         }) {
-                            Label("Ignorer", systemImage: "xmark.circle")
+                            Label(NSLocalizedString("Ignorer", comment: ""), systemImage: "xmark.circle")
                         }
                     } label: {
                         Image(systemName: "ellipsis.circle")
@@ -541,7 +541,7 @@ struct LocalPendingFileCard: View {
                 .fontWeight(.medium)
                 .lineLimit(2)
 
-            Text("Venter...")
+            Text(NSLocalizedString("Venter...", comment: ""))
                 .font(.caption2)
                 .foregroundColor(.secondary)
         }
@@ -636,7 +636,7 @@ struct MetadataInfoView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Metadata Info")
+                Text(NSLocalizedString("Metadata Info", comment: ""))
                     .font(.headline)
                 Spacer()
                 Button(action: {
@@ -645,7 +645,7 @@ struct MetadataInfoView: View {
                     Image(systemName: "doc.on.doc")
                 }
                 .buttonStyle(.borderless)
-                .help("Kopier til udklipsholder")
+                .help(NSLocalizedString("Kopier til udklipsholder", comment: ""))
             }
 
             Divider()
@@ -654,7 +654,7 @@ struct MetadataInfoView: View {
             HStack {
                 Image(systemName: audioFileExists ? "checkmark.circle.fill" : "xmark.circle.fill")
                     .foregroundColor(audioFileExists ? .green : .red)
-                Text(audioFileExists ? "Lydfil findes" : "Lydfil findes IKKE")
+                Text(audioFileExists ? NSLocalizedString("Lydfil findes", comment: "") : NSLocalizedString("Lydfil findes IKKE", comment: ""))
                     .font(.subheadline)
                     .fontWeight(.medium)
                 Spacer()
@@ -662,7 +662,7 @@ struct MetadataInfoView: View {
             .padding(.bottom, 4)
 
             if audioFileExists {
-                Text("Sti: \(url.path)")
+                Text(String(format: NSLocalizedString("Sti: %@", comment: ""), url.path))
                     .font(.caption2)
                     .foregroundColor(.secondary)
                     .textSelection(.enabled)
@@ -681,9 +681,9 @@ struct MetadataInfoView: View {
                         Image(systemName: "doc.badge.exclamationmark")
                             .font(.largeTitle)
                             .foregroundColor(.orange)
-                        Text("Ingen JSON-fil fundet")
+                        Text(NSLocalizedString("Ingen JSON-fil fundet", comment: ""))
                             .font(.headline)
-                        Text("Filen: \(url.lastPathComponent)")
+                        Text(String(format: NSLocalizedString("Filen: %@", comment: ""), url.lastPathComponent))
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -702,7 +702,7 @@ struct MetadataInfoView: View {
 
     private var metadataJSON: String {
         guard let metadataValue = metadata else {
-            return "Ingen metadata"
+            return NSLocalizedString("Ingen metadata", comment: "")
         }
 
         let encoder = JSONEncoder()
@@ -711,7 +711,7 @@ struct MetadataInfoView: View {
 
         guard let data = try? encoder.encode(metadataValue),
               let jsonString = String(data: data, encoding: .utf8) else {
-            return "Kunne ikke encode metadata"
+            return NSLocalizedString("Kunne ikke encode metadata", comment: "")
         }
 
         return jsonString

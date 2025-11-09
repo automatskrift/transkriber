@@ -233,15 +233,15 @@ enum WhisperError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .modelNotDownloaded:
-            return "Whisper model er ikke downloadet. Download modellen i indstillinger."
+            return NSLocalizedString("Whisper model er ikke downloadet. Download modellen i indstillinger.", comment: "")
         case .fileNotFound:
-            return "Lydfil ikke fundet"
+            return NSLocalizedString("Lydfil ikke fundet", comment: "")
         case .transcriptionFailed(let error):
-            return "Transskription fejlede: \(error)"
+            return String(format: NSLocalizedString("Transskription fejlede: %@", comment: ""), error)
         case .authorizationDenied:
-            return "Mikrofonadgang nægtet"
+            return NSLocalizedString("Mikrofonadgang nægtet", comment: "")
         case .recognizerNotAvailable:
-            return "Talegenkendelse ikke tilgængelig"
+            return NSLocalizedString("Talegenkendelse ikke tilgængelig", comment: "")
         }
     }
 }

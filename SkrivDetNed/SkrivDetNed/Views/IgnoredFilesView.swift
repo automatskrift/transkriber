@@ -15,10 +15,10 @@ struct IgnoredFilesView: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text("Ignorerede Lydfiler")
+                Text(NSLocalizedString("Ignorerede Lydfiler", comment: ""))
                     .font(.headline)
                 Spacer()
-                Button("Luk") {
+                Button(NSLocalizedString("Luk", comment: "")) {
                     dismiss()
                 }
                 .keyboardShortcut(.escape)
@@ -44,11 +44,11 @@ struct IgnoredFilesView: View {
                 .font(.system(size: 48))
                 .foregroundColor(.secondary)
 
-            Text("Ingen ignorerede filer")
+            Text(NSLocalizedString("Ingen ignorerede filer", comment: ""))
                 .font(.headline)
                 .foregroundColor(.secondary)
 
-            Text("Filer du vælger at ignorere vil blive vist her")
+            Text(NSLocalizedString("Filer du vælger at ignorere vil blive vist her", comment: ""))
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -100,7 +100,7 @@ struct IgnoredFileRow: View {
                     .truncationMode(.middle)
 
                 if !fileExists {
-                    Text("(Fil findes ikke længere)")
+                    Text(NSLocalizedString("(Fil findes ikke længere)", comment: ""))
                         .font(.caption2)
                         .foregroundColor(.red)
                 }
@@ -111,11 +111,11 @@ struct IgnoredFileRow: View {
             Button(action: {
                 unignoreFile(filePath)
             }) {
-                Label("Fjern fra liste", systemImage: "arrow.uturn.backward")
+                Label(NSLocalizedString("Fjern fra liste", comment: ""), systemImage: "arrow.uturn.backward")
                     .font(.caption)
             }
             .buttonStyle(.bordered)
-            .help("Fjern fra ignorerede og tillad transskribering igen")
+            .help(NSLocalizedString("Fjern fra ignorerede og tillad transskribering igen", comment: ""))
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)

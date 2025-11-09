@@ -18,7 +18,7 @@ struct TranscriptionsView: View {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.secondary)
 
-                TextField("Søg i transskriptioner...", text: $searchText)
+                TextField(NSLocalizedString("Søg i transskriptioner...", comment: ""), text: $searchText)
                     .textFieldStyle(.plain)
 
                 if !searchText.isEmpty {
@@ -83,13 +83,13 @@ struct TranscriptionsView: View {
                 .font(.system(size: 60))
                 .foregroundColor(.secondary)
 
-            Text(searchText.isEmpty ? "Ingen transskriptioner endnu" : "Ingen resultater")
+            Text(searchText.isEmpty ? NSLocalizedString("Ingen transskriptioner endnu", comment: "") : NSLocalizedString("Ingen resultater", comment: ""))
                 .font(.title2)
                 .fontWeight(.semibold)
 
             Text(searchText.isEmpty ?
-                 "Når du transskriberer filer, vil de dukke op her" :
-                 "Prøv at søge efter noget andet")
+                 NSLocalizedString("Når du transskriberer filer, vil de dukke op her", comment: "") :
+                 NSLocalizedString("Prøv at søge efter noget andet", comment: ""))
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -134,7 +134,7 @@ struct TranscriptionRow: View {
                             Button(action: {
                                 showingTextWindow = true
                             }) {
-                                Label("Vis tekst", systemImage: "doc.text.magnifyingglass")
+                                Label(NSLocalizedString("Vis tekst", comment: ""), systemImage: "doc.text.magnifyingglass")
                                     .font(.caption)
                             }
                             .buttonStyle(.borderless)
@@ -146,7 +146,7 @@ struct TranscriptionRow: View {
                                 NSPasteboard.general.clearContents()
                                 NSPasteboard.general.setString(transcription, forType: .string)
                             }) {
-                                Label("Kopier", systemImage: "doc.on.doc")
+                                Label(NSLocalizedString("Kopier", comment: ""), systemImage: "doc.on.doc")
                                     .font(.caption)
                             }
                             .buttonStyle(.borderless)
@@ -157,7 +157,7 @@ struct TranscriptionRow: View {
                             Button(action: {
                                 NSWorkspace.shared.activateFileViewerSelecting([task.outputFileURL])
                             }) {
-                                Label("Vis fil", systemImage: "folder")
+                                Label(NSLocalizedString("Vis fil", comment: ""), systemImage: "folder")
                                     .font(.caption)
                             }
                             .buttonStyle(.borderless)
@@ -192,7 +192,7 @@ struct TranscriptionRow: View {
                         // Show expand/collapse button if text is long
                         if transcription.count > 200 {
                             Button(action: { isExpanded.toggle() }) {
-                                Label(isExpanded ? "Vis mindre" : "Vis mere", systemImage: isExpanded ? "chevron.up" : "chevron.down")
+                                Label(isExpanded ? NSLocalizedString("Vis mindre", comment: "") : NSLocalizedString("Vis mere", comment: ""), systemImage: isExpanded ? "chevron.up" : "chevron.down")
                                     .font(.caption)
                             }
                             .buttonStyle(.borderless)
@@ -205,12 +205,12 @@ struct TranscriptionRow: View {
                     Divider()
 
                     HStack {
-                        Label("Varighed: \(Int(duration))s", systemImage: "clock")
+                        Label(String(format: NSLocalizedString("Varighed: %llds", comment: ""), Int(duration)), systemImage: "clock")
 
                         Spacer()
 
                         if let transcription = transcriptionText {
-                            Label("\(transcription.split(separator: " ").count) ord", systemImage: "textformat")
+                            Label(String(format: NSLocalizedString("%lld ord", comment: ""), transcription.split(separator: " ").count), systemImage: "textformat")
                         }
                     }
                     .font(.caption)
@@ -249,7 +249,7 @@ struct TranscriptionTextWindow: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(fileName)
                         .font(.headline)
-                    Text("\(text.split(separator: " ").count) ord")
+                    Text(String(format: NSLocalizedString("%lld ord", comment: ""), text.split(separator: " ").count))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -261,7 +261,7 @@ struct TranscriptionTextWindow: View {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(text, forType: .string)
                 }) {
-                    Label("Kopier", systemImage: "doc.on.doc")
+                    Label(NSLocalizedString("Kopier", comment: ""), systemImage: "doc.on.doc")
                 }
 
                 // Close button

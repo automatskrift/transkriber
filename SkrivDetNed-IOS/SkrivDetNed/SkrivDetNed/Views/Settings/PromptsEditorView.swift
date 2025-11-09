@@ -36,7 +36,7 @@ struct PromptsEditorView: View {
             .onDelete(perform: deletePrompts)
             .onMove(perform: movePrompts)
         }
-        .navigationTitle("LLM Prompts")
+        .navigationTitle(NSLocalizedString("LLM Prompts", comment: ""))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -85,39 +85,39 @@ struct PromptEditSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("Navn", text: $name)
+                    TextField(NSLocalizedString("Navn", comment: ""), text: $name)
                 } header: {
-                    Text("Prompt Navn")
+                    Text(NSLocalizedString("Prompt Navn", comment: ""))
                 } footer: {
-                    Text("F.eks. \"Uddrag pointer\" eller \"Mødereferat\"")
+                    Text(NSLocalizedString("F.eks. \"Uddrag pointer\" eller \"Mødereferat\"", comment: ""))
                 }
 
                 Section {
                     TextEditor(text: $text)
                         .frame(minHeight: 150)
                 } header: {
-                    Text("Prompt Tekst")
+                    Text(NSLocalizedString("Prompt Tekst", comment: ""))
                 } footer: {
-                    Text("Denne tekst vil blive foranstillet den transkriberede tekst. F.eks. \"Uddrag pointerne i følgende transkriberede tekst, og giv dem i punktform:\\n\\n\"")
+                    Text(NSLocalizedString("Denne tekst vil blive foranstillet den transkriberede tekst. F.eks. \"Uddrag pointerne i følgende transkriberede tekst, og giv dem i punktform:\\n\\n\"", comment: ""))
                 }
 
                 Section {
-                    Button("Eksempler") {
+                    Button(NSLocalizedString("Eksempler", comment: "")) {
                         showExamples()
                     }
                 }
             }
             .scrollDismissesKeyboard(.interactively)
-            .navigationTitle(prompt == nil ? "Ny Prompt" : "Rediger Prompt")
+            .navigationTitle(prompt == nil ? NSLocalizedString("Ny Prompt", comment: "") : NSLocalizedString("Rediger Prompt", comment: ""))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Annuller") {
+                    Button(NSLocalizedString("Annuller", comment: "")) {
                         dismiss()
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Gem") {
+                    Button(NSLocalizedString("Gem", comment: "")) {
                         savePrompt()
                     }
                     .disabled(name.isEmpty)

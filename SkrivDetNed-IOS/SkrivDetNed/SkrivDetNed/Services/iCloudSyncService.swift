@@ -937,13 +937,13 @@ enum iCloudError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .containerNotAvailable:
-            return "iCloud container er ikke tilgængelig"
+            return NSLocalizedString("iCloud container er ikke tilgængelig", comment: "")
         case .notSignedIn:
-            return "Ikke logget ind på iCloud"
+            return NSLocalizedString("Ikke logget ind på iCloud", comment: "")
         case .downloadFailed:
-            return "Download fra iCloud fejlede"
+            return NSLocalizedString("Download fra iCloud fejlede", comment: "")
         case .uploadFailed:
-            return "Upload til iCloud fejlede"
+            return NSLocalizedString("Upload til iCloud fejlede", comment: "")
         }
     }
 }

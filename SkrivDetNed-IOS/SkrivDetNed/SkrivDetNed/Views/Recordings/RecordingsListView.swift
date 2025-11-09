@@ -28,16 +28,16 @@ struct RecordingsListView: View {
                     recordingsList
                 }
             }
-            .navigationTitle("Optagelser")
-            .searchable(text: $searchText, prompt: "Søg i optagelser...")
+            .navigationTitle(NSLocalizedString("Optagelser", comment: ""))
+            .searchable(text: $searchText, prompt: NSLocalizedString("Søg i optagelser...", comment: ""))
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
-                        Picker("Sorter efter", selection: $viewModel.sortOrder) {
-                            Label("Nyeste først", systemImage: "arrow.down").tag(SortOrder.newestFirst)
-                            Label("Ældste først", systemImage: "arrow.up").tag(SortOrder.oldestFirst)
-                            Label("Navn", systemImage: "textformat").tag(SortOrder.name)
-                            Label("Størrelse", systemImage: "arrow.up.arrow.down").tag(SortOrder.size)
+                        Picker(NSLocalizedString("Sorter efter", comment: ""), selection: $viewModel.sortOrder) {
+                            Label(NSLocalizedString("Nyeste først", comment: ""), systemImage: "arrow.down").tag(SortOrder.newestFirst)
+                            Label(NSLocalizedString("Ældste først", comment: ""), systemImage: "arrow.up").tag(SortOrder.oldestFirst)
+                            Label(NSLocalizedString("Navn", comment: ""), systemImage: "textformat").tag(SortOrder.name)
+                            Label(NSLocalizedString("Størrelse", comment: ""), systemImage: "arrow.up.arrow.down").tag(SortOrder.size)
                         }
                     } label: {
                         Image(systemName: "arrow.up.arrow.down.circle")
@@ -57,13 +57,13 @@ struct RecordingsListView: View {
                     viewModel.loadRecordings()
                 }
             }
-            .alert("Slet optagelse", isPresented: $showingDeleteAlert, presenting: recordingToDelete) { recording in
-                Button("Slet", role: .destructive) {
+            .alert(NSLocalizedString("Slet optagelse", comment: ""), isPresented: $showingDeleteAlert, presenting: recordingToDelete) { recording in
+                Button(NSLocalizedString("Slet", comment: ""), role: .destructive) {
                     viewModel.deleteRecording(recording)
                 }
-                Button("Annuller", role: .cancel) {}
+                Button(NSLocalizedString("Annuller", comment: ""), role: .cancel) {}
             } message: { recording in
-                Text("Er du sikker på du vil slette '\(recording.title)'?")
+                Text(String(format: NSLocalizedString("Er du sikker på du vil slette '%@'?", comment: ""), recording.title))
             }
             .sheet(item: $recordingToShare) { recording in
                 ShareSheet(recording: recording)
@@ -96,13 +96,13 @@ struct RecordingsListView: View {
                         recordingToDelete = recording
                         showingDeleteAlert = true
                     } label: {
-                        Label("Slet", systemImage: "trash")
+                        Label(NSLocalizedString("Slet", comment: ""), systemImage: "trash")
                     }
 
                     Button {
                         recordingToShare = recording
                     } label: {
-                        Label("Del", systemImage: "square.and.arrow.up")
+                        Label(NSLocalizedString("Del", comment: ""), systemImage: "square.and.arrow.up")
                     }
                     .tint(.blue)
                 }
@@ -117,11 +117,11 @@ struct RecordingsListView: View {
                 .font(.system(size: 80))
                 .foregroundColor(.secondary)
 
-            Text("Ingen optagelser endnu")
+            Text(NSLocalizedString("Ingen optagelser endnu", comment: ""))
                 .font(.title2)
                 .fontWeight(.semibold)
 
-            Text("Gå til Optag-fanen for at lave din første optagelse")
+            Text(NSLocalizedString("Gå til Optag-fanen for at lave din første optagelse", comment: ""))
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -136,11 +136,11 @@ struct RecordingsListView: View {
                 .font(.system(size: 80))
                 .foregroundColor(.secondary)
 
-            Text("Ingen resultater")
+            Text(NSLocalizedString("Ingen resultater", comment: ""))
                 .font(.title2)
                 .fontWeight(.semibold)
 
-            Text("Prøv at søge efter noget andet")
+            Text(NSLocalizedString("Prøv at søge efter noget andet", comment: ""))
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
