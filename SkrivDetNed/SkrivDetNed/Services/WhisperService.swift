@@ -39,25 +39,29 @@ class WhisperService: ObservableObject {
         print("🔄 Loading WhisperKit model: \(modelType.displayName)")
 
         do {
-            // Initialize WhisperKit - it will download the model automatically if needed
             // Map our model types to WhisperKit model names
+            // WhisperKit uses format: openai_whisper-{size}
             let whisperKitModelName: String
             switch modelType {
             case .tiny:
-                whisperKitModelName = "tiny"
+                whisperKitModelName = "openai_whisper-tiny"
             case .base:
-                whisperKitModelName = "base"
+                whisperKitModelName = "openai_whisper-base"
             case .small:
-                whisperKitModelName = "small"
+                whisperKitModelName = "openai_whisper-small"
             case .medium:
-                whisperKitModelName = "medium"
+                whisperKitModelName = "openai_whisper-medium"
             case .large:
-                whisperKitModelName = "large-v3"
+                whisperKitModelName = "openai_whisper-large-v3"
             }
 
             isDownloadingModel = true
             downloadingModelName = modelType.displayName
             downloadProgress = 0.0
+
+            // Try to initialize WhisperKit - it will handle download automatically if needed
+            // We set download: true so it downloads if not present
+            print("📥 Initializing WhisperKit (will download if needed): \(whisperKitModelName)")
 
             whisperKit = try await WhisperKit(
                 model: whisperKitModelName,
@@ -65,7 +69,7 @@ class WhisperService: ObservableObject {
                 logLevel: .debug,
                 prewarm: false,
                 load: true,
-                download: true
+                download: true  // Auto-download if not present
             )
 
             currentModel = modelType
@@ -75,7 +79,9 @@ class WhisperService: ObservableObject {
         } catch {
             isDownloadingModel = false
             downloadingModelName = nil
+            downloadProgress = 0.0
             print("❌ Failed to load WhisperKit: \(error)")
+            print("❌ Error details: \(error.localizedDescription)")
             throw WhisperError.modelNotDownloaded
         }
     }
