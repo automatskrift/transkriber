@@ -324,8 +324,11 @@ class iCloudSyncService: ObservableObject {
             scanDirectoryForFiles()
         }
 
+        print("📊 hasGatheredOnce: \(hasGatheredOnce), resultCount: \(query.resultCount)")
+
         if !hasGatheredOnce {
             // First time - collect existing files
+            print("🔄 First time gathering - scanning for existing files")
             hasGatheredOnce = true
             existingFiles.removeAll()
 
@@ -361,6 +364,30 @@ class iCloudSyncService: ObservableObject {
                             continue
                         }
 
+                        // Check metadata status
+                        if let recordingsFolder = getRecordingsFolderURL(),
+                           let metadata = try? RecordingMetadata.load(for: fileName, from: recordingsFolder) {
+                            print("   📋 Loaded metadata - status: \(metadata.status.rawValue)")
+                            // Skip if already completed
+                            if metadata.status == .completed {
+                                print("   ⏭️ Already completed (metadata status: completed)")
+                                continue
+                            }
+                            // Skip if failed
+                            if metadata.status == .failed {
+                                print("   ⏭️ Previously failed (metadata status: failed)")
+                                continue
+                            }
+                            // Skip if transcribing (will be handled by resetStuckTranscriptions)
+                            if metadata.status == .transcribing {
+                                print("   ⏭️ Currently transcribing (will be handled by stuck transcriptions check)")
+                                continue
+                            }
+                            print("   📝 Metadata status: \(metadata.status.rawValue) - will be added to existing files")
+                        } else {
+                            print("   ⚠️ No metadata found for \(fileName) - will be added to existing files")
+                        }
+
                         existingFiles.append(url)
                         print("   ✅ Added to existing files")
                     } else {
@@ -373,6 +400,8 @@ class iCloudSyncService: ObservableObject {
 
             // Notify that existing files are ready (only if there are any)
             if !existingFiles.isEmpty {
+                print("🔔 Posting ExistingFilesFound notification with count: \(existingFiles.count)")
+                print("   Files: \(existingFiles.map { $0.lastPathComponent })")
                 Task { @MainActor in
                     NotificationCenter.default.post(
                         name: NSNotification.Name("ExistingFilesFound"),
@@ -436,14 +465,40 @@ class iCloudSyncService: ObservableObject {
                     let hasTranscription = FileManager.default.fileExists(atPath: transcriptionURL.path)
                     if hasTranscription {
                         print("   ⏭️ Skipping \(audioURL.lastPathComponent) - already transcribed")
+                        return false
                     }
-                    return !hasTranscription
+
+                    // Check metadata status
+                    if let metadata = try? RecordingMetadata.load(for: audioURL.lastPathComponent, from: recordingsURL) {
+                        print("   📋 \(audioURL.lastPathComponent) metadata status: \(metadata.status.rawValue)")
+                        // Skip if already completed
+                        if metadata.status == .completed {
+                            print("   ⏭️ Skipping \(audioURL.lastPathComponent) - completed")
+                            return false
+                        }
+                        // Skip if failed
+                        if metadata.status == .failed {
+                            print("   ⏭️ Skipping \(audioURL.lastPathComponent) - failed")
+                            return false
+                        }
+                        // Skip if transcribing (will be handled by resetStuckTranscriptions)
+                        if metadata.status == .transcribing {
+                            print("   ⏭️ Skipping \(audioURL.lastPathComponent) - transcribing (handled elsewhere)")
+                            return false
+                        }
+                    } else {
+                        print("   ⚠️ No metadata found for \(audioURL.lastPathComponent)")
+                    }
+
+                    return true
                 }
 
                 print("📂 Found \(existingFiles.count) existing audio file(s) needing transcription via direct scan")
 
                 // Notify that existing files are ready (only if there are any)
                 if !existingFiles.isEmpty {
+                    print("🔔 Posting ExistingFilesFound notification (direct scan) with count: \(existingFiles.count)")
+                    print("   Files: \(existingFiles.map { $0.lastPathComponent })")
                     Task { @MainActor in
                         NotificationCenter.default.post(
                             name: NSNotification.Name("ExistingFilesFound"),
@@ -625,7 +680,13 @@ class iCloudSyncService: ObservableObject {
                 options: [.skipsHiddenFiles]
             )
 
-            let jsonFiles = files.filter { $0.pathExtension == "json" }
+            let jsonFiles = files.filter {
+                $0.pathExtension == "json" &&
+                $0.lastPathComponent != ".mac_heartbeat.json" &&
+                !$0.lastPathComponent.contains(" 2.json") &&
+                !$0.lastPathComponent.contains(" 3.json") &&
+                !$0.lastPathComponent.contains(" 4.json")
+            }
 
             for jsonFile in jsonFiles {
                 guard let data = try? Data(contentsOf: jsonFile) else { continue }

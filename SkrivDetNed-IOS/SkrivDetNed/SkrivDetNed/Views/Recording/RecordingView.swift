@@ -68,6 +68,14 @@ struct RecordingView: View {
                     .buttonStyle(.bordered)
                     .disabled(viewModel.isInitializingRecording)
 
+                    // Mark button
+                    Button(action: { viewModel.addMark() }) {
+                        Label("Mark", systemImage: "flag.fill")
+                            .font(.headline)
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(viewModel.isInitializingRecording || viewModel.isPaused)
+
                     // Cancel button
                     Button(role: .destructive, action: {
                         if viewModel.duration > 3 {

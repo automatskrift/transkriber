@@ -26,6 +26,7 @@ struct Recording: Identifiable, Codable {
     var latitude: Double?
     var longitude: Double?
     var promptPrefix: String?
+    var marks: [Double]?
 
     // Computed property that reconstructs the full URL
     var localURL: URL {

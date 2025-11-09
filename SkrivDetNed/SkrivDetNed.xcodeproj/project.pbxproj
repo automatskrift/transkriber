@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		C3E8167A2EC0CB000065A3FA /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = C3E816792EC0CB000065A3FA /* WhisperKit */; };
+		C3E8167C2EC0CB000065A3FA /* whisperkit-cli in Frameworks */ = {isa = PBXBuildFile; productRef = C3E8167B2EC0CB000065A3FA /* whisperkit-cli */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		C39AA82D2EBE767C003185E4 /* SkrivDetNed.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkrivDetNed.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +28,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C3E8167A2EC0CB000065A3FA /* WhisperKit in Frameworks */,
+				C3E8167C2EC0CB000065A3FA /* whisperkit-cli in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +72,8 @@
 			);
 			name = SkrivDetNed;
 			packageProductDependencies = (
+				C3E816792EC0CB000065A3FA /* WhisperKit */,
+				C3E8167B2EC0CB000065A3FA /* whisperkit-cli */,
 			);
 			productName = SkrivDetNed;
 			productReference = C39AA82D2EBE767C003185E4 /* SkrivDetNed.app */;
@@ -94,6 +103,9 @@
 			);
 			mainGroup = C39AA8242EBE767C003185E4;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				C3E816782EC0CB000065A3FA /* XCRemoteSwiftPackageReference "WhisperKit" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C39AA82E2EBE767C003185E4 /* Products */;
 			projectDirPath = "";
@@ -363,6 +375,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		C3E816782EC0CB000065A3FA /* XCRemoteSwiftPackageReference "WhisperKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/argmaxinc/WhisperKit.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		C3E816792EC0CB000065A3FA /* WhisperKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C3E816782EC0CB000065A3FA /* XCRemoteSwiftPackageReference "WhisperKit" */;
+			productName = WhisperKit;
+		};
+		C3E8167B2EC0CB000065A3FA /* whisperkit-cli */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C3E816782EC0CB000065A3FA /* XCRemoteSwiftPackageReference "WhisperKit" */;
+			productName = "whisperkit-cli";
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = C39AA8252EBE767C003185E4 /* Project object */;
 }

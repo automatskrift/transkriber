@@ -32,6 +32,9 @@ struct RecordingMetadata: Codable {
     var errorMessage: String?
     var lastAttemptedAt: Date?
 
+    // Marks (timestamps in seconds when user pressed "Mark" during recording)
+    var marks: [Double]?
+
     init(audioFileName: String, createdOnDevice: String = "Unknown") {
         self.id = UUID()
         self.audioFileName = audioFileName
@@ -54,7 +57,35 @@ struct RecordingMetadata: Codable {
         encoder.outputFormatting = .prettyPrinted
 
         let data = try encoder.encode(self)
-        try data.write(to: metadataURL)
+
+        // Use NSFileCoordinator for iCloud files to prevent sync conflicts
+        if directory.path.contains("Mobile Documents") {
+            var coordinatorError: NSError?
+            var writeError: Error?
+
+            let coordinator = NSFileCoordinator(filePresenter: nil)
+
+            // Use .forMerging option to prevent conflicts when both apps write simultaneously
+            coordinator.coordinate(writingItemAt: metadataURL, options: [.forReplacing, .forMerging], error: &coordinatorError) { url in
+                do {
+                    // iOS and macOS write metadata - use coordinated writes to prevent conflicts
+                    // NSFileCoordinator handles conflicts - if a conflict occurs, iCloud creates " 2.json" which we cleanup automatically
+                    try data.write(to: url, options: [])
+                } catch {
+                    writeError = error
+                }
+            }
+
+            if let error = coordinatorError {
+                throw error
+            }
+            if let error = writeError {
+                throw error
+            }
+        } else {
+            // For local files, write directly with atomic option
+            try data.write(to: metadataURL, options: .atomic)
+        }
     }
 
     /// Load metadata from JSON file
@@ -69,7 +100,37 @@ struct RecordingMetadata: Codable {
             return nil
         }
 
-        let data = try Data(contentsOf: metadataURL)
+        // Use NSFileCoordinator for iCloud files to ensure consistent reads
+        let data: Data
+        if directory.path.contains("Mobile Documents") {
+            var coordinatorError: NSError?
+            var readData: Data?
+            var readError: Error?
+
+            let coordinator = NSFileCoordinator(filePresenter: nil)
+            coordinator.coordinate(readingItemAt: metadataURL, options: [], error: &coordinatorError) { url in
+                do {
+                    readData = try Data(contentsOf: url)
+                } catch {
+                    readError = error
+                }
+            }
+
+            if let error = coordinatorError {
+                throw error
+            }
+            if let error = readError {
+                throw error
+            }
+
+            guard let loadedData = readData else {
+                return nil
+            }
+            data = loadedData
+        } else {
+            data = try Data(contentsOf: metadataURL)
+        }
+
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
 

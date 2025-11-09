@@ -19,6 +19,7 @@ class AudioRecordingService: NSObject, ObservableObject {
     @Published var duration: TimeInterval = 0
     @Published var audioLevels: [Float] = []
     @Published var currentLevel: Float = 0
+    @Published var marks: [Double] = []
 
     private var audioRecorder: AVAudioRecorder?
     private var audioSession: AVAudioSession = .sharedInstance()
@@ -117,7 +118,7 @@ class AudioRecordingService: NSObject, ObservableObject {
         try setupAudioSession()
 
         // Generate unique filename
-        let fileName = "recording_\(Date().timeIntervalSince1970).m4a"
+        let fileName = "rec_\(Date().timeIntervalSince1970).m4a"
         let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let audioURL = documentsPath.appendingPathComponent(fileName)
 
@@ -161,6 +162,7 @@ class AudioRecordingService: NSObject, ObservableObject {
             isPaused = false
             duration = 0
             audioLevels = []
+            marks = []
 
             startMonitoring()
 
@@ -241,6 +243,15 @@ class AudioRecordingService: NSObject, ObservableObject {
         Task { await updateLiveActivity(pausedAt: nil) }
 
         print("▶️ Recording resumed")
+    }
+
+    /// Add a mark at the current recording time
+    func addMark() {
+        guard isRecording, let recorder = audioRecorder else { return }
+
+        let currentTime = recorder.currentTime
+        marks.append(currentTime)
+        print("📍 Mark added at \(currentTime) seconds (total marks: \(marks.count))")
     }
 
     /// Cancel recording

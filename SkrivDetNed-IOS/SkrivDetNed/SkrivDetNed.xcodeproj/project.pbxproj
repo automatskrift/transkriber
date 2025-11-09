@@ -214,6 +214,9 @@
 			);
 			mainGroup = C39AA8B12EBE9811003185E4;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				C3E816772EC0CAAC0065A3FA /* XCRemoteSwiftPackageReference "WhisperKit" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C39AA8BB2EBE9811003185E4 /* Products */;
 			projectDirPath = "";
@@ -556,6 +559,17 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		C3E816772EC0CAAC0065A3FA /* XCRemoteSwiftPackageReference "WhisperKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/argmaxinc/WhisperKit.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
 	};
 	rootObject = C39AA8B22EBE9811003185E4 /* Project object */;
 }

@@ -15,6 +15,7 @@ struct RecordingDetailView: View {
     @StateObject private var audioPlayer = AudioPlayerService()
     @State private var showingShareSheet = false
     @State private var isRefreshing = false
+    @State private var showingMetadataJSON = false
 
     var body: some View {
         ScrollView {
@@ -77,6 +78,11 @@ struct RecordingDetailView: View {
                 // Metadata section (always visible)
                 metadataSection
 
+                // Marks section (if available)
+                if let marks = recording.marks, !marks.isEmpty {
+                    marksSection(marks)
+                }
+
                 // Location
                 if let locationName = recording.locationName {
                     locationSection(locationName)
@@ -103,6 +109,9 @@ struct RecordingDetailView: View {
         }
         .sheet(isPresented: $showingShareSheet) {
             ShareSheet(recording: recording)
+        }
+        .sheet(isPresented: $showingMetadataJSON) {
+            MetadataJSONView(recording: recording)
         }
     }
 
@@ -284,6 +293,50 @@ struct RecordingDetailView: View {
         .cornerRadius(12)
     }
 
+    private func marksSection(_ marks: [Double]) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Marks (\(marks.count))", systemImage: "flag.fill")
+                .font(.headline)
+
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(Array(marks.enumerated()), id: \.offset) { index, timestamp in
+                    HStack {
+                        Text("Mark \(index + 1)")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+
+                        Spacer()
+
+                        Text(formatTimestamp(timestamp))
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.blue)
+                    }
+                    .padding(.vertical, 4)
+
+                    if index < marks.count - 1 {
+                        Divider()
+                    }
+                }
+            }
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+    }
+
+    private func formatTimestamp(_ seconds: Double) -> String {
+        let hours = Int(seconds) / 3600
+        let minutes = Int(seconds) / 60 % 60
+        let secs = Int(seconds) % 60
+
+        if hours > 0 {
+            return String(format: "%d:%02d:%02d", hours, minutes, secs)
+        } else {
+            return String(format: "%d:%02d", minutes, secs)
+        }
+    }
+
     private func locationSection(_ locationName: String) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Label("Lokation", systemImage: "location")
@@ -375,6 +428,11 @@ struct RecordingDetailView: View {
                 Label("Status", systemImage: "info.circle")
                     .font(.headline)
                 Spacer()
+                Button(action: { showingMetadataJSON = true }) {
+                    Image(systemName: "doc.text")
+                        .font(.caption)
+                }
+                .buttonStyle(.borderless)
                 Button(action: refreshStatus) {
                     Image(systemName: "arrow.clockwise")
                         .font(.caption)
@@ -609,5 +667,76 @@ class AudioPlayerService: ObservableObject {
             rec.transcriptionText = "Dette er en test transskription af mødet..."
             return rec
         }())
+    }
+}
+
+// MARK: - Metadata JSON View
+struct MetadataJSONView: View {
+    let recording: Recording
+    @Environment(\.dismiss) private var dismiss
+    @State private var metadataJSON: String = "Loading..."
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Metadata JSON")
+                        .font(.headline)
+
+                    Text(metadataJSON)
+                        .font(.system(.caption, design: .monospaced))
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
+                }
+                .padding()
+            }
+            .navigationTitle("Metadata")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Luk") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: copyToClipboard) {
+                        Label("Kopier", systemImage: "doc.on.doc")
+                    }
+                }
+            }
+            .onAppear {
+                loadMetadataJSON()
+            }
+        }
+    }
+
+    private func loadMetadataJSON() {
+        guard let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL() else {
+            metadataJSON = "Error: Could not find recordings folder"
+            return
+        }
+
+        do {
+            let metadata = try RecordingMetadata.load(for: recording.fileName, from: recordingsFolder)
+
+            if let metadata = metadata {
+                let encoder = JSONEncoder()
+                encoder.dateEncodingStrategy = .iso8601
+                encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+
+                let data = try encoder.encode(metadata)
+                metadataJSON = String(data: data, encoding: .utf8) ?? "Error: Could not decode JSON"
+            } else {
+                metadataJSON = "No metadata file found for this recording"
+            }
+        } catch {
+            metadataJSON = "Error loading metadata: \(error.localizedDescription)"
+        }
+    }
+
+    private func copyToClipboard() {
+        UIPasteboard.general.string = metadataJSON
     }
 }

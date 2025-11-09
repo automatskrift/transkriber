@@ -6,8 +6,19 @@
 //
 
 import Foundation
-import Speech
+import WhisperKit
 import Combine
+
+struct TranscriptionSegment {
+    let start: Double
+    let end: Double
+    let text: String
+}
+
+struct TranscriptionResult {
+    let text: String
+    let segments: [TranscriptionSegment]
+}
 
 @MainActor
 class WhisperService: ObservableObject {
@@ -16,98 +27,98 @@ class WhisperService: ObservableObject {
     @Published var isTranscribing = false
     @Published var currentProgress: Double = 0.0
 
+    private var whisperKit: WhisperKit?
     private var currentModel: WhisperModelType?
 
     private init() {}
 
-    func loadModel(_ modelType: WhisperModelType) throws {
+    func loadModel(_ modelType: WhisperModelType) async throws {
         guard FileSystemHelper.shared.modelExists(modelType) else {
             throw WhisperError.modelNotDownloaded
         }
 
-        // TODO: Load actual whisper.cpp model
-        // For now, we'll use Apple's Speech framework as a fallback
-        self.currentModel = modelType
+        print("🔄 Loading WhisperKit model: \(modelType.displayName)")
+
+        do {
+            whisperKit = try await WhisperKit(
+                model: modelType.modelPath,
+                verbose: true,
+                logLevel: .debug
+            )
+            currentModel = modelType
+            print("✅ WhisperKit model loaded successfully")
+        } catch {
+            print("❌ Failed to load WhisperKit: \(error)")
+            throw WhisperError.modelNotDownloaded
+        }
     }
 
-    func transcribe(audioURL: URL, modelType: WhisperModelType, progress: @escaping (Double) -> Void) async throws -> String {
+    func transcribe(
+        audioURL: URL,
+        modelType: WhisperModelType,
+        progress: @escaping (Double) -> Void
+    ) async throws -> TranscriptionResult {
         guard FileManager.default.fileExists(atPath: audioURL.path) else {
             throw WhisperError.fileNotFound
         }
 
-        // Load model if not already loaded
-        if currentModel != modelType {
-            try loadModel(modelType)
+        // Load model if not already loaded or different model requested
+        if whisperKit == nil || currentModel != modelType {
+            try await loadModel(modelType)
+        }
+
+        guard let whisperKit = whisperKit else {
+            throw WhisperError.modelNotDownloaded
         }
 
         isTranscribing = true
         defer { isTranscribing = false }
 
-        // Check if we should use Apple's Speech Recognition
-        // This is a temporary solution until whisper.cpp is integrated
+        print("🎙️ Starting transcription with WhisperKit...")
+
         do {
-            let transcription = try await transcribeWithSpeechRecognition(audioURL: audioURL, progress: progress)
-            return transcription
+            // Transcribe with WhisperKit
+            let result = try await whisperKit.transcribe(
+                audioPath: audioURL.path,
+                decodeOptions: DecodingOptions(
+                    verbose: true,
+                    task: .transcribe,
+                    language: AppSettings.shared.selectedLanguage,
+                    temperature: Float(AppSettings.shared.whisperTemperature),
+                    temperatureFallbackCount: 5,
+                    sampleLength: 224,
+                    skipSpecialTokens: true,
+                    withoutTimestamps: false,  // We need timestamps for marks!
+                    clipTimestamps: [],
+                    promptTokens: nil
+                )
+            ) { progressUpdate in
+                Task { @MainActor in
+                    self.currentProgress = progressUpdate.progress
+                    progress(progressUpdate.progress)
+                }
+            }
+
+            // Extract text and segments
+            let fullText = result?.text ?? ""
+            var segments: [TranscriptionSegment] = []
+
+            if let resultSegments = result?.segments {
+                segments = resultSegments.map { segment in
+                    TranscriptionSegment(
+                        start: segment.start,
+                        end: segment.end,
+                        text: segment.text
+                    )
+                }
+                print("✅ Transcription complete: \(segments.count) segments")
+            }
+
+            return TranscriptionResult(text: fullText, segments: segments)
+
         } catch {
+            print("❌ WhisperKit transcription failed: \(error)")
             throw WhisperError.transcriptionFailed(error.localizedDescription)
-        }
-    }
-
-    private func transcribeWithSpeechRecognition(audioURL: URL, progress: @escaping (Double) -> Void) async throws -> String {
-        // Request authorization
-        let authStatus = await withCheckedContinuation { continuation in
-            SFSpeechRecognizer.requestAuthorization { status in
-                continuation.resume(returning: status)
-            }
-        }
-
-        guard authStatus == .authorized else {
-            throw WhisperError.authorizationDenied
-        }
-
-        // Create recognizer
-        guard let recognizer = SFSpeechRecognizer(locale: Locale(identifier: AppSettings.shared.selectedLanguage)) else {
-            throw WhisperError.recognizerNotAvailable
-        }
-
-        guard recognizer.isAvailable else {
-            throw WhisperError.recognizerNotAvailable
-        }
-
-        // Create recognition request
-        let request = SFSpeechURLRecognitionRequest(url: audioURL)
-        request.shouldReportPartialResults = true
-        request.requiresOnDeviceRecognition = false
-
-        return try await withCheckedThrowingContinuation { continuation in
-            var hasReturned = false
-            var lastTranscription = ""
-
-            recognizer.recognitionTask(with: request) { result, error in
-                if let error = error {
-                    if !hasReturned {
-                        hasReturned = true
-                        continuation.resume(throwing: error)
-                    }
-                    return
-                }
-
-                if let result = result {
-                    lastTranscription = result.bestTranscription.formattedString
-
-                    // Update progress based on completion
-                    if result.isFinal {
-                        progress(1.0)
-                        if !hasReturned {
-                            hasReturned = true
-                            continuation.resume(returning: lastTranscription)
-                        }
-                    } else {
-                        // Estimate progress (this is approximate)
-                        progress(0.5)
-                    }
-                }
-            }
         }
     }
 
@@ -127,15 +138,15 @@ enum WhisperError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .modelNotDownloaded:
-            return "Model er ikke downloadet. Download modellen i indstillinger."
+            return "Whisper model er ikke downloadet. Download modellen i indstillinger."
         case .fileNotFound:
             return "Lydfil ikke fundet"
-        case .transcriptionFailed(let message):
-            return "Transskription fejlede: \(message)"
+        case .transcriptionFailed(let error):
+            return "Transskription fejlede: \(error)"
         case .authorizationDenied:
-            return "Adgang til talegenkendelse er nægtet. Giv tilladelse i Systemindstillinger."
+            return "Mikrofonadgang nægtet"
         case .recognizerNotAvailable:
-            return "Talegenkendelse er ikke tilgængelig"
+            return "Talegenkendelse ikke tilgængelig"
         }
     }
 }

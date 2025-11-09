@@ -435,6 +435,7 @@ class iCloudSyncService: ObservableObject {
             metadata.notes = recording.notes
             metadata.duration = recording.duration
             metadata.promptPrefix = recording.promptPrefix
+            metadata.marks = recording.marks
 
             // Debug metadata
             print("🔍 DEBUG Metadata before save:")
@@ -742,6 +743,9 @@ class iCloudSyncService: ObservableObject {
                 }
 
                 if recording.fileName == audioFileName {
+                    // Update marks from metadata
+                    recording.marks = metadata.marks
+
                     // Update status based on metadata
                     switch metadata.status {
                     case .pending:
@@ -751,8 +755,15 @@ class iCloudSyncService: ObservableObject {
                         recording.cloudStatus = .synced
                         recording.errorMessage = nil
                     case .transcribing:
-                        recording.cloudStatus = .transcribing
-                        recording.errorMessage = nil
+                        // Check if it's actually failed (has error message but status stuck as transcribing)
+                        if let errorMessage = metadata.errorMessage {
+                            recording.cloudStatus = .failed
+                            recording.errorMessage = errorMessage
+                            print("   ⚠️ File has transcribing status but has error - treating as failed")
+                        } else {
+                            recording.cloudStatus = .transcribing
+                            recording.errorMessage = nil
+                        }
                     case .completed:
                         recording.cloudStatus = .completed
                         recording.errorMessage = nil
@@ -825,6 +836,7 @@ class iCloudSyncService: ObservableObject {
                 }
 
                 // Check if stuck in transcribing state
+                // IMPORTANT: Don't touch failed files - they failed for a reason
                 if metadata.status == .transcribing {
                     let timeSinceUpdate = Date().timeIntervalSince(metadata.updatedAt)
 
@@ -833,41 +845,55 @@ class iCloudSyncService: ObservableObject {
                         print("⚠️ Found stuck transcription: \(metadata.audioFileName)")
                         print("   Time since update: \(Int(timeSinceUpdate / 60)) minutes")
 
-                        // Check if transcription file actually exists
-                        if let transcriptionFileName = metadata.transcriptionFileName {
-                            let transcriptionURL = recordingsFolder.appendingPathComponent(transcriptionFileName)
+                        // If file has error message, mark as failed (not pending)
+                        if let errorMessage = metadata.errorMessage {
+                            print("   ❌ Has error message: \(errorMessage)")
+                            metadata.status = .failed
+                            metadata.updatedAt = Date()
+                            try? metadata.save(to: recordingsFolder)
+                            print("   ✅ Marked as failed")
+                        } else {
+                            // Check if transcription file actually exists
+                            if let transcriptionFileName = metadata.transcriptionFileName {
+                                let transcriptionURL = recordingsFolder.appendingPathComponent(transcriptionFileName)
 
-                            if FileManager.default.fileExists(atPath: transcriptionURL.path) {
-                                // Transcription exists! Update status to completed
-                                metadata.status = .completed
-                                try? metadata.save(to: recordingsFolder)
-                                print("   ✅ Found transcription file - updated to completed")
+                                if FileManager.default.fileExists(atPath: transcriptionURL.path) {
+                                    // Transcription exists! Update status to completed
+                                    metadata.status = .completed
+                                    try? metadata.save(to: recordingsFolder)
+                                    print("   ✅ Found transcription file - updated to completed")
 
-                                // Update local recording
-                                if let transcription = try? String(contentsOf: transcriptionURL, encoding: .utf8) {
-                                    await updateLocalRecording(audioFileName: metadata.audioFileName, transcription: transcription)
+                                    // Update local recording
+                                    if let transcription = try? String(contentsOf: transcriptionURL, encoding: .utf8) {
+                                        await updateLocalRecording(audioFileName: metadata.audioFileName, transcription: transcription)
+                                    }
+                                } else {
+                                    // No transcription found - reset to pending
+                                    metadata.status = .pending
+                                    metadata.updatedAt = Date()
+                                    try? metadata.save(to: recordingsFolder)
+                                    print("   🔄 Reset to pending (transcription not found)")
+
+                                    // Update local recording
+                                    await updateLocalRecordingStatus(audioFileName: metadata.audioFileName, metadata: metadata)
                                 }
                             } else {
-                                // No transcription found - reset to pending
+                                // No transcription filename set - reset to pending
                                 metadata.status = .pending
                                 metadata.updatedAt = Date()
                                 try? metadata.save(to: recordingsFolder)
-                                print("   🔄 Reset to pending (transcription not found)")
+                                print("   🔄 Reset to pending (no transcription filename)")
 
                                 // Update local recording
                                 await updateLocalRecordingStatus(audioFileName: metadata.audioFileName, metadata: metadata)
                             }
-                        } else {
-                            // No transcription filename set - reset to pending
-                            metadata.status = .pending
-                            metadata.updatedAt = Date()
-                            try? metadata.save(to: recordingsFolder)
-                            print("   🔄 Reset to pending (no transcription filename)")
-
-                            // Update local recording
-                            await updateLocalRecordingStatus(audioFileName: metadata.audioFileName, metadata: metadata)
                         }
                     }
+                }
+
+                // Don't touch failed files - let the user retry manually
+                if metadata.status == .failed {
+                    print("   ⏭️ Skipping failed file: \(metadata.audioFileName)")
                 }
             }
         } catch {

@@ -315,6 +315,15 @@ class FolderMonitorService: ObservableObject {
         }
     }
 
+    func removeFromProcessed(_ url: URL) {
+        processedFiles.remove(url.path)
+
+        // Save to UserDefaults
+        if let encoded = try? JSONEncoder().encode(processedFiles) {
+            UserDefaults.standard.set(encoded, forKey: "processedFiles")
+        }
+    }
+
     func removeFromPending(_ url: URL) {
         pendingFiles.removeAll { $0 == url }
     }

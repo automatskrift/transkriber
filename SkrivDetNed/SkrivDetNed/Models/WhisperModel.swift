@@ -60,6 +60,17 @@ enum WhisperModelType: String, CaseIterable, Identifiable {
         let baseURL = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main"
         return URL(string: "\(baseURL)/ggml-\(rawValue).bin?download=true")!
     }
+
+    var modelPath: String {
+        // Path to downloaded model for WhisperKit
+        return FileManager.default
+            .urls(for: .applicationSupportDirectory, in: .userDomainMask)
+            .first?
+            .appendingPathComponent("SkrivDetNed")
+            .appendingPathComponent("Models")
+            .appendingPathComponent("ggml-\(rawValue).bin")
+            .path ?? ""
+    }
 }
 
 struct WhisperModel: Identifiable {

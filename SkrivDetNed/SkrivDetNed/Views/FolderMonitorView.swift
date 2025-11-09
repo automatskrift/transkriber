@@ -14,7 +14,7 @@ struct FolderMonitorView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                // Folder Selection
+                // MARK: - Overvåget Folder Section
                 GroupBox(label: Label("Overvåget Folder", systemImage: "folder")) {
                     VStack(spacing: 12) {
                         HStack {
@@ -67,105 +67,150 @@ struct FolderMonitorView: View {
                                 .tint(viewModel.isMonitoring ? .red : .green)
                             }
                         }
+
+                        // Pending Files from local folder
+                        if !viewModel.pendingFiles.isEmpty {
+                            Divider()
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Text("I Kø (\(viewModel.pendingFiles.count))")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                    Button(action: viewModel.clearPendingQueue) {
+                                        Label("Ryd kø", systemImage: "trash")
+                                            .font(.caption)
+                                    }
+                                    .buttonStyle(.borderless)
+                                    .foregroundColor(.red)
+                                }
+
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 8) {
+                                        ForEach(viewModel.pendingFiles, id: \.self) { fileURL in
+                                            LocalPendingFileCard(fileURL: fileURL, viewModel: viewModel)
+                                        }
+                                    }
+                                }
+                                .frame(height: 80)
+                            }
+                        }
                     }
                     .padding(.vertical, 8)
                 }
 
-                // Active Transcriptions
-                if !transcriptionVM.activeTasks.isEmpty {
-                    GroupBox(label: Label("Kørende Transkriberinger", systemImage: "waveform")) {
-                        VStack(spacing: 12) {
-                            ForEach(transcriptionVM.activeTasks) { task in
-                                TranscriptionTaskRow(task: task)
-                            }
-                        }
-                        .padding(.vertical, 8)
-                    }
-                }
+                // MARK: - Divider
+                Divider()
+                    .padding(.vertical, 8)
 
-                // Pending Files
-                if !viewModel.pendingFiles.isEmpty {
-                    GroupBox(label:
-                        HStack {
-                            Label("I Kø", systemImage: "clock")
-                            Spacer()
-                            Button(action: viewModel.clearPendingQueue) {
-                                Label("Ryd kø", systemImage: "trash")
-                                    .font(.caption)
-                            }
-                            .buttonStyle(.borderless)
-                            .foregroundColor(.red)
-                        }
-                    ) {
-                        VStack(spacing: 8) {
-                            ForEach(viewModel.pendingFiles, id: \.self) { fileURL in
-                                HStack {
-                                    Image(systemName: "doc.fill")
-                                        .foregroundColor(.secondary)
-                                    Text(fileURL.lastPathComponent)
-                                        .font(.subheadline)
-                                    Spacer()
-
-                                    Button(action: {
-                                        viewModel.ignorePendingFile(fileURL)
-                                    }) {
-                                        Label("Ignorer", systemImage: "xmark.circle")
-                                            .font(.caption)
-                                    }
-                                    .buttonStyle(.borderless)
-                                    .foregroundColor(.orange)
-
-                                    Text("Venter...")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                                .padding(.vertical, 4)
-                            }
-                        }
-                        .padding(.vertical, 8)
-                    }
-                }
-
-                // iCloud Folder Button (always visible when monitoring)
-                if viewModel.isMonitoring || !viewModel.recentlyCompleted.isEmpty {
+                // MARK: - iCloud Section
+                GroupBox(label:
                     HStack {
+                        Label("iCloud Optagelser", systemImage: "icloud")
                         Spacer()
                         Button(action: {
                             if let recordingsURL = iCloudSyncService.shared.getRecordingsFolderURL() {
                                 NSWorkspace.shared.activateFileViewerSelecting([recordingsURL])
                             }
                         }) {
-                            Label("Åbn iCloud folder", systemImage: "folder.badge.icloud")
+                            Label("Åbn folder", systemImage: "folder")
+                                .font(.caption)
                         }
-                        .buttonStyle(.bordered)
-                        Spacer()
+                        .buttonStyle(.borderless)
                     }
-                }
+                ) {
+                    VStack(spacing: 16) {
+                        // Currently transcribing
+                        if !transcriptionVM.activeTasks.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Under Transkribering")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
 
-                // Recent Completions
-                if !viewModel.recentlyCompleted.isEmpty {
-                    GroupBox(label:
-                        HStack {
-                            Label("Seneste Færdige", systemImage: "checkmark.circle")
-                            Spacer()
-                            Button(action: viewModel.clearCompletedTasks) {
-                                Label("Ryd liste", systemImage: "trash")
+                                ForEach(transcriptionVM.activeTasks) { task in
+                                    TranscriptionTaskRow(task: task)
+                                }
+                            }
+                            Divider()
+                        }
+
+                        // Queued files
+                        if !viewModel.iCloudQueuedFiles.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("I Kø (\(viewModel.iCloudQueuedFiles.count))")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 8) {
+                                        ForEach(viewModel.iCloudQueuedFiles, id: \.url) { item in
+                                            iCloudFileCard(url: item.url, metadata: item.metadata, status: .queued)
+                                        }
+                                    }
+                                }
+                                .frame(height: 100)
+                            }
+                            Divider()
+                        }
+
+                        // Completed files
+                        if !viewModel.iCloudCompletedFiles.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Færdige (\(viewModel.iCloudCompletedFiles.count))")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 8) {
+                                        ForEach(viewModel.iCloudCompletedFiles, id: \.url) { item in
+                                            iCloudFileCard(url: item.url, metadata: item.metadata, status: .completed)
+                                        }
+                                    }
+                                }
+                                .frame(height: 100)
+                            }
+                            Divider()
+                        }
+
+                        // Failed files
+                        if !viewModel.iCloudFailedFiles.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Fejlede (\(viewModel.iCloudFailedFiles.count))")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 8) {
+                                        ForEach(viewModel.iCloudFailedFiles, id: \.url) { item in
+                                            iCloudFileCard(url: item.url, metadata: item.metadata, status: .failed)
+                                        }
+                                    }
+                                }
+                                .frame(height: 120)
+                            }
+                        }
+
+                        // Empty state for iCloud
+                        if transcriptionVM.activeTasks.isEmpty &&
+                           viewModel.iCloudQueuedFiles.isEmpty &&
+                           viewModel.iCloudCompletedFiles.isEmpty &&
+                           viewModel.iCloudFailedFiles.isEmpty {
+                            VStack(spacing: 12) {
+                                Image(systemName: "icloud")
+                                    .font(.system(size: 32))
+                                    .foregroundColor(.secondary)
+                                Text("Ingen filer i iCloud")
                                     .font(.caption)
+                                    .foregroundColor(.secondary)
                             }
-                            .buttonStyle(.borderless)
-                            .foregroundColor(.secondary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 20)
                         }
-                    ) {
-                        VStack(spacing: 8) {
-                            ForEach(viewModel.recentlyCompleted) { task in
-                                CompletedTaskRow(task: task)
-                            }
-                        }
-                        .padding(.vertical, 8)
                     }
+                    .padding(.vertical, 8)
                 }
 
-                // Empty state
+                // MARK: - Empty State
                 if viewModel.selectedFolderURL == nil {
                     VStack(spacing: 16) {
                         Image(systemName: "folder.badge.questionmark")
@@ -189,7 +234,9 @@ struct FolderMonitorView: View {
                 if viewModel.selectedFolderURL != nil && !viewModel.isMonitoring &&
                    transcriptionVM.activeTasks.isEmpty &&
                    viewModel.pendingFiles.isEmpty &&
-                   viewModel.recentlyCompleted.isEmpty {
+                   viewModel.iCloudQueuedFiles.isEmpty &&
+                   viewModel.iCloudCompletedFiles.isEmpty &&
+                   viewModel.iCloudFailedFiles.isEmpty {
                     VStack(spacing: 16) {
                         Image(systemName: "play.circle")
                             .font(.system(size: 48))
@@ -213,8 +260,226 @@ struct FolderMonitorView: View {
         }
         .frame(minWidth: 600, minHeight: 500)
     }
+
+    // MARK: - iCloud File Card
+    @ViewBuilder
+    private func iCloudFileCard(url: URL, metadata: RecordingMetadata, status: FileCardStatus) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: status.icon)
+                    .foregroundColor(status.color)
+                    .imageScale(.medium)
+
+                Spacer()
+
+                // Info button (always visible)
+                MetadataInfoButton(url: url, metadata: metadata)
+
+                if status == .completed {
+                    Button(action: {
+                        let txtURL = url.deletingPathExtension().appendingPathExtension("txt")
+                        if FileManager.default.fileExists(atPath: txtURL.path) {
+                            NSWorkspace.shared.activateFileViewerSelecting([txtURL])
+                        }
+                    }) {
+                        Image(systemName: "doc.text")
+                            .font(.caption)
+                    }
+                    .buttonStyle(.borderless)
+                }
+
+                if status == .queued {
+                    Menu {
+                        Button(action: {
+                            Task {
+                                // Force start transcription
+                                await transcriptionVM.addToQueue(url)
+                            }
+                        }) {
+                            Label("Start nu", systemImage: "play.fill")
+                        }
+
+                        Button(role: .destructive, action: {
+                            // Ignore file
+                            viewModel.ignorePendingFile(url)
+                        }) {
+                            Label("Ignorer", systemImage: "xmark.circle")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                            .font(.caption)
+                    }
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
+                }
+
+                if status == .failed {
+                    Menu {
+                        Button(action: {
+                            Task {
+                                // Retry transcription - first update metadata to pending
+                                if let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL() {
+                                    do {
+                                        var updatedMetadata = try RecordingMetadata.load(for: url.lastPathComponent, from: recordingsFolder)
+                                            ?? RecordingMetadata(audioFileName: url.lastPathComponent, createdOnDevice: "macOS")
+
+                                        // Clear error and reset to pending
+                                        updatedMetadata.status = .pending
+                                        updatedMetadata.errorMessage = nil
+                                        updatedMetadata.lastAttemptedAt = nil
+                                        updatedMetadata.updatedAt = Date()
+
+                                        try updatedMetadata.save(to: recordingsFolder)
+                                        print("🔄 Reset failed file to pending for retry: \(url.lastPathComponent)")
+
+                                        // Remove from processed files list so it can be retried
+                                        FolderMonitorService.shared.removeFromProcessed(url)
+                                        print("🔄 Removed from processed files list")
+
+                                        // Now add to queue
+                                        await transcriptionVM.addToQueue(url)
+
+                                        // Trigger immediate refresh to update UI
+                                        await viewModel.refreshiCloudFileLists()
+                                    } catch {
+                                        print("❌ Failed to reset metadata for retry: \(error)")
+                                    }
+                                }
+                            }
+                        }) {
+                            Label("Retry", systemImage: "arrow.clockwise")
+                        }
+
+                        Button(role: .destructive, action: {
+                            // Ignore file
+                            viewModel.ignorePendingFile(url)
+                        }) {
+                            Label("Ignorer", systemImage: "xmark.circle")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                            .font(.caption)
+                    }
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
+                }
+            }
+
+            Text(metadata.title ?? url.deletingPathExtension().lastPathComponent)
+                .font(.caption)
+                .fontWeight(.medium)
+                .lineLimit(1)
+
+            if let duration = metadata.duration {
+                Text(formatDuration(duration))
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+
+            if status == .failed, let error = metadata.errorMessage {
+                Text(error)
+                    .font(.caption2)
+                    .foregroundColor(.red)
+                    .lineLimit(2)
+            }
+
+            Text(metadata.createdAt.timeAgoString())
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+        .padding(12)
+        .frame(width: 160)
+        .background(Color(.controlBackgroundColor))
+        .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(status.color.opacity(0.3), lineWidth: 1)
+        )
+    }
+
+    private func formatDuration(_ seconds: TimeInterval) -> String {
+        let mins = Int(seconds) / 60
+        let secs = Int(seconds) % 60
+        return String(format: "%d:%02d", mins, secs)
+    }
+
+    enum FileCardStatus {
+        case queued, completed, failed
+
+        var icon: String {
+            switch self {
+            case .queued: return "clock"
+            case .completed: return "checkmark.circle.fill"
+            case .failed: return "exclamationmark.triangle.fill"
+            }
+        }
+
+        var color: Color {
+            switch self {
+            case .queued: return .orange
+            case .completed: return .green
+            case .failed: return .red
+            }
+        }
+    }
 }
 
+// MARK: - Local Pending File Card
+struct LocalPendingFileCard: View {
+    let fileURL: URL
+    let viewModel: FolderMonitorViewModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "doc.fill")
+                    .foregroundColor(.orange)
+                    .imageScale(.small)
+
+                Spacer()
+
+                // Info button - check if there's iCloud metadata for this file
+                MetadataInfoButton(url: fileURL, metadata: getMetadata())
+
+                Button(action: {
+                    viewModel.ignorePendingFile(fileURL)
+                }) {
+                    Image(systemName: "xmark.circle")
+                        .font(.caption)
+                }
+                .buttonStyle(.borderless)
+            }
+
+            Text(fileURL.lastPathComponent)
+                .font(.caption)
+                .fontWeight(.medium)
+                .lineLimit(2)
+
+            Text("Venter...")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+        .padding(10)
+        .frame(width: 140)
+        .background(Color(.controlBackgroundColor))
+        .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+        )
+    }
+
+    private func getMetadata() -> RecordingMetadata? {
+        // Try to load metadata if this is an iCloud file
+        guard let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL() else {
+            return nil
+        }
+
+        return try? RecordingMetadata.load(for: fileURL.lastPathComponent, from: recordingsFolder)
+    }
+}
+
+// MARK: - Transcription Task Row
 struct TranscriptionTaskRow: View {
     let task: TranscriptionTask
 
@@ -253,113 +518,123 @@ struct TranscriptionTaskRow: View {
     }
 }
 
-struct CompletedTaskRow: View {
-    let task: TranscriptionTask
-    @ObservedObject private var transcriptionVM = TranscriptionViewModel.shared
+// MARK: - Metadata Info Button
+struct MetadataInfoButton: View {
+    let url: URL
+    let metadata: RecordingMetadata?
+    @State private var showingInfo = false
+
+    init(url: URL, metadata: RecordingMetadata?) {
+        self.url = url
+        self.metadata = metadata
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        Button(action: {
+            showingInfo = true
+        }) {
+            Image(systemName: "info.circle")
+                .font(.caption)
+        }
+        .buttonStyle(.borderless)
+        .popover(isPresented: $showingInfo, arrowEdge: .bottom) {
+            MetadataInfoView(url: url, metadata: metadata)
+        }
+    }
+}
+
+struct MetadataInfoView: View {
+    let url: URL
+    let metadata: RecordingMetadata?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Image(systemName: statusIcon)
-                    .foregroundColor(statusColor)
+                Text("Metadata Info")
+                    .font(.headline)
+                Spacer()
+                Button(action: {
+                    copyToClipboard()
+                }) {
+                    Image(systemName: "doc.on.doc")
+                }
+                .buttonStyle(.borderless)
+                .help("Kopier til udklipsholder")
+            }
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(task.fileName)
-                        .font(.subheadline)
+            Divider()
 
-                    if let completedAt = task.completedAt {
-                        Text(completedAt.timeAgoString())
-                            .font(.caption2)
+            // File existence status
+            HStack {
+                Image(systemName: audioFileExists ? "checkmark.circle.fill" : "xmark.circle.fill")
+                    .foregroundColor(audioFileExists ? .green : .red)
+                Text(audioFileExists ? "Lydfil findes" : "Lydfil findes IKKE")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                Spacer()
+            }
+            .padding(.bottom, 4)
+
+            if audioFileExists {
+                Text("Sti: \(url.path)")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                    .textSelection(.enabled)
+                    .lineLimit(2)
+            }
+
+            Divider()
+
+            ScrollView {
+                if let metadata = metadata {
+                    Text(metadataJSON)
+                        .font(.system(.caption, design: .monospaced))
+                        .textSelection(.enabled)
+                } else {
+                    VStack(spacing: 8) {
+                        Image(systemName: "doc.badge.exclamationmark")
+                            .font(.largeTitle)
+                            .foregroundColor(.orange)
+                        Text("Ingen JSON-fil fundet")
+                            .font(.headline)
+                        Text("Filen: \(url.lastPathComponent)")
+                            .font(.caption)
                             .foregroundColor(.secondary)
                     }
+                    .frame(maxWidth: .infinity)
+                    .padding()
                 }
-
-                Spacer()
-
-                // Show transcription file link if completed
-                if task.status == .completed && FileManager.default.fileExists(atPath: task.outputFileURL.path) {
-                    Button(action: {
-                        NSWorkspace.shared.activateFileViewerSelecting([task.outputFileURL])
-                    }) {
-                        Label("Vis tekst", systemImage: "doc.text")
-                            .font(.caption)
-                    }
-                    .buttonStyle(.borderless)
-                }
-
-                // Show Retry and Ignore buttons if failed
-                if case .failed = task.status {
-                    Button(action: {
-                        Task {
-                            await transcriptionVM.retryTask(task)
-                        }
-                    }) {
-                        Label("Retry", systemImage: "arrow.clockwise")
-                            .font(.caption)
-                    }
-                    .buttonStyle(.borderless)
-                    .foregroundColor(.blue)
-
-                    Button(action: {
-                        transcriptionVM.ignoreTask(task)
-                    }) {
-                        Label("Ignorer", systemImage: "xmark.circle")
-                            .font(.caption)
-                    }
-                    .buttonStyle(.borderless)
-                    .foregroundColor(.orange)
-                }
-
-                Text(statusText)
-                    .font(.caption)
-                    .foregroundColor(statusColor)
             }
-
-            // Show error details if failed
-            if case .failed(let error) = task.status {
-                Text("Fejl: \(error)")
-                    .font(.caption2)
-                    .foregroundColor(.red)
-                    .padding(.leading, 24)
-            }
+            .frame(width: 400, height: 300)
         }
-        .padding(.vertical, 4)
+        .padding()
     }
 
-    private var statusIcon: String {
-        switch task.status {
-        case .completed:
-            return "checkmark.circle.fill"
-        case .failed:
-            return "exclamationmark.circle.fill"
-        default:
-            return "circle"
-        }
+    private var audioFileExists: Bool {
+        FileManager.default.fileExists(atPath: url.path)
     }
 
-    private var statusColor: Color {
-        switch task.status {
-        case .completed:
-            return .green
-        case .failed:
-            return .red
-        default:
-            return .secondary
+    private var metadataJSON: String {
+        guard let metadataValue = metadata else {
+            return "Ingen metadata"
         }
+
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+
+        guard let data = try? encoder.encode(metadataValue),
+              let jsonString = String(data: data, encoding: .utf8) else {
+            return "Kunne ikke encode metadata"
+        }
+
+        return jsonString
     }
 
-    private var statusText: String {
-        switch task.status {
-        case .completed:
-            if let duration = task.duration {
-                return "Færdig (\(Int(duration))s)"
-            }
-            return "Færdig"
-        case .failed(let error):
-            return "Fejl"
-        default:
-            return ""
-        }
+    private func copyToClipboard() {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(metadataJSON, forType: .string)
     }
 }
 

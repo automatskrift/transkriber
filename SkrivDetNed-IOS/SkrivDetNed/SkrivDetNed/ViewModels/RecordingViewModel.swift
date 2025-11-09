@@ -109,6 +109,7 @@ class RecordingViewModel: ObservableObject {
                 recording.title = recordingTitle.isEmpty ? recording.title : recordingTitle
                 recording.tags = parseTags(from: recordingTags)
                 recording.notes = recordingNotes.isEmpty ? nil : recordingNotes
+                recording.marks = audioService.marks.isEmpty ? nil : audioService.marks
 
                 // Debug selectedPrompt
                 print("🔍 DEBUG selectedPrompt:")
@@ -161,6 +162,10 @@ class RecordingViewModel: ObservableObject {
         } else {
             audioService.pauseRecording()
         }
+    }
+
+    func addMark() {
+        audioService.addMark()
     }
 
     func cancelRecording() {

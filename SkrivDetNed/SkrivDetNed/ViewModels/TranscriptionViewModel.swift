@@ -24,7 +24,6 @@ class TranscriptionViewModel: ObservableObject {
 
     private var isProcessing = false
     private var taskQueue: [URL] = []
-    private var stuckCheckTimer: Timer?
 
     private init() {
         // Listen for new files from folder monitor
@@ -37,173 +36,58 @@ class TranscriptionViewModel: ObservableObject {
 
         // Load existing completed transcriptions on startup
         Task {
-            await resetStuckTranscriptions()
+            await cleanupDuplicateMetadataFiles()
             await loadExistingTranscriptions()
-            await processPendingFiles()
         }
-
-        // Start periodic check for stuck transcriptions and pending files (every 5 minutes)
-        stuckCheckTimer = Timer.scheduledTimer(withTimeInterval: 300, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                await self?.resetStuckTranscriptions()
-                await self?.processPendingFiles()
-            }
-        }
-        print("⏰ Started periodic check for stuck/pending transcriptions (every 5 minutes)")
     }
 
-    deinit {
-        stuckCheckTimer?.invalidate()
-    }
-
-    /// Reset transcriptions that are stuck in "transcribing" status
-    private func resetStuckTranscriptions() async {
-        print("🔍 Checking for stuck transcriptions...")
-
-        guard let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL() else {
-            print("⚠️ Cannot access iCloud recordings folder")
+    /// Clean up duplicate metadata files created by iCloud sync conflicts
+    private func cleanupDuplicateMetadataFiles() async {
+        guard let directory = iCloudSyncService.shared.getRecordingsFolderURL() else {
             return
         }
-
         do {
             let files = try FileManager.default.contentsOfDirectory(
-                at: recordingsFolder,
+                at: directory,
                 includingPropertiesForKeys: [.contentModificationDateKey],
                 options: [.skipsHiddenFiles]
             )
 
-            let jsonFiles = files.filter { $0.pathExtension == "json" }
-            var resetCount = 0
+            // Find all duplicate JSON files (ending with " 2.json", " 3.json", etc.)
+            let duplicateFiles = files.filter {
+                $0.pathExtension == "json" &&
+                ($0.lastPathComponent.contains(" 2.json") ||
+                 $0.lastPathComponent.contains(" 3.json") ||
+                 $0.lastPathComponent.contains(" 4.json"))
+            }
 
-            for jsonFile in jsonFiles {
-                guard let data = try? Data(contentsOf: jsonFile) else { continue }
+            for duplicateFile in duplicateFiles {
+                print("🗑️ Cleaning up duplicate metadata file: \(duplicateFile.lastPathComponent)")
 
-                let decoder = JSONDecoder()
-                decoder.dateDecodingStrategy = .iso8601
+                // Try to find the original file
+                let originalFileName = duplicateFile.lastPathComponent
+                    .replacingOccurrences(of: " 2.json", with: ".json")
+                    .replacingOccurrences(of: " 3.json", with: ".json")
+                    .replacingOccurrences(of: " 4.json", with: ".json")
 
-                guard var metadata = try? decoder.decode(RecordingMetadata.self, from: data) else {
-                    continue
-                }
+                let originalFile = directory.appendingPathComponent(originalFileName)
 
-                // Check if stuck in transcribing state
-                if metadata.status == .transcribing {
-                    let timeSinceUpdate = Date().timeIntervalSince(metadata.updatedAt)
-
-                    // If transcribing for more than 2 minutes, consider it stuck
-                    if timeSinceUpdate > 120 {
-                        print("⚠️ Found stuck transcription: \(metadata.audioFileName)")
-                        print("   Time since update: \(Int(timeSinceUpdate)) seconds")
-
-                        // Reset to pending so it will be picked up again
-                        metadata.status = .pending
-                        metadata.updatedAt = Date()
-                        metadata.transcribedOnDevice = nil
-
-                        let encoder = JSONEncoder()
-                        encoder.dateEncodingStrategy = .iso8601
-                        encoder.outputFormatting = .prettyPrinted
-
-                        if let updatedData = try? encoder.encode(metadata) {
-                            try? updatedData.write(to: jsonFile)
-                            print("   ✅ Reset to pending status")
-                            resetCount += 1
-                        }
-                    }
+                if FileManager.default.fileExists(atPath: originalFile.path) {
+                    // Original exists, so we can safely delete the duplicate
+                    try? FileManager.default.removeItem(at: duplicateFile)
+                    print("   ✅ Deleted duplicate (original exists)")
+                } else {
+                    // Original doesn't exist, rename duplicate to be the original
+                    try? FileManager.default.moveItem(at: duplicateFile, to: originalFile)
+                    print("   ✅ Renamed duplicate to original filename")
                 }
             }
 
-            if resetCount > 0 {
-                print("✅ Reset \(resetCount) stuck transcription(s)")
-            } else {
-                print("✅ No stuck transcriptions found")
+            if !duplicateFiles.isEmpty {
+                print("✅ Cleaned up \(duplicateFiles.count) duplicate metadata file(s)")
             }
-
         } catch {
-            print("❌ Failed to check for stuck transcriptions: \(error)")
-        }
-    }
-
-    /// Process pending files from iCloud that are waiting for transcription
-    private func processPendingFiles() async {
-        print("🔍 Checking for pending transcriptions in iCloud...")
-
-        guard AppSettings.shared.iCloudSyncEnabled else {
-            print("⏭️ iCloud sync not enabled, skipping pending files check")
-            return
-        }
-
-        guard let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL() else {
-            print("⚠️ Cannot access iCloud recordings folder")
-            return
-        }
-
-        print("📁 iCloud recordings folder: \(recordingsFolder.path)")
-
-        do {
-            let files = try FileManager.default.contentsOfDirectory(
-                at: recordingsFolder,
-                includingPropertiesForKeys: [.contentModificationDateKey],
-                options: [.skipsHiddenFiles]
-            )
-
-            print("📂 Found \(files.count) total files in iCloud folder")
-
-            let jsonFiles = files.filter { $0.pathExtension == "json" }
-            print("📄 Found \(jsonFiles.count) JSON metadata files")
-
-            var pendingCount = 0
-            var statusCounts: [String: Int] = [:]
-
-            for jsonFile in jsonFiles {
-                guard let data = try? Data(contentsOf: jsonFile) else {
-                    print("⚠️ Could not read: \(jsonFile.lastPathComponent)")
-                    continue
-                }
-
-                let decoder = JSONDecoder()
-                decoder.dateDecodingStrategy = .iso8601
-
-                guard let metadata = try? decoder.decode(RecordingMetadata.self, from: data) else {
-                    print("⚠️ Could not decode metadata: \(jsonFile.lastPathComponent)")
-                    continue
-                }
-
-                // Count status
-                let statusKey = metadata.status.rawValue
-                statusCounts[statusKey, default: 0] += 1
-
-                // Check if in pending state
-                if metadata.status == .pending {
-                    // Find the audio file
-                    let audioURL = recordingsFolder.appendingPathComponent(metadata.audioFileName)
-
-                    print("🔎 Checking pending file: \(metadata.audioFileName)")
-                    print("   Audio file exists: \(FileManager.default.fileExists(atPath: audioURL.path))")
-                    print("   Audio file path: \(audioURL.path)")
-
-                    if FileManager.default.fileExists(atPath: audioURL.path) {
-                        print("📥 Found pending file: \(metadata.audioFileName)")
-                        await addToQueue(audioURL)
-                        pendingCount += 1
-                    } else {
-                        print("⚠️ Pending file not found on disk: \(metadata.audioFileName)")
-                    }
-                }
-            }
-
-            print("📊 Status summary:")
-            for (status, count) in statusCounts.sorted(by: { $0.key < $1.key }) {
-                print("   \(status): \(count)")
-            }
-
-            if pendingCount > 0 {
-                print("✅ Found \(pendingCount) pending file(s) to transcribe")
-            } else {
-                print("✅ No pending files found")
-            }
-
-        } catch {
-            print("❌ Failed to check for pending files: \(error)")
+            print("❌ Failed to clean up duplicate metadata files: \(error)")
         }
     }
 
@@ -300,6 +184,12 @@ class TranscriptionViewModel: ObservableObject {
     }
 
     func addToQueue(_ url: URL) async {
+        print("📝 addToQueue called for: \(url.lastPathComponent)")
+        print("   Full path: \(url.path)")
+        print("   Current taskQueue size: \(taskQueue.count)")
+        print("   Current activeTasks size: \(activeTasks.count)")
+        print("   isProcessing: \(isProcessing)")
+
         // Check if already in queue
         guard !taskQueue.contains(url) else {
             print("⏭️ File already in queue: \(url.lastPathComponent)")
@@ -310,11 +200,15 @@ class TranscriptionViewModel: ObservableObject {
             return
         }
 
+        print("   ✓ Not in queue or active tasks")
+
         // Check if file has already been processed (completed or failed) in iCloud
         if AppSettings.shared.iCloudSyncEnabled,
            let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL() {
+            print("   📁 Checking iCloud metadata...")
             do {
                 if let metadata = try RecordingMetadata.load(for: url.lastPathComponent, from: recordingsFolder) {
+                    print("   📋 Found metadata with status: \(metadata.status.rawValue)")
                     // Skip if already completed successfully
                     if metadata.status == .completed {
                         print("⏭️ File already transcribed (status: completed): \(url.lastPathComponent)")
@@ -329,23 +223,37 @@ class TranscriptionViewModel: ObservableObject {
                         return
                     }
                     // Allow pending and transcribing status (transcribing will be reset by resetStuckTranscriptions)
+                    print("   ✓ Status is \(metadata.status.rawValue) - will proceed")
+                } else {
+                    print("   ℹ️ No metadata found - will proceed")
                 }
             } catch {
                 // No metadata found, proceed with transcription
-                print("ℹ️ No existing metadata for: \(url.lastPathComponent)")
+                print("   ℹ️ No existing metadata (error: \(error.localizedDescription)) - will proceed")
             }
+        } else {
+            print("   ℹ️ iCloud sync disabled or no recordings folder - will proceed")
         }
 
         taskQueue.append(url)
         print("➕ Added to transcription queue: \(url.lastPathComponent)")
+        print("   Queue length: \(taskQueue.count)")
+        print("   isProcessing: \(isProcessing)")
 
         // Start processing if not already
         if !isProcessing {
+            print("   🚀 Starting queue processing...")
             await processQueue()
+        } else {
+            print("   ⏸️ Already processing - will be picked up when current task completes")
         }
     }
 
     func transcribeFile(_ url: URL) async throws {
+        let logMessage = "🎬 transcribeFile STARTED for: \(url.lastPathComponent) at \(Date())"
+        print(logMessage)
+        try? logMessage.appending("\n").write(toFile: "/tmp/skrivdetned_debug.log", atomically: false, encoding: .utf8)
+
         // Check if file is ignored
         if AppSettings.shared.ignoredFiles.contains(url.path) {
             print("⏭️ Skipping ignored file in transcribeFile: \(url.lastPathComponent)")
@@ -361,9 +269,11 @@ class TranscriptionViewModel: ObservableObject {
             throw TranscriptionError.fileNotFound
         }
 
+        print("✅ File exists, creating task...")
         let task = TranscriptionTask(audioFileURL: url)
         activeTasks.append(task)
         currentTask = task
+        print("✅ Task created and added to activeTasks (count: \(activeTasks.count))")
 
         // Update task status
         if let index = activeTasks.firstIndex(where: { $0.id == task.id }) {
@@ -376,6 +286,13 @@ class TranscriptionViewModel: ObservableObject {
                 if let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL() {
                     var metadata = try RecordingMetadata.load(for: url.lastPathComponent, from: recordingsFolder)
                         ?? RecordingMetadata(audioFileName: url.lastPathComponent, createdOnDevice: "Unknown")
+
+                    // Clear previous error if retrying a failed transcription
+                    if metadata.status == .failed {
+                        print("🔄 Retrying previously failed file - clearing error message")
+                        metadata.errorMessage = nil
+                        metadata.lastAttemptedAt = nil
+                    }
 
                     metadata.status = .transcribing
                     metadata.transcribedOnDevice = "macOS"
@@ -399,7 +316,7 @@ class TranscriptionViewModel: ObservableObject {
             }
 
             // Transcribe
-            let transcription = try await WhisperService.shared.transcribe(
+            let result = try await WhisperService.shared.transcribe(
                 audioURL: url,
                 modelType: modelType
             ) { progress in
@@ -410,15 +327,25 @@ class TranscriptionViewModel: ObservableObject {
                 }
             }
 
+            // Insert marks if available
+            var finalTranscription = result.text
+            if url.path.contains("Mobile Documents"),
+               let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL(),
+               let metadata = try? RecordingMetadata.load(for: url.lastPathComponent, from: recordingsFolder),
+               let marks = metadata.marks, !marks.isEmpty {
+                finalTranscription = insertMarks(in: result.text, marks: marks, segments: result.segments)
+                print("📍 Inserted \(marks.count) marks into transcription")
+            }
+
             // Save transcription to file
-            try transcription.write(to: task.outputFileURL, atomically: true, encoding: .utf8)
+            try finalTranscription.write(to: task.outputFileURL, atomically: true, encoding: .utf8)
 
             // If file is from iCloud, save transcription back to iCloud
             if url.path.contains("Mobile Documents") {
                 do {
                     try await iCloudSyncService.shared.saveTranscriptionToiCloud(
                         audioFileName: url.lastPathComponent,
-                        transcription: transcription
+                        transcription: finalTranscription
                     )
                     print("✅ Successfully saved transcription and metadata to iCloud")
                 } catch {
@@ -455,6 +382,8 @@ class TranscriptionViewModel: ObservableObject {
             }
 
         } catch {
+            print("❌ Transcription error caught for \(url.lastPathComponent): \(error)")
+
             // Update task status
             if let index = activeTasks.firstIndex(where: { $0.id == task.id }) {
                 activeTasks[index].status = .failed(error: error.localizedDescription)
@@ -463,26 +392,53 @@ class TranscriptionViewModel: ObservableObject {
                 // Move to completed
                 let failedTask = activeTasks.remove(at: index)
                 completedTasks.insert(failedTask, at: 0)
+                print("   ✅ Task moved to completed with failed status")
             }
 
             // If file is from iCloud, save error status to metadata
             if url.path.contains("Mobile Documents") {
+                print("   📁 File is from iCloud, updating metadata...")
+                print("   📍 File path: \(url.path)")
+
                 do {
                     if let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL() {
+                        print("   📂 Recordings folder: \(recordingsFolder.path)")
+
                         var metadata = try RecordingMetadata.load(for: url.lastPathComponent, from: recordingsFolder)
                             ?? RecordingMetadata(audioFileName: url.lastPathComponent, createdOnDevice: "Unknown")
+
+                        print("   📝 Current metadata status: \(metadata.status.rawValue)")
 
                         metadata.status = .failed
                         metadata.errorMessage = error.localizedDescription
                         metadata.lastAttemptedAt = Date()
                         metadata.updatedAt = Date()
 
+                        print("   💾 Attempting to save metadata with status: failed")
                         try metadata.save(to: recordingsFolder)
-                        print("❌ Saved error status to iCloud metadata: \(error.localizedDescription)")
+                        print("   ✅ Successfully saved error status to iCloud metadata: \(error.localizedDescription)")
+
+                        // Verify it was saved correctly
+                        if let verifyMetadata = try? RecordingMetadata.load(for: url.lastPathComponent, from: recordingsFolder) {
+                            print("   ✓ Verification - metadata status is now: \(verifyMetadata.status.rawValue)")
+                        } else {
+                            print("   ⚠️ Verification failed - could not reload metadata")
+                        }
+                    } else {
+                        print("   ❌ Could not get recordings folder URL")
                     }
-                } catch {
-                    print("⚠️ Failed to save error status to iCloud: \(error)")
+                } catch let saveError {
+                    print("   ❌ Failed to save error status to iCloud: \(saveError)")
+                    print("   📋 Save error type: \(type(of: saveError))")
+                    print("   📋 Save error details: \(saveError.localizedDescription)")
+                    if let nsError = saveError as NSError? {
+                        print("   📋 NSError domain: \(nsError.domain)")
+                        print("   📋 NSError code: \(nsError.code)")
+                        print("   📋 NSError userInfo: \(nsError.userInfo)")
+                    }
                 }
+            } else {
+                print("   ℹ️ File is NOT from iCloud (path: \(url.path))")
             }
 
             throw error
@@ -492,52 +448,97 @@ class TranscriptionViewModel: ObservableObject {
     }
 
     private func processQueue() async {
+        // Check if stuck - processing flag set but no active tasks
+        if isProcessing && activeTasks.isEmpty && !taskQueue.isEmpty {
+            print("⚠️ Processing flag stuck - resetting (queue has \(taskQueue.count) files)")
+            isProcessing = false
+        }
+
         guard !isProcessing else {
-            print("⏸️ Already processing queue")
+            print("⏸️ Already processing queue (activeTasks: \(activeTasks.count))")
             return
         }
         isProcessing = true
 
-        print("🚀 Starting queue processing (\(taskQueue.count) files in queue)")
+        let logMsg = "🚀 Starting queue processing (\(taskQueue.count) files in queue) at \(Date())"
+        print(logMsg)
+        try? logMsg.appending("\n").write(toFile: "/tmp/skrivdetned_debug.log", atomically: true, encoding: .utf8)
 
         while !taskQueue.isEmpty {
             let url = taskQueue.removeFirst()
 
-            print("🔄 Processing: \(url.lastPathComponent) (\(taskQueue.count) remaining)")
+            let procMsg = "🔄 Processing: \(url.lastPathComponent) (\(taskQueue.count) remaining)"
+            print(procMsg)
+            if var log = try? String(contentsOfFile: "/tmp/skrivdetned_debug.log", encoding: .utf8) {
+                log.append(procMsg + "\n")
+                try? log.write(toFile: "/tmp/skrivdetned_debug.log", atomically: true, encoding: .utf8)
+            }
 
             // Check if file still exists
-            guard FileManager.default.fileExists(atPath: url.path) else {
-                print("⏭️ Skipping deleted file: \(url.lastPathComponent)")
+            let fileExists = FileManager.default.fileExists(atPath: url.path)
+            if !fileExists {
+                let msg = "⏭️ SKIP: File doesn't exist: \(url.lastPathComponent)"
+                print(msg)
+                if var log = try? String(contentsOfFile: "/tmp/skrivdetned_debug.log", encoding: .utf8) {
+                    log.append(msg + "\n")
+                    try? log.write(toFile: "/tmp/skrivdetned_debug.log", atomically: true, encoding: .utf8)
+                }
                 FolderMonitorService.shared.removeFromPending(url)
                 continue
             }
 
             // Skip if file is ignored
             if AppSettings.shared.ignoredFiles.contains(url.path) {
-                print("⏭️ Skipping ignored file: \(url.lastPathComponent)")
+                let msg = "⏭️ SKIP: File is ignored: \(url.lastPathComponent)"
+                print(msg)
+                if var log = try? String(contentsOfFile: "/tmp/skrivdetned_debug.log", encoding: .utf8) {
+                    log.append(msg + "\n")
+                    try? log.write(toFile: "/tmp/skrivdetned_debug.log", atomically: true, encoding: .utf8)
+                }
                 continue
             }
 
             // Skip if already processed
-            guard !FolderMonitorService.shared.processedFiles.contains(url.path) else {
-                print("⏭️ Skipping already processed file: \(url.lastPathComponent)")
+            let isProcessed = FolderMonitorService.shared.processedFiles.contains(url.path)
+            if isProcessed {
+                let msg = "⏭️ SKIP: Already processed: \(url.lastPathComponent)"
+                print(msg)
+                if var log = try? String(contentsOfFile: "/tmp/skrivdetned_debug.log", encoding: .utf8) {
+                    log.append(msg + "\n")
+                    try? log.write(toFile: "/tmp/skrivdetned_debug.log", atomically: true, encoding: .utf8)
+                }
                 continue
             }
 
             // Skip if transcription already exists
-            guard !FileSystemHelper.shared.transcriptionFileExists(for: url) else {
-                print("⏭️ Transcription already exists: \(url.lastPathComponent)")
+            let transcriptionExists = FileSystemHelper.shared.transcriptionFileExists(for: url)
+            if transcriptionExists {
+                let msg = "⏭️ SKIP: Transcription exists: \(url.lastPathComponent)"
+                print(msg)
+                if var log = try? String(contentsOfFile: "/tmp/skrivdetned_debug.log", encoding: .utf8) {
+                    log.append(msg + "\n")
+                    try? log.write(toFile: "/tmp/skrivdetned_debug.log", atomically: true, encoding: .utf8)
+                }
                 FolderMonitorService.shared.markAsProcessed(url)
                 continue
             }
 
-            print("▶️ Starting transcription: \(url.lastPathComponent)")
+            let startMsg = "▶️ Starting transcription: \(url.lastPathComponent)"
+            print(startMsg)
+            if var log = try? String(contentsOfFile: "/tmp/skrivdetned_debug.log", encoding: .utf8) {
+                log.append(startMsg + "\n")
+                try? log.write(toFile: "/tmp/skrivdetned_debug.log", atomically: true, encoding: .utf8)
+            }
 
             do {
                 try await transcribeFile(url)
                 print("✅ Completed transcription: \(url.lastPathComponent)")
             } catch {
                 print("❌ Transcription failed for \(url.lastPathComponent): \(error)")
+                // Mark as processed even if failed, so it doesn't keep appearing
+                // The metadata status is already set to .failed in the error handler
+                FolderMonitorService.shared.markAsProcessed(url)
+                print("   ✅ Marked failed file as processed in FolderMonitorService")
             }
 
             // Small delay between files
@@ -597,6 +598,11 @@ class TranscriptionViewModel: ObservableObject {
         print("🗑️ Removed \(url.lastPathComponent) from transcription processing")
     }
 
+    /// Check if a file is already in the transcription queue
+    func isInQueue(_ url: URL) -> Bool {
+        return taskQueue.contains { $0.path == url.path }
+    }
+
     /// Retry a failed transcription task
     func retryTask(_ task: TranscriptionTask) async {
         // Remove from completed tasks
@@ -619,6 +625,60 @@ class TranscriptionViewModel: ObservableObject {
         completedTasks.removeAll { $0.id == task.id }
 
         print("🚫 Ignoring file: \(task.fileName)")
+    }
+
+    /// Insert marks into transcription text based on segment timestamps
+    private func insertMarks(in text: String, marks: [Double], segments: [TranscriptionSegment]) -> String {
+        guard !marks.isEmpty, !segments.isEmpty else { return text }
+
+        // Sort marks by timestamp
+        let sortedMarks = marks.sorted()
+
+        // Create a list of (position, markNumber) to insert
+        var insertions: [(segmentIndex: Int, markNumber: Int)] = []
+
+        for (markIndex, markTime) in sortedMarks.enumerated() {
+            // Find the segment that contains or is closest to this mark time
+            var closestSegmentIndex = 0
+            var closestDistance = Double.infinity
+
+            for (index, segment) in segments.enumerated() {
+                // Check if mark is within this segment
+                if markTime >= segment.start && markTime <= segment.end {
+                    closestSegmentIndex = index
+                    break
+                }
+
+                // Check distance to segment start
+                let distance = abs(segment.start - markTime)
+                if distance < closestDistance {
+                    closestDistance = distance
+                    closestSegmentIndex = index
+                }
+            }
+
+            insertions.append((segmentIndex: closestSegmentIndex, markNumber: markIndex + 1))
+        }
+
+        // Sort insertions by segment index (descending) so we can insert from end to start
+        insertions.sort { $0.segmentIndex > $1.segmentIndex }
+
+        // Build result by inserting marks before segments
+        var result = text
+        var processedSegments = segments
+
+        for insertion in insertions.reversed() {
+            let segment = processedSegments[insertion.segmentIndex]
+            let markText = "[Mark \(insertion.markNumber)]"
+
+            // Find the segment text in the full transcription
+            if let range = result.range(of: segment.text) {
+                // Insert mark before the segment
+                result.insert(contentsOf: markText + " ", at: range.lowerBound)
+            }
+        }
+
+        return result
     }
 }
 
