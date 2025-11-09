@@ -14,6 +14,12 @@ struct SettingsView: View {
     @State private var cacheCleared = false
     @State private var lastMacHeartbeat: Date?
 
+    private var appVersion: String {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+        return "\(version) (\(build))"
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -168,7 +174,7 @@ struct SettingsView: View {
                     HStack {
                         Text(NSLocalizedString("Version", comment: ""))
                         Spacer()
-                        Text("1.0.0")
+                        Text(appVersion)
                             .foregroundColor(.secondary)
                     }
 
@@ -176,9 +182,9 @@ struct SettingsView: View {
                         showingAbout = true
                     }
 
-                    Link(NSLocalizedString("Support", comment: ""), destination: URL(string: "https://github.com")!)
+                    Link(NSLocalizedString("Support", comment: ""), destination: URL(string: "https://omdethele.dk/apps")!)
 
-                    Link(NSLocalizedString("Privatlivspolitik", comment: ""), destination: URL(string: "https://github.com")!)
+                    Link(NSLocalizedString("Privatlivspolitik", comment: ""), destination: URL(string: "https://omdethele.dk/apps")!)
                 } header: {
                     Label(NSLocalizedString("Om", comment: ""), systemImage: "info.circle")
                 }
@@ -325,6 +331,12 @@ struct SettingsView: View {
 struct AboutView: View {
     @Environment(\.dismiss) var dismiss
 
+    private var appVersion: String {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+        return "\(version) (\(build))"
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -337,7 +349,7 @@ struct AboutView: View {
                         .font(.title)
                         .fontWeight(.bold)
 
-                    Text(NSLocalizedString("Version 1.0.0", comment: ""))
+                    Text("Version \(appVersion)")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
 

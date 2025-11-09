@@ -2,10 +2,36 @@
   "sourceLanguage" : "da",
   "strings" : {
     "'%@' er færdig transskriberet" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "'%@' er færdig transskriberet"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "'%@' has been transcribed"
+          }
+        }
+      }
     },
     "'%@' er uploadet til iCloud" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "'%@' er uploadet til iCloud"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "'%@' uploaded to iCloud"
+          }
+        }
+      }
     },
     "'%@' kunne ikke uploades: %@" : {
       "localizations" : {
@@ -14,17 +40,62 @@
             "state" : "new",
             "value" : "'%1$@' kunne ikke uploades: %2$@"
           }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "'%@' could not be uploaded: %@"
+          }
         }
       }
     },
     "#%@" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "#%@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "#%@"
+          }
+        }
+      }
     },
     "%@ gør det nemt at optage lyd på din iPhone og automatisk få det transskriberet til tekst via din Mac." : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ gør det nemt at optage lyd på din iPhone og automatisk få det transskriberet til tekst via din Mac."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ makes it easy to record audio on your iPhone and automatically get it transcribed to text via your Mac."
+          }
+        }
+      }
     },
     "%lld" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld"
+          }
+        }
+      }
     },
     "%lld ord" : {
       "extractionState" : "manual",
@@ -44,10 +115,37 @@
       }
     },
     "•" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "•"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "•"
+          }
+        }
+      }
     },
     "1.0.0" : {
-
+      "extractionState" : "stale",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1.0.0"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1.0.0"
+          }
+        }
+      }
     },
     "Åbn i Kort" : {
       "extractionState" : "manual",
@@ -322,7 +420,20 @@
       }
     },
     "Dette vil slette alle lokale optagelser og transskriptioner. Filer i iCloud påvirkes ikke.\n\nDenne handling kan ikke fortrydes." : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dette vil slette alle lokale optagelser og transskriptioner. Filer i iCloud påvirkes ikke.\n\nDenne handling kan ikke fortrydes."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This will delete all local recordings and transcriptions. Files in iCloud are not affected.\n\nThis action cannot be undone."
+          }
+        }
+      }
     },
     "Dette vil slette alle lokale optagelser og transskriptioner. Filer i iCloud påvirkes ikke.\\n\\nDenne handling kan ikke fortrydes." : {
       "extractionState" : "manual",
@@ -359,10 +470,36 @@
       }
     },
     "Download fra iCloud fejlede" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download fra iCloud fejlede"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download from iCloud failed"
+          }
+        }
+      }
     },
     "Downloader..." : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloader..."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloading..."
+          }
+        }
+      }
     },
     "Eksempler" : {
       "extractionState" : "manual",
@@ -773,37 +910,180 @@
       }
     },
     "For %lld år siden" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For %lld år siden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld years ago"
+          }
+        }
+      }
     },
     "For %lld dag siden" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For %lld dag siden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld day ago"
+          }
+        }
+      }
     },
     "For %lld dage siden" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For %lld dage siden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld days ago"
+          }
+        }
+      }
     },
     "For %lld måned siden" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For %lld måned siden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld month ago"
+          }
+        }
+      }
     },
     "For %lld måneder siden" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For %lld måneder siden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld months ago"
+          }
+        }
+      }
     },
     "For %lld minut siden" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For %lld minut siden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld minute ago"
+          }
+        }
+      }
     },
     "For %lld minutter siden" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For %lld minutter siden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld minutes ago"
+          }
+        }
+      }
     },
     "For %lld time siden" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For %lld time siden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld hour ago"
+          }
+        }
+      }
     },
     "For %lld timer siden" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For %lld timer siden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld hours ago"
+          }
+        }
+      }
     },
     "For %lld uge siden" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For %lld uge siden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld week ago"
+          }
+        }
+      }
     },
     "For %lld uger siden" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For %lld uger siden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld weeks ago"
+          }
+        }
+      }
     },
     "For et øjeblik siden" : {
       "extractionState" : "manual",
@@ -993,7 +1273,20 @@
       }
     },
     "Hello, world!" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hello, world!"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hello, world!"
+          }
+        }
+      }
     },
     "Høj (128 kbps)" : {
       "extractionState" : "manual",
@@ -1047,7 +1340,20 @@
       }
     },
     "iCloud container er ikke tilgængelig" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iCloud container er ikke tilgængelig"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iCloud container is not available"
+          }
+        }
+      }
     },
     "iCloud Status" : {
       "extractionState" : "manual",
@@ -1084,7 +1390,20 @@
       }
     },
     "Identificer alle handlingspunkter og opgaver i følgende transkriberede tekst:\n\n" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identificer alle handlingspunkter og opgaver i følgende transkriberede tekst:\n\n"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identify all action items and tasks in the following transcribed text:\n\n"
+          }
+        }
+      }
     },
     "Identificer alle handlingspunkter og opgaver i følgende transkriberede tekst:\\n\\n" : {
       "extractionState" : "manual",
@@ -1104,7 +1423,20 @@
       }
     },
     "Ikke logget ind på iCloud" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ikke logget ind på iCloud"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not logged in to iCloud"
+          }
+        }
+      }
     },
     "Indstillinger" : {
       "extractionState" : "manual",
@@ -1141,7 +1473,20 @@
       }
     },
     "Ingen aktiv optagelse." : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingen aktiv optagelse."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No active recording."
+          }
+        }
+      }
     },
     "Ingen optagelser endnu" : {
       "extractionState" : "manual",
@@ -1246,7 +1591,20 @@
       }
     },
     "Kunne ikke starte optagelse. Prøv igen." : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kunne ikke starte optagelse. Prøv igen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not start recording. Try again."
+          }
+        }
+      }
     },
     "Lagerplads" : {
       "extractionState" : "manual",
@@ -1283,7 +1641,20 @@
       }
     },
     "Lav et professionelt mødereferat baseret på følgende transkriberede tekst:\n\n" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lav et professionelt mødereferat baseret på følgende transkriberede tekst:\n\n"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create a professional meeting summary based on the following transcribed text:\n\n"
+          }
+        }
+      }
     },
     "Lav et professionelt mødereferat baseret på følgende transkriberede tekst:\\n\\n" : {
       "extractionState" : "manual",
@@ -1422,7 +1793,20 @@
       }
     },
     "Lydfil: %@" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lydfil: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio file: %@"
+          }
+        }
+      }
     },
     "Lydkvalitet" : {
       "extractionState" : "manual",
@@ -1493,7 +1877,20 @@
       }
     },
     "Mark %lld" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark %lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark %lld"
+          }
+        }
+      }
     },
     "Marks (%d)" : {
       "extractionState" : "manual",
@@ -1513,7 +1910,20 @@
       }
     },
     "Marks (%lld)" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marks (%lld)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marks (%lld)"
+          }
+        }
+      }
     },
     "Medium (64 kbps)" : {
       "extractionState" : "manual",
@@ -1550,10 +1960,36 @@
       }
     },
     "Metadata JSON" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metadata JSON"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metadata JSON"
+          }
+        }
+      }
     },
     "Mikrofon adgang nægtet. Gå til Indstillinger for at give tilladelse." : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mikrofon adgang nægtet. Gå til Indstillinger for at give tilladelse."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microphone access denied. Go to Settings to grant permission."
+          }
+        }
+      }
     },
     "Mødereferat" : {
       "extractionState" : "manual",
@@ -1607,7 +2043,20 @@
       }
     },
     "Noter" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noter"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notes"
+          }
+        }
+      }
     },
     "Noter (valgfri)" : {
       "extractionState" : "manual",
@@ -1729,10 +2178,36 @@
       }
     },
     "Om %@" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Om %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About %@"
+          }
+        }
+      }
     },
     "Om appen" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Om appen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About the app"
+          }
+        }
+      }
     },
     "Om SkrivDetNed" : {
       "extractionState" : "manual",
@@ -1786,7 +2261,20 @@
       }
     },
     "Opsummér følgende transkriberede tekst kort og præcist:\n\n" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opsummér følgende transkriberede tekst kort og præcist:\n\n"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Summarize the following transcribed text concisely and accurately:\n\n"
+          }
+        }
+      }
     },
     "Opsummér følgende transkriberede tekst kort og præcist:\\n\\n" : {
       "extractionState" : "manual",
@@ -2180,19 +2668,84 @@
       }
     },
     "Sidst set: %lld dag siden" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sidst set: %lld dag siden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last seen: %lld day ago"
+          }
+        }
+      }
     },
     "Sidst set: %lld dage siden" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sidst set: %lld dage siden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last seen: %lld days ago"
+          }
+        }
+      }
     },
     "Sidst set: %lld min siden" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sidst set: %lld min siden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last seen: %lld min ago"
+          }
+        }
+      }
     },
     "Sidst set: %lld time siden" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sidst set: %lld time siden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last seen: %lld hour ago"
+          }
+        }
+      }
     },
     "Sidst set: %lld timer siden" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sidst set: %lld timer siden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last seen: %lld hours ago"
+          }
+        }
+      }
     },
     "Sidst set: nu" : {
       "extractionState" : "manual",
@@ -2467,7 +3020,20 @@
       }
     },
     "Sti: %@" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sti: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Path: %@"
+          }
+        }
+      }
     },
     "Størrelse" : {
       "extractionState" : "manual",
@@ -2538,7 +3104,20 @@
       }
     },
     "Tags" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tags"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tags"
+          }
+        }
+      }
     },
     "Tags (valgfri)" : {
       "extractionState" : "manual",
@@ -2643,7 +3222,20 @@
       }
     },
     "Transkriberer..." : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transkriberer..."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transcribing..."
+          }
+        }
+      }
     },
     "Transkriberes..." : {
       "extractionState" : "manual",
@@ -2697,7 +3289,20 @@
       }
     },
     "Transskribering sker på din Mac via %@ macOS appen" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transskribering sker på din Mac via %@ macOS appen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transcription happens on your Mac via the %@ macOS app"
+          }
+        }
+      }
     },
     "Transskribering sker på din Mac via SkrivDetNed macOS appen" : {
       "extractionState" : "manual",
@@ -2734,7 +3339,20 @@
       }
     },
     "Transskription klar" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transskription klar"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transcription ready"
+          }
+        }
+      }
     },
     "Transskriptioner" : {
       "extractionState" : "manual",
@@ -2788,7 +3406,20 @@
       }
     },
     "Uddrag pointerne i følgende transkriberede tekst, og giv dem i punktform:\n\n" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uddrag pointerne i følgende transkriberede tekst, og giv dem i punktform:\n\n"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extract the key points from the following transcribed text and present them in bullet form:\n\n"
+          }
+        }
+      }
     },
     "Uddrag pointerne i følgende transkriberede tekst, og giv dem i punktform:\\n\\n" : {
       "extractionState" : "manual",
@@ -2842,13 +3473,52 @@
       }
     },
     "Upload fejlede" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upload fejlede"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upload failed"
+          }
+        }
+      }
     },
     "Upload fuldført" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upload fuldført"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upload completed"
+          }
+        }
+      }
     },
     "Upload til iCloud fejlede" : {
-
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upload til iCloud fejlede"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upload to iCloud failed"
+          }
+        }
+      }
     },
     "Uploader..." : {
       "extractionState" : "manual",
@@ -2918,8 +3588,25 @@
         }
       }
     },
-    "Version 1.0.0" : {
+    "Version %@" : {
 
+    },
+    "Version 1.0.0" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version 1.0.0"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version 1.0.0"
+          }
+        }
+      }
     },
     "Vis notifikationer" : {
       "extractionState" : "manual",
