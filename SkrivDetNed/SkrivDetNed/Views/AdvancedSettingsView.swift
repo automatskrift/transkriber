@@ -147,48 +147,16 @@ struct AdvancedSettingsView: View {
                     GroupBox(label: Label("Ydeevne", systemImage: "cpu")) {
                         VStack(alignment: .leading, spacing: 12) {
                             HStack {
-                                Text("CPU tråde:")
+                                Text("Samtidige workers:")
                                 Spacer()
-                                Text(settings.whisperThreadCount == 0 ? "Auto" : "\(settings.whisperThreadCount)")
+                                Text("\(settings.whisperThreadCount)")
                                     .foregroundColor(.secondary)
                             }
 
-                            Picker("", selection: $settings.whisperThreadCount) {
-                                Text("Auto (Anbefalet)").tag(0)
-                                Text("1 tråd").tag(1)
-                                Text("2 tråde").tag(2)
-                                Text("4 tråde").tag(4)
-                                Text("8 tråde").tag(8)
-                            }
-                            .pickerStyle(.segmented)
+                            Stepper("", value: $settings.whisperThreadCount, in: 1...8)
+                                .labelsHidden()
 
-                            Text("Auto vælger automatisk baseret på din CPU. Færre tråde bruger mindre batteri.")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(8)
-                    }
-
-                    // Segment Length
-                    GroupBox(label: Label("Segment længde", systemImage: "waveform")) {
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Text("Max segment længde:")
-                                Spacer()
-                                Text(settings.whisperMaxSegmentLength == 0 ? "Standard" : "\(settings.whisperMaxSegmentLength)s")
-                                    .foregroundColor(.secondary)
-                            }
-
-                            Picker("", selection: $settings.whisperMaxSegmentLength) {
-                                Text("Standard (Anbefalet)").tag(0)
-                                Text("10 sekunder").tag(10)
-                                Text("20 sekunder").tag(20)
-                                Text("30 sekunder").tag(30)
-                                Text("60 sekunder").tag(60)
-                            }
-                            .pickerStyle(.segmented)
-
-                            Text("Kortere segmenter processeres hurtigere, men kan miste kontekst mellem segmenter.")
+                            Text("Flere workers kan øge hastigheden på kraftige Macs, men bruger mere hukommelse.")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -222,8 +190,7 @@ struct AdvancedSettingsView: View {
         settings.whisperInitialPrompt = ""
         settings.whisperIncludeTimestamps = false
         settings.whisperWordLevelTimestamps = false
-        settings.whisperThreadCount = 0
-        settings.whisperMaxSegmentLength = 0
+        settings.whisperThreadCount = 2
         settings.whisperAutoDetectLanguage = false
     }
 }

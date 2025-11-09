@@ -47,8 +47,7 @@ class AppSettings: ObservableObject {
     @AppStorage("whisperInitialPrompt") var whisperInitialPrompt: String = ""
     @AppStorage("whisperIncludeTimestamps") var whisperIncludeTimestamps: Bool = false
     @AppStorage("whisperWordLevelTimestamps") var whisperWordLevelTimestamps: Bool = false
-    @AppStorage("whisperThreadCount") var whisperThreadCount: Int = 0 // 0 = auto
-    @AppStorage("whisperMaxSegmentLength") var whisperMaxSegmentLength: Int = 0 // 0 = default
+    @AppStorage("whisperThreadCount") var whisperThreadCount: Int = 2 // Number of concurrent workers
     @AppStorage("whisperAutoDetectLanguage") var whisperAutoDetectLanguage: Bool = false
 
     static let shared = AppSettings()

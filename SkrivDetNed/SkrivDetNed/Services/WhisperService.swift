@@ -40,55 +40,40 @@ class WhisperService: ObservableObject {
 
         do {
             // Map our model types to WhisperKit model names
-            // WhisperKit uses format: openai_whisper-{size}
+            // Use simple names as shown in WhisperKit README
             let whisperKitModelName: String
             switch modelType {
             case .tiny:
-                whisperKitModelName = "openai_whisper-tiny"
+                whisperKitModelName = "tiny"
             case .base:
-                whisperKitModelName = "openai_whisper-base"
+                whisperKitModelName = "base"
             case .small:
-                whisperKitModelName = "openai_whisper-small"
+                whisperKitModelName = "small"
             case .medium:
-                whisperKitModelName = "openai_whisper-medium"
+                whisperKitModelName = "medium"
             case .large:
-                whisperKitModelName = "openai_whisper-large-v3"
+                whisperKitModelName = "large-v3"
             }
 
             isDownloadingModel = true
             downloadingModelName = modelType.displayName
             downloadProgress = 0.0
 
-            // First, download the model with progress callback
-            print("📥 Downloading model with progress tracking: \(whisperKitModelName)")
-
-            do {
-                let modelFolder = try await WhisperKit.download(
-                    variant: whisperKitModelName,
-                    progressCallback: { [weak self] progress in
-                        Task { @MainActor in
-                            self?.downloadProgress = progress.fractionCompleted
-                            let percentage = Int(progress.fractionCompleted * 100)
-                            print("📊 Download progress: \(percentage)%")
-                        }
-                    }
-                )
-                print("✅ Model downloaded to: \(modelFolder.path)")
-            } catch {
-                print("⚠️ Download may have failed or model already exists: \(error)")
-                // Continue anyway - model might already be downloaded
-            }
-
-            // Now initialize WhisperKit with the model
             print("🔧 Initializing WhisperKit with model: \(whisperKitModelName)")
+            print("   (WhisperKit will auto-download if needed)")
+
+            // Initialize WhisperKit - let it handle download internally
+            // Note: WhisperKit doesn't expose progress for download in init, only in .download() method
             whisperKit = try await WhisperKit(
                 model: whisperKitModelName,
                 verbose: true,
                 logLevel: .debug,
                 prewarm: false,
                 load: true,
-                download: false  // Already downloaded above
+                download: true  // Let WhisperKit handle download
             )
+
+            print("✅ WhisperKit initialized successfully")
 
             currentModel = modelType
             isDownloadingModel = false
@@ -123,13 +108,81 @@ class WhisperService: ObservableObject {
         }
 
         isTranscribing = true
-        defer { isTranscribing = false }
+        currentProgress = 0.0
+        defer {
+            isTranscribing = false
+            currentProgress = 0.0
+        }
 
         print("🎙️ Starting transcription with WhisperKit...")
 
         do {
-            // Transcribe with WhisperKit
-            let results = try await whisperKit.transcribe(audioPath: audioURL.path)
+            // Get settings
+            let settings = AppSettings.shared
+
+            // Determine language
+            let language: String? = settings.whisperAutoDetectLanguage ? nil : settings.selectedLanguage
+            print("🌍 Language: \(language ?? "auto-detect")")
+
+            // Determine task (transcribe or translate)
+            let task: DecodingTask = settings.whisperTranslateToEnglish ? .translate : .transcribe
+            print("📝 Task: \(task == .translate ? "translate to English" : "transcribe")")
+
+            // Create decode options with all settings
+            let decodeOptions = DecodingOptions(
+                verbose: true,
+                task: task,
+                language: language,
+                temperature: Float(settings.whisperTemperature),
+                temperatureIncrementOnFallback: 0.2,
+                temperatureFallbackCount: 5,
+                sampleLength: 224,
+                topK: 5,
+                usePrefillPrompt: !settings.whisperInitialPrompt.isEmpty,
+                usePrefillCache: true,
+                detectLanguage: settings.whisperAutoDetectLanguage,
+                skipSpecialTokens: true,
+                withoutTimestamps: !settings.whisperIncludeTimestamps,
+                wordTimestamps: settings.whisperWordLevelTimestamps,
+                maxInitialTimestamp: nil,
+                maxWindowSeek: nil,
+                clipTimestamps: [],
+                windowClipTime: 30.0,
+                promptTokens: nil,
+                prefixTokens: nil,
+                suppressBlank: true,
+                supressTokens: [],
+                compressionRatioThreshold: 2.4,
+                logProbThreshold: -1.0,
+                firstTokenLogProbThreshold: nil,
+                noSpeechThreshold: 0.6,
+                concurrentWorkerCount: settings.whisperThreadCount,
+                chunkingStrategy: nil
+            )
+
+            print("⚙️ Settings: temp=\(settings.whisperTemperature), timestamps=\(settings.whisperIncludeTimestamps), wordTimestamps=\(settings.whisperWordLevelTimestamps), workers=\(settings.whisperThreadCount)")
+
+            // Transcribe with WhisperKit and progress callback
+            let results = try await whisperKit.transcribe(
+                audioPath: audioURL.path,
+                decodeOptions: decodeOptions,
+                callback: { [weak self] transcriptionProgress in
+                    Task { @MainActor in
+                        // TranscriptionProgress contains: timings, text, tokens, windowId
+                        // Use windowId to estimate progress (each window is a chunk of audio)
+                        let currentWindow = Double(transcriptionProgress.windowId)
+                        // Rough estimation: assume ~10-20 windows for typical audio
+                        // Cap at 95% until we're actually done
+                        let estimatedProgress = min(currentWindow / 15.0, 0.95)
+
+                        self?.currentProgress = estimatedProgress
+                        progress(estimatedProgress)
+
+                        print("📊 Transcription progress: \(Int(estimatedProgress * 100))% (window \(transcriptionProgress.windowId))")
+                    }
+                    return nil
+                }
+            )
 
             // Extract text and segments from first result
             guard let firstResult = results.first else {
@@ -147,6 +200,7 @@ class WhisperService: ObservableObject {
 
             print("✅ Transcription complete: \(segments.count) segments")
 
+            currentProgress = 1.0
             progress(1.0)
             return TranscriptionResult(text: fullText, segments: segments)
 

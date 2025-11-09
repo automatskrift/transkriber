@@ -12,6 +12,7 @@ struct RecordingView: View {
     @ObservedObject private var settings = AppSettings.shared
     @State private var showingCancelConfirmation = false
     @State private var showRecordingUI = false
+    @State private var markButtonPressed = false
 
     var body: some View {
         NavigationStack {
@@ -68,12 +69,26 @@ struct RecordingView: View {
                     .buttonStyle(.bordered)
                     .disabled(viewModel.isInitializingRecording)
 
-                    // Mark button
-                    Button(action: { viewModel.addMark() }) {
+                    // Mark button with feedback
+                    Button(action: {
+                        viewModel.addMark()
+                        // Trigger visual feedback
+                        markButtonPressed = true
+                        // Haptic feedback
+                        let generator = UIImpactFeedbackGenerator(style: .medium)
+                        generator.impactOccurred()
+                        // Reset animation after delay
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            markButtonPressed = false
+                        }
+                    }) {
                         Label("Mark", systemImage: "flag.fill")
                             .font(.headline)
                     }
                     .buttonStyle(.bordered)
+                    .tint(markButtonPressed ? .orange : .blue)
+                    .scaleEffect(markButtonPressed ? 1.2 : 1.0)
+                    .animation(.spring(response: 0.3, dampingFraction: 0.5), value: markButtonPressed)
                     .disabled(viewModel.isInitializingRecording || viewModel.isPaused)
 
                     // Cancel button
@@ -169,6 +184,46 @@ struct RecordingView: View {
                     UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                 }
             )
+            .overlay(
+                // Success toast notification
+                VStack {
+                    if viewModel.showSuccess {
+                        HStack(spacing: 12) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                                .font(.title2)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Optagelse gemt")
+                                    .font(.headline)
+                                Text("Uploades til iCloud")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            Spacer()
+                        }
+                        .padding()
+                        .background(Color(.systemBackground))
+                        .cornerRadius(12)
+                        .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
+                        .padding(.horizontal)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                    }
+
+                    Spacer()
+                }
+                .padding(.top, 100)
+                .animation(.spring(response: 0.4, dampingFraction: 0.7), value: viewModel.showSuccess)
+                .onChange(of: viewModel.showSuccess) { _, newValue in
+                    if newValue {
+                        // Auto-dismiss after 2 seconds
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                            viewModel.showSuccess = false
+                        }
+                    }
+                }
+            )
             .navigationTitle("Optag")
             .navigationBarTitleDisplayMode(.inline)
             .onChange(of: viewModel.isRecording) { _, newValue in
@@ -193,11 +248,6 @@ struct RecordingView: View {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(viewModel.errorMessage ?? "Ukendt fejl")
-            }
-            .alert("Optagelse gemt", isPresented: $viewModel.showSuccess) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text("Din optagelse er gemt og bliver nu uploadet til iCloud.")
             }
             .alert("Annuller optagelse?", isPresented: $showingCancelConfirmation) {
                 Button("Fortsæt optagelse", role: .cancel) {}

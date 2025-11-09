@@ -324,12 +324,80 @@ class TranscriptionViewModel: ObservableObject {
 
             // Insert marks if available
             var finalTranscription = result.text
+
+            let logMessage = """
+
+            🔍 MARKS DEBUG - Checking for marks to insert...
+               File: \(url.lastPathComponent)
+               File path: \(url.path)
+               Contains 'Mobile Documents': \(url.path.contains("Mobile Documents"))
+            """
+            print(logMessage)
+            try? logMessage.appending("\n").write(toFile: "/tmp/marks_debug.log", atomically: false, encoding: .utf8)
+
             if url.path.contains("Mobile Documents"),
-               let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL(),
-               let metadata = try? RecordingMetadata.load(for: url.lastPathComponent, from: recordingsFolder),
-               let marks = metadata.marks, !marks.isEmpty {
-                finalTranscription = insertMarks(in: result.text, marks: marks, segments: result.segments)
-                print("📍 Inserted \(marks.count) marks into transcription")
+               let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL() {
+                let log2 = "   Recordings folder: \(recordingsFolder.path)\n"
+                print(log2)
+                if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
+                    logFile.seekToEndOfFile()
+                    logFile.write(log2.data(using: .utf8)!)
+                    logFile.closeFile()
+                }
+
+                if let metadata = try? RecordingMetadata.load(for: url.lastPathComponent, from: recordingsFolder) {
+                    let log3 = "   Loaded metadata - Marks in metadata: \(metadata.marks?.count ?? 0)\n"
+                    print(log3)
+                    if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
+                        logFile.seekToEndOfFile()
+                        logFile.write(log3.data(using: .utf8)!)
+                        logFile.closeFile()
+                    }
+
+                    if let marks = metadata.marks, !marks.isEmpty {
+                        let log4 = "   Marks: \(marks)\n   Segments: \(result.segments.count)\n"
+                        print(log4)
+                        if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
+                            logFile.seekToEndOfFile()
+                            logFile.write(log4.data(using: .utf8)!)
+                            logFile.closeFile()
+                        }
+
+                        finalTranscription = insertMarks(in: result.text, marks: marks, segments: result.segments)
+
+                        let log5 = "📍 Inserted \(marks.count) marks into transcription\n   Result length: \(finalTranscription.count) chars\n"
+                        print(log5)
+                        if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
+                            logFile.seekToEndOfFile()
+                            logFile.write(log5.data(using: .utf8)!)
+                            logFile.closeFile()
+                        }
+                    } else {
+                        let log6 = "   ⚠️ No marks found in metadata\n"
+                        print(log6)
+                        if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
+                            logFile.seekToEndOfFile()
+                            logFile.write(log6.data(using: .utf8)!)
+                            logFile.closeFile()
+                        }
+                    }
+                } else {
+                    let log7 = "   ⚠️ Could not load metadata\n"
+                    print(log7)
+                    if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
+                        logFile.seekToEndOfFile()
+                        logFile.write(log7.data(using: .utf8)!)
+                        logFile.closeFile()
+                    }
+                }
+            } else {
+                let log8 = "   ⚠️ File not from iCloud or recordings folder not found\n"
+                print(log8)
+                if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
+                    logFile.seekToEndOfFile()
+                    logFile.write(log8.data(using: .utf8)!)
+                    logFile.closeFile()
+                }
             }
 
             // Save transcription to file
@@ -624,7 +692,35 @@ class TranscriptionViewModel: ObservableObject {
 
     /// Insert marks into transcription text based on segment timestamps
     private func insertMarks(in text: String, marks: [Double], segments: [TranscriptionSegment]) -> String {
-        guard !marks.isEmpty, !segments.isEmpty else { return text }
+        guard !marks.isEmpty, !segments.isEmpty else {
+            let log = "      ⚠️ insertMarks: Empty marks or segments\n"
+            print(log)
+            if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
+                logFile.seekToEndOfFile()
+                logFile.write(log.data(using: .utf8)!)
+                logFile.closeFile()
+            }
+            return text
+        }
+
+        let log1 = "      📍 insertMarks: Starting with \(marks.count) marks and \(segments.count) segments\n      📍 Original text: '\(text)'\n      📍 Original text length: \(text.count)\n"
+        print(log1)
+        if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
+            logFile.seekToEndOfFile()
+            logFile.write(log1.data(using: .utf8)!)
+            logFile.closeFile()
+        }
+
+        // Log all segments
+        for (i, seg) in segments.enumerated() {
+            let segLog = "      Segment \(i): \(seg.start)s - \(seg.end)s = '\(seg.text)'\n"
+            print(segLog)
+            if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
+                logFile.seekToEndOfFile()
+                logFile.write(segLog.data(using: .utf8)!)
+                logFile.closeFile()
+            }
+        }
 
         // Sort marks by timestamp
         let sortedMarks = marks.sorted()
@@ -641,6 +737,7 @@ class TranscriptionViewModel: ObservableObject {
                 // Check if mark is within this segment
                 if markTime >= segment.start && markTime <= segment.end {
                     closestSegmentIndex = index
+                    print("      📍 Mark \(markIndex + 1) at \(markTime)s is within segment \(index) (\(segment.start)s - \(segment.end)s)")
                     break
                 }
 
@@ -652,6 +749,13 @@ class TranscriptionViewModel: ObservableObject {
                 }
             }
 
+            let log2 = "      📍 Mark \(markIndex + 1) at \(markTime)s -> segment \(closestSegmentIndex)\n"
+            print(log2)
+            if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
+                logFile.seekToEndOfFile()
+                logFile.write(log2.data(using: .utf8)!)
+                logFile.closeFile()
+            }
             insertions.append((segmentIndex: closestSegmentIndex, markNumber: markIndex + 1))
         }
 
@@ -666,13 +770,49 @@ class TranscriptionViewModel: ObservableObject {
             let segment = processedSegments[insertion.segmentIndex]
             let markText = "[Mark \(insertion.markNumber)]"
 
-            // Find the segment text in the full transcription
-            if let range = result.range(of: segment.text) {
+            // Strip WhisperKit tokens from segment text
+            // Tokens look like: <|startoftranscript|>, <|en|>, <|transcribe|>, <|0.00|>, <|10.00|>, etc.
+            var cleanSegmentText = segment.text
+            cleanSegmentText = cleanSegmentText.replacingOccurrences(of: #"<\|[^|]+\|>"#, with: "", options: .regularExpression)
+            cleanSegmentText = cleanSegmentText.trimmingCharacters(in: .whitespacesAndNewlines)
+
+            let log3 = "      📍 Trying to insert '\(markText)' before segment text: '\(cleanSegmentText)'\n"
+            print(log3)
+            if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
+                logFile.seekToEndOfFile()
+                logFile.write(log3.data(using: .utf8)!)
+                logFile.closeFile()
+            }
+
+            // Find the cleaned segment text in the full transcription
+            if let range = result.range(of: cleanSegmentText) {
                 // Insert mark before the segment
                 result.insert(contentsOf: markText + " ", at: range.lowerBound)
+                let log4 = "      ✅ Inserted '\(markText)' at position \(result.distance(from: result.startIndex, to: range.lowerBound))\n"
+                print(log4)
+                if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
+                    logFile.seekToEndOfFile()
+                    logFile.write(log4.data(using: .utf8)!)
+                    logFile.closeFile()
+                }
+            } else {
+                let log5 = "      ⚠️ Could not find segment text '\(cleanSegmentText)' in result\n"
+                print(log5)
+                if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
+                    logFile.seekToEndOfFile()
+                    logFile.write(log5.data(using: .utf8)!)
+                    logFile.closeFile()
+                }
             }
         }
 
+        let logFinal = "      📍 Final text: '\(result)'\n      📍 Final text length: \(result.count)\n"
+        print(logFinal)
+        if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
+            logFile.seekToEndOfFile()
+            logFile.write(logFinal.data(using: .utf8)!)
+            logFile.closeFile()
+        }
         return result
     }
 }

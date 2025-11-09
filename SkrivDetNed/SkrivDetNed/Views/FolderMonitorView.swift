@@ -122,6 +122,8 @@ struct FolderMonitorView: View {
                 ) {
                     VStack(spacing: 16) {
                         // Model downloading banner
+                        // Note: WhisperKit initializer doesn't expose download progress
+                        // This banner shows during model initialization but progress won't update
                         if whisperService.isDownloadingModel {
                             VStack(alignment: .leading, spacing: 12) {
                                 HStack {
@@ -130,7 +132,7 @@ struct FolderMonitorView: View {
                                         .imageScale(.large)
 
                                     VStack(alignment: .leading, spacing: 4) {
-                                        Text("Downloader WhisperKit model")
+                                        Text("Indlæser WhisperKit model")
                                             .font(.headline)
 
                                         if let modelName = whisperService.downloadingModelName {
@@ -142,15 +144,10 @@ struct FolderMonitorView: View {
 
                                     Spacer()
 
-                                    if whisperService.downloadProgress > 0 {
-                                        Text("\(Int(whisperService.downloadProgress * 100))%")
-                                            .font(.headline)
-                                            .foregroundColor(.blue)
-                                    }
+                                    // Show indeterminate progress since we can't track download progress
+                                    ProgressView()
+                                        .scaleEffect(0.8)
                                 }
-
-                                ProgressView(value: whisperService.downloadProgress)
-                                    .progressViewStyle(.linear)
                             }
                             .padding(12)
                             .background(Color.blue.opacity(0.1))
