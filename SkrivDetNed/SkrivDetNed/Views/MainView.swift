@@ -10,6 +10,8 @@ import SwiftUI
 struct MainView: View {
     @State private var selectedTab: Tab = .monitor
     @StateObject private var folderMonitorVM = FolderMonitorViewModel.shared
+    @StateObject private var transcriptionVM = TranscriptionViewModel.shared
+    @StateObject private var whisperService = WhisperService.shared
 
     enum Tab {
         case monitor
@@ -21,18 +23,23 @@ struct MainView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             FolderMonitorView()
+                .environmentObject(transcriptionVM)
+                .environmentObject(whisperService)
+                .environmentObject(folderMonitorVM)
                 .tabItem {
                     Label("Overvågning", systemImage: "folder.badge.gearshape")
                 }
                 .tag(Tab.monitor)
 
             TranscriptionsView()
+                .environmentObject(transcriptionVM)
                 .tabItem {
                     Label("Transskriptioner", systemImage: "doc.text.magnifyingglass")
                 }
                 .tag(Tab.transcriptions)
 
             ManualTranscriptionView()
+                .environmentObject(transcriptionVM)
                 .tabItem {
                     Label("Manuel", systemImage: "doc.text")
                 }

@@ -17,7 +17,7 @@ struct ManualTranscriptionView: View {
     @State private var showingFilePicker = false
 
     @ObservedObject private var settings = AppSettings.shared
-    @ObservedObject private var transcriptionVM = TranscriptionViewModel.shared
+    @EnvironmentObject private var transcriptionVM: TranscriptionViewModel
 
     var body: some View {
         ScrollView {
@@ -334,4 +334,5 @@ struct ManualTranscriptionView: View {
 
 #Preview {
     ManualTranscriptionView()
+        .environmentObject(TranscriptionViewModel.shared)
 }

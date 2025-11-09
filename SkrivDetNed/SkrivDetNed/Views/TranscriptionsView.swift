@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TranscriptionsView: View {
-    @ObservedObject private var transcriptionVM = TranscriptionViewModel.shared
+    @EnvironmentObject private var transcriptionVM: TranscriptionViewModel
     @State private var searchText = ""
 
     var body: some View {
@@ -294,4 +294,5 @@ struct TranscriptionTextWindow: View {
 
 #Preview {
     TranscriptionsView()
+        .environmentObject(TranscriptionViewModel.shared)
 }

@@ -8,9 +8,9 @@
 import SwiftUI
 
 struct FolderMonitorView: View {
-    @ObservedObject private var viewModel = FolderMonitorViewModel.shared
-    @ObservedObject private var transcriptionVM = TranscriptionViewModel.shared
-    @ObservedObject private var whisperService = WhisperService.shared
+    @EnvironmentObject private var viewModel: FolderMonitorViewModel
+    @EnvironmentObject private var transcriptionVM: TranscriptionViewModel
+    @EnvironmentObject private var whisperService: WhisperService
 
     var body: some View {
         ScrollView {
@@ -726,4 +726,7 @@ struct MetadataInfoView: View {
 
 #Preview {
     FolderMonitorView()
+        .environmentObject(FolderMonitorViewModel.shared)
+        .environmentObject(TranscriptionViewModel.shared)
+        .environmentObject(WhisperService.shared)
 }

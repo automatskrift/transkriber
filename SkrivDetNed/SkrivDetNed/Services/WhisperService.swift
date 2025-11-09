@@ -32,6 +32,7 @@ class WhisperService: ObservableObject {
 
     private var whisperKit: WhisperKit?
     private var currentModel: WhisperModelType?
+    private var lastReportedProgress: Double = 0.0
 
     private init() {}
 
@@ -163,11 +164,14 @@ class WhisperService: ObservableObject {
             print("⚙️ Settings: temp=\(settings.whisperTemperature), timestamps=\(settings.whisperIncludeTimestamps), wordTimestamps=\(settings.whisperWordLevelTimestamps), workers=\(settings.whisperThreadCount)")
 
             // Transcribe with WhisperKit and progress callback
+            lastReportedProgress = 0.0
             let results = try await whisperKit.transcribe(
                 audioPath: audioURL.path,
                 decodeOptions: decodeOptions,
                 callback: { [weak self] transcriptionProgress in
                     Task { @MainActor in
+                        guard let self = self else { return }
+
                         // TranscriptionProgress contains: timings, text, tokens, windowId
                         // Use windowId to estimate progress (each window is a chunk of audio)
                         let currentWindow = Double(transcriptionProgress.windowId)
@@ -175,10 +179,13 @@ class WhisperService: ObservableObject {
                         // Cap at 95% until we're actually done
                         let estimatedProgress = min(currentWindow / 15.0, 0.95)
 
-                        self?.currentProgress = estimatedProgress
-                        progress(estimatedProgress)
-
-                        print("📊 Transcription progress: \(Int(estimatedProgress * 100))% (window \(transcriptionProgress.windowId))")
+                        // Only update if progress changed by at least 5% to avoid excessive UI updates
+                        if abs(estimatedProgress - self.lastReportedProgress) >= 0.05 {
+                            self.lastReportedProgress = estimatedProgress
+                            self.currentProgress = estimatedProgress
+                            progress(estimatedProgress)
+                            print("📊 Transcription progress: \(Int(estimatedProgress * 100))% (window \(transcriptionProgress.windowId))")
+                        }
                     }
                     return nil
                 }
