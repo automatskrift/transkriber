@@ -51,8 +51,6 @@ class iCloudHelper {
     func isDownloaded(_ url: URL) throws -> Bool {
         guard isICloudURL(url) else { return true }
 
-        let fileManager = FileManager.default
-
         // Check if file is downloaded
         let resourceValues = try url.resourceValues(forKeys: [.ubiquitousItemDownloadingStatusKey])
 

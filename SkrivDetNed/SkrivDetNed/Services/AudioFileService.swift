@@ -13,19 +13,22 @@ class AudioFileService {
 
     private init() {}
 
-    func getAudioDuration(_ url: URL) -> TimeInterval? {
-        let asset = AVAsset(url: url)
-        return asset.duration.seconds
+    func getAudioDuration(_ url: URL) async -> TimeInterval? {
+        let asset = AVURLAsset(url: url)
+        guard let duration = try? await asset.load(.duration) else {
+            return nil
+        }
+        return duration.seconds
     }
 
-    func getAudioFormat(_ url: URL) -> String? {
-        let asset = AVAsset(url: url)
-        guard let track = asset.tracks(withMediaType: .audio).first else {
+    func getAudioFormat(_ url: URL) async -> String? {
+        let asset = AVURLAsset(url: url)
+        guard let track = try? await asset.loadTracks(withMediaType: .audio).first else {
             return nil
         }
 
-        let descriptions = track.formatDescriptions as! [CMFormatDescription]
-        guard let formatDescription = descriptions.first else {
+        guard let descriptions = try? await track.load(.formatDescriptions),
+              let formatDescription = descriptions.first else {
             return nil
         }
 
@@ -33,7 +36,7 @@ class AudioFileService {
         return fourCharCodeToString(mediaSubType)
     }
 
-    func validateAudioFile(_ url: URL) -> Bool {
+    func validateAudioFile(_ url: URL) async -> Bool {
         guard FileManager.default.fileExists(atPath: url.path) else {
             return false
         }
@@ -44,8 +47,8 @@ class AudioFileService {
         }
 
         // Check if it's a valid audio file by trying to create an AVAsset
-        let asset = AVAsset(url: url)
-        let audioTracks = asset.tracks(withMediaType: .audio)
+        let asset = AVURLAsset(url: url)
+        let audioTracks = (try? await asset.loadTracks(withMediaType: .audio)) ?? []
 
         return !audioTracks.isEmpty
     }

@@ -53,13 +53,15 @@ class FolderMonitorViewModel: ObservableObject {
                 try? log.write(toFile: "/tmp/skrivdetned_debug.log", atomically: true, encoding: .utf8)
             }
 
-            iCloudRefreshTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
+            iCloudRefreshTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { @Sendable [weak self] _ in
                 Task { @MainActor [weak self] in
                     await self?.refreshiCloudFileLists()
                 }
             }
-            // Initial refresh
+            // Initial refresh - delayed to not block app startup
             Task {
+                // Wait 1 second before first refresh to let UI show up
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
                 await refreshiCloudFileLists()
             }
         } else {
@@ -81,10 +83,13 @@ class FolderMonitorViewModel: ObservableObject {
         print("🔧 setupiCloudMonitoring called, iCloudSyncEnabled: \(settings.iCloudSyncEnabled)")
 
         if settings.iCloudSyncEnabled {
-            Task {
+            // Don't block app startup - do this in background
+            Task.detached { [weak self] in
+                guard let self = self else { return }
+
                 // Check availability first
                 print("🔍 Checking iCloud availability...")
-                await iCloudService.checkiCloudAvailability()
+                await iCloudSyncService.shared.checkiCloudAvailability()
 
                 // Wait a moment for iCloud to be ready
                 try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
@@ -92,7 +97,7 @@ class FolderMonitorViewModel: ObservableObject {
                 // Start monitoring
                 await MainActor.run {
                     print("🚀 Starting iCloud monitoring...")
-                    iCloudService.startMonitoring { [weak self] url in
+                    iCloudSyncService.shared.startMonitoring { [weak self] url in
                         Task { @MainActor in
                             await self?.handleiCloudFile(url)
                         }
@@ -100,13 +105,13 @@ class FolderMonitorViewModel: ObservableObject {
                 }
 
                 // Check for pending files that need retry
-                let pendingFiles = await iCloudService.checkForPendingFiles()
+                let pendingFiles = await self.iCloudService.checkForPendingFiles()
                 if !pendingFiles.isEmpty {
                     await MainActor.run {
                         print("🔄 Processing \(pendingFiles.count) pending file(s) for retry")
                     }
                     for url in pendingFiles {
-                        await handleiCloudFile(url)
+                        await self.handleiCloudFile(url)
                     }
                 }
             }
@@ -151,8 +156,10 @@ class FolderMonitorViewModel: ObservableObject {
             queue: .main
         ) { [weak self] notification in
             guard let count = notification.userInfo?["count"] as? Int else { return }
-            self?.existingFilesCount = count
-            self?.showExistingFilesPrompt = true
+            Task { @MainActor [weak self] in
+                self?.existingFilesCount = count
+                self?.showExistingFilesPrompt = true
+            }
         }
     }
 
@@ -336,7 +343,6 @@ class FolderMonitorViewModel: ObservableObject {
                 case .pending, .downloading:
                     // Check if currently being transcribed
                     let isActive = transcriptionVM.activeTasks.contains { $0.audioFileURL.lastPathComponent == metadata.audioFileName }
-                    let isInQueue = transcriptionVM.isInQueue(audioURL)
 
                     if !isActive {
                         // If file has an error message, it should be marked as failed, not pending
@@ -389,8 +395,8 @@ class FolderMonitorViewModel: ObservableObject {
             if !queued.isEmpty {
                 print("🔍 Checking \(queued.count) queued file(s) for auto-start")
                 for (url, _) in queued {
-                    let isInQueue = await transcriptionVM.isInQueue(url)
-                    let isActive = await transcriptionVM.activeTasks.contains { $0.audioFileURL.lastPathComponent == url.lastPathComponent }
+                    let isInQueue = transcriptionVM.isInQueue(url)
+                    let isActive = transcriptionVM.activeTasks.contains { $0.audioFileURL.lastPathComponent == url.lastPathComponent }
 
                     print("   File: \(url.lastPathComponent) - inQueue: \(isInQueue), isActive: \(isActive)")
 

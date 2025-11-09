@@ -82,7 +82,7 @@ struct AppError: LocalizedError {
     // Predefined errors
     static func noFolderSelected() -> AppError {
         AppError(
-            title: NSLocalizedString("Ingen Folder Valgt", comment: ""),
+            title: NSLocalizedString("Ingen folder valgt", comment: ""),
             message: NSLocalizedString("Vælg en folder for at starte overvågning.", comment: ""),
             alertStyle: .informational
         )

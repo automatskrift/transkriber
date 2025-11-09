@@ -49,7 +49,7 @@ class ModelDownloadService: NSObject, ObservableObject {
         }
 
         let modelsDir = try FileSystemHelper.shared.createModelsDirectory()
-        let destinationURL = modelsDir.appendingPathComponent("ggml-\(modelType.rawValue).bin")
+        _ = modelsDir.appendingPathComponent("ggml-\(modelType.rawValue).bin")
 
         print("📁 Models directory: \(modelsDir.path)")
         print("🌐 Download URL: \(modelType.downloadURL)")
@@ -116,15 +116,8 @@ extension ModelDownloadService: URLSessionDownloadDelegate, URLSessionTaskDelega
         completionHandler(request)
     }
 
-    // Handle response to log details
-    nonisolated func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
-        if let httpResponse = response as? HTTPURLResponse {
-            print("📡 Response status: \(httpResponse.statusCode)")
-            print("📡 Content-Type: \(httpResponse.allHeaderFields["Content-Type"] ?? "unknown")")
-            print("📡 Content-Length: \(httpResponse.allHeaderFields["Content-Length"] ?? "unknown")")
-        }
-        completionHandler(.allow)
-    }
+    // Note: Removed urlSession(_:task:didReceive:completionHandler:) as it's optional
+    // and was causing protocol matching warnings. Response logging happens in other delegates.
 
     nonisolated func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
         guard let modelType = downloadModelTypes[downloadTask] else {

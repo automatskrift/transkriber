@@ -18,6 +18,8 @@ class LocationService: NSObject, ObservableObject {
     @Published var authorizationStatus: CLAuthorizationStatus = .notDetermined
 
     private let locationManager = CLLocationManager()
+    // TODO: Replace CLGeocoder with MapKit when targeting iOS 26+
+    @available(iOS, deprecated: 26.0, message: "Will migrate to MapKit when iOS 26 is released")
     private let geocoder = CLGeocoder()
 
     private override init() {

@@ -302,18 +302,18 @@ class AudioRecordingService: NSObject, ObservableObject {
 
         // Monitor duration
         durationTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] timer in
-            guard let self else {
-                timer.invalidate()
-                return
-            }
-
-            guard let recorder = self.audioRecorder else {
-                timer.invalidate()
-                return
-            }
-
-            // Update duration on main thread
             Task { @MainActor in
+                guard let self else {
+                    timer.invalidate()
+                    return
+                }
+
+                guard let recorder = self.audioRecorder else {
+                    timer.invalidate()
+                    return
+                }
+
+                // Update duration
                 self.duration = recorder.currentTime
             }
         }

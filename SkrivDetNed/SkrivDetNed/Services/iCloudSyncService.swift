@@ -235,7 +235,7 @@ class iCloudSyncService: ObservableObject {
         // Start periodic check as backup (every 30 seconds)
         // This helps catch files that NSMetadataQuery might miss
         periodicCheckTimer?.invalidate()
-        periodicCheckTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true) { [weak self] _ in
+        periodicCheckTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true) { @Sendable [weak self] _ in
             Task { @MainActor in
                 await self?.performPeriodicCheck()
             }
@@ -751,8 +751,10 @@ extension iCloudSyncService {
         writeHeartbeat()
 
         // Schedule periodic heartbeat every 60 seconds
-        heartbeatTimer = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true) { [weak self] _ in
-            self?.writeHeartbeat()
+        heartbeatTimer = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true) { @Sendable [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.writeHeartbeat()
+            }
         }
         print("💓 Heartbeat timer started (every 60 seconds)")
     }

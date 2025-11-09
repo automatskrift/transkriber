@@ -45,7 +45,7 @@ class MenuBarManager: ObservableObject {
         menu.removeAllItems()
 
         // Status item
-        let statusTitle = isMonitoring ? NSLocalizedString("● Overvåger...", comment: "") : NSLocalizedString("○ Inaktiv", comment: "")
+        let statusTitle = isMonitoring ? "● " + NSLocalizedString("Overvåger...", comment: "") : NSLocalizedString("○ Inaktiv", comment: "")
         let statusItem = NSMenuItem(title: statusTitle, action: nil, keyEquivalent: "")
         statusItem.isEnabled = false
         menu.addItem(statusItem)
@@ -66,7 +66,7 @@ class MenuBarManager: ObservableObject {
         menu.addItem(showItem)
 
         // Settings
-        let settingsItem = NSMenuItem(title: NSLocalizedString("Indstillinger...", comment: ""), action: #selector(openSettings), keyEquivalent: ",")
+        let settingsItem = NSMenuItem(title: NSLocalizedString("Indstillinger", comment: "") + "...", action: #selector(openSettings), keyEquivalent: ",")
         settingsItem.target = self
         menu.addItem(settingsItem)
 

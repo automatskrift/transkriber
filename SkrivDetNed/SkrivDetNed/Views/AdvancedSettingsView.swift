@@ -75,7 +75,7 @@ struct AdvancedSettingsView: View {
                     GroupBox(label: Label(NSLocalizedString("Temperatur", comment: ""), systemImage: "thermometer.medium")) {
                         VStack(alignment: .leading, spacing: 12) {
                             HStack {
-                                Text(NSLocalizedString("Temperatur:", comment: ""))
+                                Text(NSLocalizedString("Temperatur", comment: "") + ":")
                                 Spacer()
                                 Text(String(format: "%.1f", settings.whisperTemperature))
                                     .foregroundColor(.secondary)
@@ -190,7 +190,7 @@ struct AdvancedSettingsView: View {
         settings.whisperInitialPrompt = ""
         settings.whisperIncludeTimestamps = false
         settings.whisperWordLevelTimestamps = false
-        settings.whisperThreadCount = 2
+        settings.whisperThreadCount = 1
         settings.whisperAutoDetectLanguage = false
     }
 }

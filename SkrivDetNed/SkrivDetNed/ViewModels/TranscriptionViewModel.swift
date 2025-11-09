@@ -583,6 +583,21 @@ class TranscriptionViewModel: ObservableObject {
                     try? log.write(toFile: "/tmp/skrivdetned_debug.log", atomically: true, encoding: .utf8)
                 }
                 FolderMonitorService.shared.markAsProcessed(url)
+
+                // Check if metadata status needs to be fixed (file from iCloud with stale status)
+                if url.path.contains("Mobile Documents"),
+                   let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL(),
+                   var metadata = try? RecordingMetadata.load(for: url.lastPathComponent, from: recordingsFolder) {
+                    if metadata.status == .pending {
+                        print("   🔧 Fixing stale metadata status (pending → completed)")
+                        metadata.status = .completed
+                        metadata.updatedAt = Date()
+                        metadata.transcribedOnDevice = "macOS"
+                        try? metadata.save(to: recordingsFolder)
+                        print("   ✅ Metadata status updated to completed")
+                    }
+                }
+
                 continue
             }
 
@@ -764,7 +779,7 @@ class TranscriptionViewModel: ObservableObject {
 
         // Build result by inserting marks before segments
         var result = text
-        var processedSegments = segments
+        let processedSegments = segments
 
         for insertion in insertions.reversed() {
             let segment = processedSegments[insertion.segmentIndex]

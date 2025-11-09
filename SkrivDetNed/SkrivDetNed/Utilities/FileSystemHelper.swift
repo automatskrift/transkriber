@@ -7,15 +7,16 @@
 
 import Foundation
 
+@MainActor
 class FileSystemHelper {
-    static let shared = FileSystemHelper()
+    nonisolated static let shared = FileSystemHelper()
 
-    private init() {}
+    nonisolated private init() {}
 
     // Supported audio file extensions
-    static let supportedAudioExtensions = ["m4a", "mp3", "wav", "aiff", "caf", "aac", "flac"]
+    nonisolated static let supportedAudioExtensions = ["m4a", "mp3", "wav", "aiff", "caf", "aac", "flac"]
 
-    func isAudioFile(_ url: URL) -> Bool {
+    nonisolated func isAudioFile(_ url: URL) -> Bool {
         let ext = url.pathExtension.lowercased()
         return Self.supportedAudioExtensions.contains(ext)
     }
@@ -39,12 +40,12 @@ class FileSystemHelper {
         return initialSize == finalSize
     }
 
-    func transcriptionFileExists(for audioURL: URL) -> Bool {
+    nonisolated func transcriptionFileExists(for audioURL: URL) -> Bool {
         let txtURL = audioURL.deletingPathExtension().appendingPathExtension("txt")
         return FileManager.default.fileExists(atPath: txtURL.path)
     }
 
-    func createApplicationSupportDirectory() throws -> URL {
+    nonisolated func createApplicationSupportDirectory() throws -> URL {
         let fileManager = FileManager.default
         let appSupportURL = try fileManager.url(
             for: .applicationSupportDirectory,
@@ -62,7 +63,7 @@ class FileSystemHelper {
         return appDirectory
     }
 
-    func createModelsDirectory() throws -> URL {
+    nonisolated func createModelsDirectory() throws -> URL {
         let appDirectory = try createApplicationSupportDirectory()
         let modelsDirectory = appDirectory.appendingPathComponent("Models")
 
@@ -74,13 +75,13 @@ class FileSystemHelper {
         return modelsDirectory
     }
 
-    func modelExists(_ modelType: WhisperModelType) -> Bool {
+    nonisolated func modelExists(_ modelType: WhisperModelType) -> Bool {
         guard let modelsDir = try? createModelsDirectory() else { return false }
         let modelPath = modelsDir.appendingPathComponent("ggml-\(modelType.rawValue).bin")
         return FileManager.default.fileExists(atPath: modelPath.path)
     }
 
-    func deleteModel(_ modelType: WhisperModelType) throws {
+    nonisolated func deleteModel(_ modelType: WhisperModelType) throws {
         let modelsDir = try createModelsDirectory()
         let modelPath = modelsDir.appendingPathComponent("ggml-\(modelType.rawValue).bin")
 

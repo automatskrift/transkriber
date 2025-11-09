@@ -129,7 +129,11 @@ class FolderMonitorService: ObservableObject {
         )
 
         if let stream = stream {
-            FSEventStreamScheduleWithRunLoop(stream, CFRunLoopGetMain(), CFRunLoopMode.defaultMode.rawValue)
+            if #available(macOS 15.0, *) {
+                FSEventStreamSetDispatchQueue(stream, DispatchQueue.main)
+            } else {
+                FSEventStreamScheduleWithRunLoop(stream, CFRunLoopGetMain(), CFRunLoopMode.defaultMode.rawValue)
+            }
             FSEventStreamStart(stream)
             self.eventStream = stream
         }
@@ -170,20 +174,20 @@ class FolderMonitorService: ObservableObject {
 
         // Check iCloud metadata if this is the iCloud recordings folder
         if AppSettings.shared.iCloudSyncEnabled,
-           let iCloudFolder = await iCloudSyncService.shared.getRecordingsFolderURL(),
+           let iCloudFolder = iCloudSyncService.shared.getRecordingsFolderURL(),
            url.path.hasPrefix(iCloudFolder.path) {
             // Try to load metadata
             if let metadata = try? RecordingMetadata.load(for: url.lastPathComponent, from: iCloudFolder) {
                 // Skip if already completed
                 if metadata.status == .completed {
                     print("⏭️ Skipping already completed file: \(url.lastPathComponent)")
-                    await markAsProcessed(url)
+                    markAsProcessed(url)
                     return
                 }
                 // Skip if failed
                 if metadata.status == .failed {
                     print("⏭️ Skipping previously failed file: \(url.lastPathComponent)")
-                    await markAsProcessed(url)
+                    markAsProcessed(url)
                     return
                 }
             }
@@ -237,15 +241,19 @@ class FolderMonitorService: ObservableObject {
     }
 
     private func scanFolderForNewFiles(_ folder: URL) async {
-        guard let enumerator = FileManager.default.enumerator(
-            at: folder,
-            includingPropertiesForKeys: [.isRegularFileKey],
-            options: [.skipsHiddenFiles, .skipsPackageDescendants]
-        ) else {
+        let urls: [URL]
+        do {
+            urls = try FileManager.default.contentsOfDirectory(
+                at: folder,
+                includingPropertiesForKeys: [.isRegularFileKey],
+                options: [.skipsHiddenFiles]
+            )
+        } catch {
+            print("❌ Failed to scan folder: \(error)")
             return
         }
 
-        for case let fileURL as URL in enumerator {
+        for fileURL in urls {
             // Check if it's an audio file
             guard FileSystemHelper.shared.isAudioFile(fileURL) else {
                 continue
@@ -268,20 +276,20 @@ class FolderMonitorService: ObservableObject {
 
             // Check iCloud metadata if this is the iCloud recordings folder
             if AppSettings.shared.iCloudSyncEnabled,
-               let iCloudFolder = await iCloudSyncService.shared.getRecordingsFolderURL(),
+               let iCloudFolder = iCloudSyncService.shared.getRecordingsFolderURL(),
                fileURL.path.hasPrefix(iCloudFolder.path) {
                 // Try to load metadata
                 if let metadata = try? RecordingMetadata.load(for: fileURL.lastPathComponent, from: iCloudFolder) {
                     // Skip if already completed
                     if metadata.status == .completed {
                         print("⏭️ Skipping already completed file in scan: \(fileURL.lastPathComponent)")
-                        await markAsProcessed(fileURL)
+                        markAsProcessed(fileURL)
                         continue
                     }
                     // Skip if failed
                     if metadata.status == .failed {
                         print("⏭️ Skipping previously failed file in scan: \(fileURL.lastPathComponent)")
-                        await markAsProcessed(fileURL)
+                        markAsProcessed(fileURL)
                         continue
                     }
                 }

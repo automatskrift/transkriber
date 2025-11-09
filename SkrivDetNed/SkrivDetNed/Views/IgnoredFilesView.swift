@@ -15,7 +15,7 @@ struct IgnoredFilesView: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text(NSLocalizedString("Ignorerede Lydfiler", comment: ""))
+                Text(NSLocalizedString("Ignorerede lydfiler", comment: ""))
                     .font(.headline)
                 Spacer()
                 Button(NSLocalizedString("Luk", comment: "")) {

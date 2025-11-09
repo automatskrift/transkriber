@@ -22,34 +22,58 @@ struct MainView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            FolderMonitorView()
-                .environmentObject(transcriptionVM)
-                .environmentObject(whisperService)
-                .environmentObject(folderMonitorVM)
-                .tabItem {
-                    Label(NSLocalizedString("Overvågning", comment: ""), systemImage: "folder.badge.gearshape")
+            Group {
+                if selectedTab == .monitor {
+                    FolderMonitorView()
+                        .environmentObject(transcriptionVM)
+                        .environmentObject(whisperService)
+                        .environmentObject(folderMonitorVM)
+                } else {
+                    Color.clear
                 }
-                .tag(Tab.monitor)
+            }
+            .tabItem {
+                Label(NSLocalizedString("Overvågning", comment: ""), systemImage: "folder.badge.gearshape")
+            }
+            .tag(Tab.monitor)
 
-            TranscriptionsView()
-                .environmentObject(transcriptionVM)
-                .tabItem {
-                    Label(NSLocalizedString("Transskriptioner", comment: ""), systemImage: "doc.text.magnifyingglass")
+            Group {
+                if selectedTab == .transcriptions {
+                    TranscriptionsView()
+                        .environmentObject(transcriptionVM)
+                } else {
+                    Color.clear
                 }
-                .tag(Tab.transcriptions)
+            }
+            .tabItem {
+                Label(NSLocalizedString("Transskriptioner", comment: ""), systemImage: "doc.text.magnifyingglass")
+            }
+            .tag(Tab.transcriptions)
 
-            ManualTranscriptionView()
-                .environmentObject(transcriptionVM)
-                .tabItem {
-                    Label(NSLocalizedString("Manuel", comment: ""), systemImage: "doc.text")
+            Group {
+                if selectedTab == .manual {
+                    ManualTranscriptionView()
+                        .environmentObject(transcriptionVM)
+                } else {
+                    Color.clear
                 }
-                .tag(Tab.manual)
+            }
+            .tabItem {
+                Label(NSLocalizedString("Manuel", comment: ""), systemImage: "doc.text")
+            }
+            .tag(Tab.manual)
 
-            SettingsView()
-                .tabItem {
-                    Label(NSLocalizedString("Indstillinger", comment: ""), systemImage: "gear")
+            Group {
+                if selectedTab == .settings {
+                    SettingsView()
+                } else {
+                    Color.clear
                 }
-                .tag(Tab.settings)
+            }
+            .tabItem {
+                Label(NSLocalizedString("Indstillinger", comment: ""), systemImage: "gear")
+            }
+            .tag(Tab.settings)
         }
         .frame(minWidth: 700, minHeight: 600)
         .alert(NSLocalizedString("Eksisterende filer fundet", comment: ""), isPresented: $folderMonitorVM.showExistingFilesPrompt) {

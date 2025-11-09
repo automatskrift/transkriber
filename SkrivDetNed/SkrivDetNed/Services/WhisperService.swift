@@ -96,7 +96,27 @@ class WhisperService: ObservableObject {
         progress: @escaping (Double) -> Void
     ) async throws -> TranscriptionResult {
         guard FileManager.default.fileExists(atPath: audioURL.path) else {
+            print("❌ Audio file not found: \(audioURL.path)")
             throw WhisperError.fileNotFound
+        }
+
+        // Validate audio file
+        do {
+            let fileAttributes = try FileManager.default.attributesOfItem(atPath: audioURL.path)
+            let fileSize = fileAttributes[.size] as? Int64 ?? 0
+            print("📊 Audio file size: \(fileSize) bytes")
+
+            if fileSize == 0 {
+                print("❌ Audio file is empty")
+                throw WhisperError.transcriptionFailed("Audio file is empty")
+            }
+
+            if fileSize > 100_000_000 {  // 100MB
+                print("⚠️ Warning: Large audio file (\(fileSize / 1_000_000)MB). This may take a while or fail.")
+            }
+        } catch {
+            print("❌ Failed to validate audio file: \(error)")
+            throw WhisperError.transcriptionFailed("Failed to validate audio file: \(error.localizedDescription)")
         }
 
         // Load model if not already loaded or different model requested
@@ -116,18 +136,33 @@ class WhisperService: ObservableObject {
         }
 
         print("🎙️ Starting transcription with WhisperKit...")
+        print("📁 File: \(audioURL.lastPathComponent)")
+        print("🔧 Model: \(modelType.displayName)")
 
         do {
             // Get settings
             let settings = AppSettings.shared
 
             // Determine language
+            // IMPORTANT: For best results with WhisperKit:
+            // - Always provide explicit language (don't use nil) unless user explicitly wants auto-detect
+            // - Set detectLanguage to false when using explicit language
+            // - Use usePrefillPrompt to force the language tokens
             let language: String? = settings.whisperAutoDetectLanguage ? nil : settings.selectedLanguage
+            let shouldDetectLanguage = settings.whisperAutoDetectLanguage
+
             print("🌍 Language: \(language ?? "auto-detect")")
+            print("🔍 Detect language: \(shouldDetectLanguage)")
+
+            // Get initial prompt from settings (for advanced users)
+            let initialPrompt = settings.whisperInitialPrompt
 
             // Determine task (transcribe or translate)
             let task: DecodingTask = settings.whisperTranslateToEnglish ? .translate : .transcribe
             print("📝 Task: \(task == .translate ? "translate to English" : "transcribe")")
+            if !initialPrompt.isEmpty {
+                print("💬 Initial prompt: '\(initialPrompt)'")
+            }
 
             // Create decode options with all settings
             let decodeOptions = DecodingOptions(
@@ -139,9 +174,9 @@ class WhisperService: ObservableObject {
                 temperatureFallbackCount: 5,
                 sampleLength: 224,
                 topK: 5,
-                usePrefillPrompt: !settings.whisperInitialPrompt.isEmpty,
+                usePrefillPrompt: true,  // Always use prefill to enforce language setting
                 usePrefillCache: true,
-                detectLanguage: settings.whisperAutoDetectLanguage,
+                detectLanguage: shouldDetectLanguage,
                 skipSpecialTokens: true,
                 withoutTimestamps: !settings.whisperIncludeTimestamps,
                 wordTimestamps: settings.whisperWordLevelTimestamps,
@@ -211,9 +246,24 @@ class WhisperService: ObservableObject {
             progress(1.0)
             return TranscriptionResult(text: fullText, segments: segments)
 
-        } catch {
+        } catch let error as WhisperError {
+            // Already a WhisperError, just rethrow
             print("❌ WhisperKit transcription failed: \(error)")
-            throw WhisperError.transcriptionFailed(error.localizedDescription)
+            throw error
+        } catch {
+            // Wrap other errors with more context
+            print("❌ WhisperKit transcription failed: \(error)")
+            print("   Error type: \(type(of: error))")
+
+            // Provide more specific error messages for common issues
+            let errorMessage = error.localizedDescription
+            if errorMessage.contains("ML Program") {
+                throw WhisperError.transcriptionFailed("ML model error. This can happen with corrupted audio files, very long recordings, or if the model needs to be re-downloaded. Try with a different audio file or re-download the model in Settings.")
+            } else if errorMessage.contains("memory") || errorMessage.contains("Memory") {
+                throw WhisperError.transcriptionFailed("Out of memory. Try using a smaller model (e.g. Tiny or Base) or split your audio into shorter segments.")
+            } else {
+                throw WhisperError.transcriptionFailed(errorMessage)
+            }
         }
     }
 

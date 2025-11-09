@@ -1,207 +1,22 @@
 {
   "sourceLanguage" : "da",
   "strings" : {
-    "" : {
-
-    },
-    "'%@' er blevet transkriberet" : {
+    "● Overvåger..." : {
       "extractionState" : "manual",
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "'%@' er blevet transkriberet"
+            "value" : "● Overvåger..."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "'%@' has been transcribed"
+            "value" : "● Monitoring..."
           }
         }
       }
-    },
-    "(%@)" : {
-
-    },
-    "(Fil findes ikke længere)" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "(Fil findes ikke længere)"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "(File no longer exists)"
-          }
-        }
-      }
-    },
-    "**Kom godt i gang:**" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "**Kom godt i gang:**"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "**Getting started:**"
-          }
-        }
-      }
-    },
-    "**Tips:**" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "**Tips:**"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "**Tips:**"
-          }
-        }
-      }
-    },
-    "**Understøttede formater:**" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "**Understøttede formater:**"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "**Supported formats:**"
-          }
-        }
-      }
-    },
-    "%@ er en intelligent macOS-applikation der automatisk transkriberer dine lydoptagelser ved hjælp af avanceret talegenkendelse." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ er en intelligent macOS-applikation der automatisk transkriberer dine lydoptagelser ved hjælp af avanceret talegenkendelse."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ is an intelligent macOS application that automatically transcribes your audio recordings using advanced speech recognition."
-          }
-        }
-      }
-    },
-    "%lld" : {
-
-    },
-    "%lld ord" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld ord"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld words"
-          }
-        }
-      }
-    },
-    "%lld%%" : {
-
-    },
-    "• Aktiv" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "• Aktiv"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "• Active"
-          }
-        }
-      }
-    },
-    "• Brug menulinjen til hurtig adgang" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "• Brug menulinjen til hurtig adgang"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "• Use the menu bar for quick access"
-          }
-        }
-      }
-    },
-    "• Find transskriptioner ved siden af dine lydfiler (.txt)" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "• Find transskriptioner ved siden af dine lydfiler (.txt)"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "• Find transcriptions next to your audio files (.txt)"
-          }
-        }
-      }
-    },
-    "• Juster indstillinger for bedre resultater" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "• Juster indstillinger for bedre resultater"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "• Adjust settings for better results"
-          }
-        }
-      }
-    },
-    "→ %@" : {
-
     },
     "○ Inaktiv" : {
       "extractionState" : "manual",
@@ -220,104 +35,19 @@
         }
       }
     },
-    "1. Download en model i Indstillinger → Modeller" : {
+    "%lld ord" : {
       "extractionState" : "manual",
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1. Download en model i Indstillinger → Modeller"
+            "value" : "%lld ord"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1. Download a model in Settings → Models"
-          }
-        }
-      }
-    },
-    "2. Vælg en mappe at overvåge i Indstillinger → Mappeovervågning" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "2. Vælg en mappe at overvåge i Indstillinger → Mappeovervågning"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "2. Choose a folder to monitor in Settings → Folder Monitoring"
-          }
-        }
-      }
-    },
-    "3. Placer eller optag lydfiler i den valgte mappe" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "3. Placer eller optag lydfiler i den valgte mappe"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "3. Place or record audio files in the chosen folder"
-          }
-        }
-      }
-    },
-    "4. Transkriptionen starter automatisk" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "4. Transkriptionen starter automatisk"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "4. Transcription starts automatically"
-          }
-        }
-      }
-    },
-    "Åbn folder" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Åbn folder"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open folder"
-          }
-        }
-      }
-    },
-    "Adgang Nægtet" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Adgang Nægtet"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Access Denied"
+            "value" : "%lld words"
           }
         }
       }
@@ -335,74 +65,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Quit Write it down"
-          }
-        }
-      }
-    },
-    "Afslut SkrivDetNed" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Afslut SkrivDetNed"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Quit Write it down"
-          }
-        }
-      }
-    },
-    "Afventer" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Afventer"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pending"
-          }
-        }
-      }
-    },
-    "AI-baseret transskribering" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AI-baseret transskribering"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AI-based transcription"
-          }
-        }
-      }
-    },
-    "Alle rettigheder forbeholdes" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alle rettigheder forbeholdes"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "All rights reserved"
           }
         }
       }
@@ -437,23 +99,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Write it down"
-          }
-        }
-      }
-    },
-    "Appen vil automatisk overvåge folderen og transkribere nye lydfiler" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Appen vil automatisk overvåge folderen og transkribere nye lydfiler"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The app will automatically monitor the folder and transcribe new audio files"
           }
         }
       }
@@ -594,43 +239,6 @@
         }
       }
     },
-    "Besøg hjemmeside" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Besøg hjemmeside"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Visit website"
-          }
-        }
-      }
-    },
-    "Brug menulinjen til hurtig adgang" : {
-
-    },
-    "Copyright © 2025 Tomas Thøfner" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copyright © 2025 Tomas Thøfner"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copyright © 2025 Tomas Thøfner"
-          }
-        }
-      }
-    },
     "Dansk" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -716,9 +324,6 @@
         }
       }
     },
-    "Download en model i Indstillinger → Modeller" : {
-
-    },
     "Download en Whisper model i Indstillinger før du kan transkribere." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -783,23 +388,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Download from iCloud failed"
-          }
-        }
-      }
-    },
-    "Downloader..." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Downloader..."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Downloading..."
           }
         }
       }
@@ -889,6 +477,23 @@
         }
       }
     },
+    "Færdig!" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Færdig!"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done!"
+          }
+        }
+      }
+    },
     "Færdige (%lld)" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -974,23 +579,6 @@
         }
       }
     },
-    "Filen: %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Filen: %@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "File: %@"
-          }
-        }
-      }
-    },
     "Filer du vælger at ignorere vil blive vist her" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1008,8 +596,22 @@
         }
       }
     },
-    "Find transskriptioner ved siden af dine lydfiler (.txt)" : {
-
+    "(Fil findes ikke længere)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(Fil findes ikke længere)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(File no longer exists)"
+          }
+        }
+      }
     },
     "Fjern fra ignorerede og tillad transskribering igen" : {
       "extractionState" : "manual",
@@ -1041,23 +643,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Remove from list"
-          }
-        }
-      }
-    },
-    "Flere workers kan øge hastigheden på kraftige Macs, men bruger mere hukommelse." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Flere workers kan øge hastigheden på kraftige Macs, men bruger mere hukommelse."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "More workers can increase speed on powerful Macs, but use more memory."
           }
         }
       }
@@ -1130,19 +715,19 @@
         }
       }
     },
-    "Hjælp" : {
+    "Hvert ord får sit eget tidsstempel for præcis navigation." : {
       "extractionState" : "manual",
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hjælp"
+            "value" : "Hvert ord får sit eget tidsstempel for præcis navigation."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Help"
+            "value" : "Each word gets its own timestamp for precise navigation."
           }
         }
       }
@@ -1160,6 +745,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Helps Whisper with context, e.g., names, technical terms, or the subject of the recording. Example: \"This is a meeting about software development with Tomas and Anders.\""
+          }
+        }
+      }
+    },
+    "Hurtigste model, god til korte optagelser" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hurtigste model, god til korte optagelser"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fastest model, good for short recordings"
           }
         }
       }
@@ -1198,53 +800,19 @@
         }
       }
     },
-    "Hurtigste model, god til korte optagelser" : {
+    "AI-baseret transskribering" : {
       "extractionState" : "manual",
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hurtigste model, god til korte optagelser"
+            "value" : "AI-baseret transskribering"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fastest model, good for short recordings"
-          }
-        }
-      }
-    },
-    "Hvert ord får sit eget tidsstempel for præcis navigation." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hvert ord får sit eget tidsstempel for præcis navigation."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Each word gets its own timestamp for precise navigation."
-          }
-        }
-      }
-    },
-    "I Kø (%lld)" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "I Kø (%lld)"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Queued (%lld)"
+            "value" : "AI-based transcription"
           }
         }
       }
@@ -1334,23 +902,6 @@
         }
       }
     },
-    "iCloud Sync" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iCloud Sync"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iCloud Sync"
-          }
-        }
-      }
-    },
     "iCloud tilgængelig" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1368,19 +919,36 @@
         }
       }
     },
-    "Ignorer" : {
+    "I Kø (%lld)" : {
       "extractionState" : "manual",
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ignorer"
+            "value" : "I Kø (%lld)"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ignore"
+            "value" : "Queued (%lld)"
+          }
+        }
+      }
+    },
+    "Ignorerede Lydfiler" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignorerede Lydfiler"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignored Audio Files"
           }
         }
       }
@@ -1398,6 +966,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ignored audio files"
+          }
+        }
+      }
+    },
+    "Ignorer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignorer"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignore"
           }
         }
       }
@@ -1470,6 +1055,23 @@
         }
       }
     },
+    "Indstillinger..." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indstillinger..."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings..."
+          }
+        }
+      }
+    },
     "Ingen fil valgt" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1500,6 +1102,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No files in iCloud"
+          }
+        }
+      }
+    },
+    "Ingen Folder Valgt" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingen Folder Valgt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Folder Selected"
           }
         }
       }
@@ -1606,23 +1225,6 @@
         }
       }
     },
-    "Initial prompt (valgfri):" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Initial prompt (valgfri):"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Initial prompt (optional):"
-          }
-        }
-      }
-    },
     "Inkludér tidsstempler" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1640,22 +1242,19 @@
         }
       }
     },
-    "Juster indstillinger for bedre resultater" : {
-
-    },
-    "Klar til at starte" : {
+    "Initial prompt (valgfri):" : {
       "extractionState" : "manual",
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Klar til at starte"
+            "value" : "Initial prompt (valgfri):"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ready to start"
+            "value" : "Initial prompt (optional):"
           }
         }
       }
@@ -1813,6 +1412,23 @@
         }
       }
     },
+    "Klar til at starte" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klar til at starte"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ready to start"
+          }
+        }
+      }
+    },
     "Large" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1826,23 +1442,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Large"
-          }
-        }
-      }
-    },
-    "Lav Diskplads" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lav Diskplads"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Low Disk Space"
           }
         }
       }
@@ -1864,19 +1463,19 @@
         }
       }
     },
-    "Lavere værdier giver mere konsistente resultater. Højere værdier kan hjælpe ved dårlig lydkvalitet." : {
+    "Lav Diskplads" : {
       "extractionState" : "manual",
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lavere værdier giver mere konsistente resultater. Højere værdier kan hjælpe ved dårlig lydkvalitet."
+            "value" : "Lav Diskplads"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lower values give more consistent results. Higher values can help with poor audio quality."
+            "value" : "Low Disk Space"
           }
         }
       }
@@ -1979,23 +1578,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The audio file was not found"
-          }
-        }
-      }
-    },
-    "M4A, MP3, WAV, AIFF, CAF, AAC, FLAC" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "M4A, MP3, WAV, AIFF, CAF, AAC, FLAC"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "M4A, MP3, WAV, AIFF, CAF, AAC, FLAC"
           }
         }
       }
@@ -2136,40 +1718,6 @@
         }
       }
     },
-    "Når aktiveret, vil Whisper automatisk detektere sproget i lydoptagelsen." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Når aktiveret, vil Whisper automatisk detektere sproget i lydoptagelsen."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "When enabled, Whisper will automatically detect the language in the audio recording."
-          }
-        }
-      }
-    },
-    "Når du transskriberer filer, vil de dukke op her" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Når du transskriberer filer, vil de dukke op her"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "When you transcribe files, they will appear here"
-          }
-        }
-      }
-    },
     "Netværksfejl: %@" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2238,6 +1786,40 @@
         }
       }
     },
+    "Når aktiveret, vil Whisper automatisk detektere sproget i lydoptagelsen." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Når aktiveret, vil Whisper automatisk detektere sproget i lydoptagelsen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When enabled, Whisper will automatically detect the language in the audio recording."
+          }
+        }
+      }
+    },
+    "Når du transskriberer filer, vil de dukke op her" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Når du transskriberer filer, vil de dukke op her"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When you transcribe files, they will appear here"
+          }
+        }
+      }
+    },
     "OK" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2251,23 +1833,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "OK"
-          }
-        }
-      }
-    },
-    "Om %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Om %@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "About %@"
           }
         }
       }
@@ -2323,6 +1888,108 @@
         }
       }
     },
+    "Overvåg også lokal mappe" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Overvåg også lokal mappe"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Also monitor local folder"
+          }
+        }
+      }
+    },
+    "Overvåg både iCloud og en lokal mappe samtidig" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Overvåg både iCloud og en lokal mappe samtidig"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monitor both iCloud and a local folder simultaneously"
+          }
+        }
+      }
+    },
+    "Overvåger..." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Overvåger..."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monitoring..."
+          }
+        }
+      }
+    },
+    "Overvågning" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Overvågning"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monitoring"
+          }
+        }
+      }
+    },
+    "Overvåger automatisk iCloud mappe for optagelser fra iOS appen" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Overvåger automatisk iCloud mappe for optagelser fra iOS appen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatically monitors iCloud folder for recordings from the iOS app"
+          }
+        }
+      }
+    },
+    "Overvåget Folder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Overvåget Folder"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monitored Folder"
+          }
+        }
+      }
+    },
     "Oversæt til engelsk" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2357,111 +2024,6 @@
         }
       }
     },
-    "Overvåg både iCloud og en lokal mappe samtidig" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Overvåg både iCloud og en lokal mappe samtidig"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Monitor both iCloud and a local folder simultaneously"
-          }
-        }
-      }
-    },
-    "Overvåg også lokal mappe" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Overvåg også lokal mappe"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Also monitor local folder"
-          }
-        }
-      }
-    },
-    "Overvåger automatisk iCloud mappe for optagelser fra iOS appen" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Overvåger automatisk iCloud mappe for optagelser fra iOS appen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Automatically monitors iCloud folder for recordings from the iOS app"
-          }
-        }
-      }
-    },
-    "Overvåger..." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Overvåger..."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Monitoring..."
-          }
-        }
-      }
-    },
-    "Overvåget Folder" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Overvåget Folder"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Monitored Folder"
-          }
-        }
-      }
-    },
-    "Overvågning" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Overvågning"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Monitoring"
-          }
-        }
-      }
-    },
-    "Placer eller optag lydfiler i den valgte mappe" : {
-
-    },
     "Proces alle (%lld)" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2479,23 +2041,6 @@
         }
       }
     },
-    "Prøv at søge efter noget andet" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Prøv at søge efter noget andet"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Try searching for something else"
-          }
-        }
-      }
-    },
     "Prøv Igen" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2509,6 +2054,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Try Again"
+          }
+        }
+      }
+    },
+    "Prøv at søge efter noget andet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prøv at søge efter noget andet"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try searching for something else"
           }
         }
       }
@@ -2564,23 +2126,6 @@
         }
       }
     },
-    "Sådan bruges SkrivDetNed" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sådan bruges SkrivDetNed"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "How to use Write it down"
-          }
-        }
-      }
-    },
     "Samtidige workers:" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2594,74 +2139,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Concurrent workers:"
-          }
-        }
-      }
-    },
-    "SkrivDetNed" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SkrivDetNed"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Write it down"
-          }
-        }
-      }
-    },
-    "SkrivDetNed er en intelligent macOS-applikation der automatisk transkriberer dine lydoptagelser ved hjælp af avanceret talegenkendelse." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SkrivDetNed er en intelligent macOS-applikation der automatisk transkriberer dine lydoptagelser ved hjælp af avanceret talegenkendelse."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Write it down is an intelligent macOS application that automatically transcribes your audio recordings using advanced speech recognition."
-          }
-        }
-      }
-    },
-    "SkrivDetNed hjælp" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SkrivDetNed hjælp"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Write it down Help"
-          }
-        }
-      }
-    },
-    "SkrivDetNed transkriberer automatisk dine lydoptagelser." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SkrivDetNed transkriberer automatisk dine lydoptagelser."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Write it down automatically transcribes your audio recordings."
           }
         }
       }
@@ -2717,6 +2194,40 @@
         }
       }
     },
+    "SkrivDetNed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SkrivDetNed"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Write it down"
+          }
+        }
+      }
+    },
+    "SkrivDetNed er en intelligent macOS-applikation der automatisk transkriberer dine lydoptagelser ved hjælp af avanceret talegenkendelse." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SkrivDetNed er en intelligent macOS-applikation der automatisk transkriberer dine lydoptagelser ved hjælp af avanceret talegenkendelse."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Write it down is an intelligent macOS application that automatically transcribes your audio recordings using advanced speech recognition."
+          }
+        }
+      }
+    },
     "Small" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2730,23 +2241,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Small"
-          }
-        }
-      }
-    },
-    "Søg i transskriptioner..." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Søg i transskriptioner..."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search in transcriptions..."
           }
         }
       }
@@ -2781,6 +2275,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Language"
+          }
+        }
+      }
+    },
+    "Sprog:" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sprog:"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Language:"
           }
         }
       }
@@ -2870,23 +2381,6 @@
         }
       }
     },
-    "Sti: %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sti: %@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Path: %@"
-          }
-        }
-      }
-    },
     "Stop Overvågning" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2938,6 +2432,23 @@
         }
       }
     },
+    "Søg i transskriptioner..." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Søg i transskriptioner..."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search in transcriptions..."
+          }
+        }
+      }
+    },
     "Talegenkendelse ikke tilgængelig" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2968,6 +2479,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Temperature"
+          }
+        }
+      }
+    },
+    "Temperatur:" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temperatur:"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temperature:"
           }
         }
       }
@@ -3074,26 +2602,6 @@
         }
       }
     },
-    "Transkriptionen starter automatisk" : {
-
-    },
-    "Transskriberer og oversætter automatisk alt indhold til engelsk." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Transskriberer og oversætter automatisk alt indhold til engelsk."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Transcribes and automatically translates all content to English."
-          }
-        }
-      }
-    },
     "Transskribering fejlede" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3128,25 +2636,22 @@
         }
       }
     },
-    "Transskription fejlede" : {
+    "Transskription Fejlede" : {
       "extractionState" : "manual",
       "localizations" : {
         "da" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Transskription fejlede"
+            "value" : "Transskription Fejlede"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Transcription failed"
+            "value" : "Transcription Failed"
           }
         }
       }
-    },
-    "Transskription Fejlede" : {
-
     },
     "Transskription fejlede: %@" : {
       "extractionState" : "manual",
@@ -3195,6 +2700,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Transcriptions"
+          }
+        }
+      }
+    },
+    "Transskriberer og oversætter automatisk alt indhold til engelsk." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transskriberer og oversætter automatisk alt indhold til engelsk."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transcribes and automatically translates all content to English."
           }
         }
       }
@@ -3284,6 +2806,91 @@
         }
       }
     },
+    "Valgt" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valgt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selected"
+          }
+        }
+      }
+    },
+    "Valgt sprog:" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valgt sprog:"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selected language:"
+          }
+        }
+      }
+    },
+    "Varighed: %@s" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Varighed: %@s"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duration: %@s"
+          }
+        }
+      }
+    },
+    "Venter..." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Venter..."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting..."
+          }
+        }
+      }
+    },
+    "Version 1.0" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version 1.0"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version 1.0"
+          }
+        }
+      }
+    },
     "Vælg" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3369,9 +2976,6 @@
         }
       }
     },
-    "Vælg en mappe at overvåge i Indstillinger → Mappeovervågning" : {
-
-    },
     "Vælg Fil" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3423,128 +3027,6 @@
         }
       }
     },
-    "Valgt" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Valgt"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Selected"
-          }
-        }
-      }
-    },
-    "Valgt sprog:" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Valgt sprog:"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Selected language:"
-          }
-        }
-      }
-    },
-    "Varighed: %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Varighed: %@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Duration: %@"
-          }
-        }
-      }
-    },
-    "Varighed: %@s" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Varighed: %@s"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Duration: %@s"
-          }
-        }
-      }
-    },
-    "Varighed: %llds" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Varighed: %llds"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Duration: %llds"
-          }
-        }
-      }
-    },
-    "Venter..." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Venter..."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Waiting..."
-          }
-        }
-      }
-    },
-    "Version %@" : {
-
-    },
-    "Version 1.0" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Version 1.0"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Version 1.0"
-          }
-        }
-      }
-    },
     "Vis fil" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3579,23 +3061,6 @@
         }
       }
     },
-    "Vis mere" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vis mere"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show more"
-          }
-        }
-      }
-    },
     "Vis mindre" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3609,6 +3074,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Show less"
+          }
+        }
+      }
+    },
+    "Vis mere" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis mere"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show more"
           }
         }
       }
@@ -3664,6 +3146,23 @@
         }
       }
     },
+    "WhisperKit Modeller" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WhisperKit Modeller"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WhisperKit Models"
+          }
+        }
+      }
+    },
     "Whisper model er ikke downloadet. Download en model i indstillinger." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3698,23 +3197,6 @@
         }
       }
     },
-    "WhisperKit Modeller" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "WhisperKit Modeller"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "WhisperKit Models"
-          }
-        }
-      }
-    },
     "Ydeevne" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3728,6 +3210,176 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Performance"
+          }
+        }
+      }
+    },
+    "Åbn folder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åbn folder"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open folder"
+          }
+        }
+      }
+    },
+    "Adgang Nægtet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adgang Nægtet"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Access Denied"
+          }
+        }
+      }
+    },
+    "Afventer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afventer"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pending"
+          }
+        }
+      }
+    },
+    "Alle rettigheder forbeholdes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle rettigheder forbeholdes"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All rights reserved"
+          }
+        }
+      }
+    },
+    "Appen vil automatisk overvåge folderen og transkribere nye lydfiler" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appen vil automatisk overvåge folderen og transkribere nye lydfiler"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app will automatically monitor the folder and transcribe new audio files"
+          }
+        }
+      }
+    },
+    "Copyright © 2025 Tomas Thøfner" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copyright © 2025 Tomas Thøfner"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copyright © 2025 Tomas Thøfner"
+          }
+        }
+      }
+    },
+    "Downloader..." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloader..."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloading..."
+          }
+        }
+      }
+    },
+    "Flere workers kan øge hastigheden på kraftige Macs, men bruger mere hukommelse." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flere workers kan øge hastigheden på kraftige Macs, men bruger mere hukommelse."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More workers can increase speed on powerful Macs, but use more memory."
+          }
+        }
+      }
+    },
+    "iCloud Sync" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iCloud Sync"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iCloud Sync"
+          }
+        }
+      }
+    },
+    "'%@' er blevet transkriberet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "'%@' er blevet transkriberet"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "'%@' has been transcribed"
           }
         }
       }

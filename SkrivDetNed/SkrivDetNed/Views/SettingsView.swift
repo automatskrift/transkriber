@@ -128,7 +128,7 @@ struct SettingsView: View {
 
                         // Language selection
                         HStack {
-                            Text(NSLocalizedString("Sprog:", comment: ""))
+                            Text(NSLocalizedString("Sprog", comment: "") + ":")
                             Spacer()
                             Picker("", selection: $settings.selectedLanguage) {
                                 Text(NSLocalizedString("Dansk", comment: "")).tag("da")

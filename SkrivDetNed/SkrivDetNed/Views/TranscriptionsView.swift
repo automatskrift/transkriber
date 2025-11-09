@@ -10,6 +10,8 @@ import SwiftUI
 struct TranscriptionsView: View {
     @EnvironmentObject private var transcriptionVM: TranscriptionViewModel
     @State private var searchText = ""
+    @State private var filteredTasks: [TranscriptionTask] = []
+    @State private var isActive = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -36,34 +38,57 @@ struct TranscriptionsView: View {
 
             Divider()
 
-            // Content
-            if filteredTasks.isEmpty {
-                emptyState
+            // Content - only show if view is active
+            if isActive {
+                if filteredTasks.isEmpty {
+                    emptyState
+                } else {
+                    transcriptionsList
+                }
             } else {
-                transcriptionsList
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
         .frame(minWidth: 600, minHeight: 500)
+        .onChange(of: searchText) {
+            if isActive {
+                updateFilteredTasks()
+            }
+        }
+        .onChange(of: transcriptionVM.completedTasks.count) {
+            if isActive {
+                updateFilteredTasks()
+            }
+        }
+        .onAppear {
+            // Delay to ensure smooth transition
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 50_000_000) // 0.05 seconds
+                isActive = true
+                updateFilteredTasks()
+            }
+        }
+        .onDisappear {
+            isActive = false
+        }
     }
 
-    private var filteredTasks: [TranscriptionTask] {
-        let completed = transcriptionVM.completedTasks.filter { $0.status == .completed }
+    private func updateFilteredTasks() {
+        // Perform filtering asynchronously to avoid blocking UI
+        Task { @MainActor in
+            let completed = transcriptionVM.completedTasks.filter { $0.status == .completed }
 
-        if searchText.isEmpty {
-            return completed
+            if searchText.isEmpty {
+                filteredTasks = completed
+            } else {
+                // Only filter by filename to avoid loading all transcription files
+                // Users can open individual transcriptions to search content
+                filteredTasks = completed.filter { task in
+                    task.fileName.localizedCaseInsensitiveContains(searchText)
+                }
+            }
         }
-
-        return completed.filter { task in
-            task.fileName.localizedCaseInsensitiveContains(searchText) ||
-            (loadTranscriptionText(for: task)?.localizedCaseInsensitiveContains(searchText) ?? false)
-        }
-    }
-
-    private func loadTranscriptionText(for task: TranscriptionTask) -> String? {
-        guard FileManager.default.fileExists(atPath: task.outputFileURL.path) else {
-            return nil
-        }
-        return try? String(contentsOf: task.outputFileURL, encoding: .utf8)
     }
 
     private var transcriptionsList: some View {
@@ -71,6 +96,7 @@ struct TranscriptionsView: View {
             LazyVStack(spacing: 12) {
                 ForEach(filteredTasks) { task in
                     TranscriptionRow(task: task)
+                        .id(task.id) // Ensure stable identity
                 }
             }
             .padding()
@@ -105,6 +131,8 @@ struct TranscriptionRow: View {
     @State private var transcriptionText: String?
     @State private var isExpanded = false
     @State private var showingTextWindow = false
+    @State private var fileExists = false
+    @State private var hasLoaded = false
 
     var body: some View {
         GroupBox {
@@ -153,7 +181,7 @@ struct TranscriptionRow: View {
                         }
 
                         // Open transcription file button
-                        if FileManager.default.fileExists(atPath: task.outputFileURL.path) {
+                        if fileExists {
                             Button(action: {
                                 NSWorkspace.shared.activateFileViewerSelecting([task.outputFileURL])
                             }) {
@@ -219,21 +247,38 @@ struct TranscriptionRow: View {
             }
             .padding(8)
         }
-        .onAppear {
-            loadTranscription()
+        .task(id: task.id) {
+            // Only load once per task
+            guard !hasLoaded else { return }
+
+            // Don't block - run everything in background
+            await Task.detached(priority: .background) {
+                // Mark as loaded immediately to prevent duplicate loads
+                await MainActor.run { hasLoaded = true }
+
+                // Check if file exists
+                let exists = FileManager.default.fileExists(atPath: task.outputFileURL.path)
+
+                await MainActor.run {
+                    fileExists = exists
+                }
+
+                guard exists, !Task.isCancelled else { return }
+
+                // Load file content
+                guard let text = try? String(contentsOf: task.outputFileURL, encoding: .utf8),
+                      !Task.isCancelled else { return }
+
+                await MainActor.run {
+                    transcriptionText = text
+                }
+            }.value
         }
         .sheet(isPresented: $showingTextWindow) {
             if let text = transcriptionText {
                 TranscriptionTextWindow(text: text, fileName: task.fileName)
             }
         }
-    }
-
-    private func loadTranscription() {
-        guard FileManager.default.fileExists(atPath: task.outputFileURL.path) else {
-            return
-        }
-        transcriptionText = try? String(contentsOf: task.outputFileURL, encoding: .utf8)
     }
 }
 

@@ -633,6 +633,10 @@ struct MetadataInfoView: View {
     let url: URL
     let metadata: RecordingMetadata?
 
+    @State private var audioFileExists = false
+    @State private var metadataJSON = ""
+    @State private var isLoading = true
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -646,75 +650,98 @@ struct MetadataInfoView: View {
                 }
                 .buttonStyle(.borderless)
                 .help(NSLocalizedString("Kopier til udklipsholder", comment: ""))
+                .disabled(metadataJSON.isEmpty)
             }
 
             Divider()
 
-            // File existence status
-            HStack {
-                Image(systemName: audioFileExists ? "checkmark.circle.fill" : "xmark.circle.fill")
-                    .foregroundColor(audioFileExists ? .green : .red)
-                Text(audioFileExists ? NSLocalizedString("Lydfil findes", comment: "") : NSLocalizedString("Lydfil findes IKKE", comment: ""))
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                Spacer()
-            }
-            .padding(.bottom, 4)
-
-            if audioFileExists {
-                Text(String(format: NSLocalizedString("Sti: %@", comment: ""), url.path))
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                    .textSelection(.enabled)
-                    .lineLimit(2)
-            }
-
-            Divider()
-
-            ScrollView {
-                if let metadata = metadata {
-                    Text(metadataJSON)
-                        .font(.system(.caption, design: .monospaced))
-                        .textSelection(.enabled)
-                } else {
-                    VStack(spacing: 8) {
-                        Image(systemName: "doc.badge.exclamationmark")
-                            .font(.largeTitle)
-                            .foregroundColor(.orange)
-                        Text(NSLocalizedString("Ingen JSON-fil fundet", comment: ""))
-                            .font(.headline)
-                        Text(String(format: NSLocalizedString("Filen: %@", comment: ""), url.lastPathComponent))
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
+            if isLoading {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                // File existence status
+                HStack {
+                    Image(systemName: audioFileExists ? "checkmark.circle.fill" : "xmark.circle.fill")
+                        .foregroundColor(audioFileExists ? .green : .red)
+                    Text(audioFileExists ? NSLocalizedString("Lydfil findes", comment: "") : NSLocalizedString("Lydfil findes IKKE", comment: ""))
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    Spacer()
                 }
+                .padding(.bottom, 4)
+
+                if audioFileExists {
+                    Text(String(format: NSLocalizedString("Sti: %@", comment: ""), url.path))
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                        .textSelection(.enabled)
+                        .lineLimit(2)
+                }
+
+                Divider()
+
+                ScrollView {
+                    if metadata != nil && !metadataJSON.isEmpty {
+                        Text(metadataJSON)
+                            .font(.system(.caption, design: .monospaced))
+                            .textSelection(.enabled)
+                    } else {
+                        VStack(spacing: 8) {
+                            Image(systemName: "doc.badge.exclamationmark")
+                                .font(.largeTitle)
+                                .foregroundColor(.orange)
+                            Text(NSLocalizedString("Ingen JSON-fil fundet", comment: ""))
+                                .font(.headline)
+                            Text(String(format: NSLocalizedString("Filen: %@", comment: ""), url.lastPathComponent))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                    }
+                }
+                .frame(width: 400, height: 300)
             }
-            .frame(width: 400, height: 300)
         }
         .padding()
+        .task {
+            // Load data asynchronously
+            await loadMetadataInfo()
+        }
     }
 
-    private var audioFileExists: Bool {
-        FileManager.default.fileExists(atPath: url.path)
-    }
+    private func loadMetadataInfo() async {
+        // Run in background to avoid blocking UI
+        await Task.detached(priority: .userInitiated) {
+            // Check file existence
+            let exists = FileManager.default.fileExists(atPath: url.path)
 
-    private var metadataJSON: String {
-        guard let metadataValue = metadata else {
-            return NSLocalizedString("Ingen metadata", comment: "")
-        }
+            // Generate JSON string
+            // Encode metadata on main actor
+            let jsonString: String
+            if let metadataValue = metadata {
+                jsonString = await MainActor.run {
+                    let encoder = JSONEncoder()
+                    encoder.dateEncodingStrategy = .iso8601
+                    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
 
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+                    if let data = try? encoder.encode(metadataValue),
+                       let json = String(data: data, encoding: .utf8) {
+                        return json
+                    }
+                    return ""
+                }
+            } else {
+                jsonString = ""
+            }
 
-        guard let data = try? encoder.encode(metadataValue),
-              let jsonString = String(data: data, encoding: .utf8) else {
-            return NSLocalizedString("Kunne ikke encode metadata", comment: "")
-        }
-
-        return jsonString
+            // Update UI on main actor
+            await MainActor.run {
+                audioFileExists = exists
+                metadataJSON = jsonString
+                isLoading = false
+            }
+        }.value
     }
 
     private func copyToClipboard() {

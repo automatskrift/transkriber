@@ -48,15 +48,7 @@ struct ManualTranscriptionView: View {
                                 }
 
                                 // File info
-                                if let duration = AudioFileService.shared.getAudioDuration(fileURL) {
-                                    HStack {
-                                        Image(systemName: "clock")
-                                            .foregroundColor(.secondary)
-                                        Text(String(format: NSLocalizedString("Varighed: %@", comment: ""), formatDuration(duration)))
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
-                                }
+                                FileInfoView(fileURL: fileURL)
                             }
                             .padding()
                             .background(Color.accentColor.opacity(0.1))
@@ -147,11 +139,8 @@ struct ManualTranscriptionView: View {
 
                                 Spacer()
 
-                                if let fileURL = selectedFileURL,
-                                   let duration = AudioFileService.shared.getAudioDuration(fileURL) {
-                                    Text(String(format: NSLocalizedString("Estimeret tid: ~%llds", comment: ""), Int(duration / 10)))
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
+                                if let fileURL = selectedFileURL {
+                                    EstimatedTimeView(fileURL: fileURL)
                                 }
                             }
                         }
@@ -174,8 +163,8 @@ struct ManualTranscriptionView: View {
                 }
 
                 // Success message
-                if let result = transcriptionResult {
-                    GroupBox(label: Label(NSLocalizedString("Færdig!", comment: ""), systemImage: "checkmark.circle.fill")) {
+                if transcriptionResult != nil {
+                    GroupBox(label: Label(NSLocalizedString("Færdig", comment: ""), systemImage: "checkmark.circle.fill")) {
                         VStack(alignment: .leading, spacing: 12) {
                             Text(NSLocalizedString("Transskriptionen er gemt", comment: ""))
                                 .font(.headline)
@@ -329,6 +318,53 @@ struct ManualTranscriptionView: View {
         let minutes = Int(duration) / 60
         let seconds = Int(duration) % 60
         return String(format: "%d:%02d", minutes, seconds)
+    }
+}
+
+// Helper views for async operations
+struct FileInfoView: View {
+    let fileURL: URL
+    @State private var duration: TimeInterval?
+
+    var body: some View {
+        Group {
+            if let duration = duration {
+                HStack {
+                    Image(systemName: "clock")
+                        .foregroundColor(.secondary)
+                    Text(String(format: NSLocalizedString("Varighed: %@", comment: ""), formatDuration(duration)))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+        .task {
+            duration = await AudioFileService.shared.getAudioDuration(fileURL)
+        }
+    }
+
+    private func formatDuration(_ duration: TimeInterval) -> String {
+        let minutes = Int(duration) / 60
+        let seconds = Int(duration) % 60
+        return String(format: "%d:%02d", minutes, seconds)
+    }
+}
+
+struct EstimatedTimeView: View {
+    let fileURL: URL
+    @State private var duration: TimeInterval?
+
+    var body: some View {
+        Group {
+            if let duration = duration {
+                Text(String(format: NSLocalizedString("Estimeret tid: ~%llds", comment: ""), Int(duration / 10)))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .task {
+            duration = await AudioFileService.shared.getAudioDuration(fileURL)
+        }
     }
 }
 

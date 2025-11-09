@@ -71,11 +71,10 @@ struct RecordingMetadata: Codable {
                     // Check if file exists and read current version first
                     if FileManager.default.fileExists(atPath: url.path) {
                         // Read existing metadata to merge with current changes
-                        var currentData: Data?
                         var readError: NSError?
 
                         coordinator.coordinate(readingItemAt: url, options: [], error: &readError) { readURL in
-                            currentData = try? Data(contentsOf: readURL)
+                            _ = try? Data(contentsOf: readURL)
                         }
 
                         // iOS only writes once (after upload), macOS writes status updates

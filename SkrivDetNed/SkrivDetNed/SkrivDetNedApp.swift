@@ -12,6 +12,7 @@ import UserNotifications
 struct SkrivDetNedApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State private var showingAbout = false
+    @State private var showingHelp = false
 
     var body: some Scene {
         WindowGroup {
@@ -19,12 +20,22 @@ struct SkrivDetNedApp: App {
                 .sheet(isPresented: $showingAbout) {
                     AboutView()
                 }
+                .sheet(isPresented: $showingHelp) {
+                    HelpView()
+                }
         }
         .commands {
             CommandGroup(replacing: .appInfo) {
                 Button(String(format: NSLocalizedString("Om %@", comment: ""), NSLocalizedString("SkrivDetNed", comment: ""))) {
                     showingAbout = true
                 }
+            }
+
+            CommandGroup(replacing: .help) {
+                Button(NSLocalizedString("Sådan bruges SkrivDetNed", comment: "")) {
+                    showingHelp = true
+                }
+                .keyboardShortcut("?", modifiers: [.command])
             }
         }
 

@@ -9,13 +9,28 @@ import SwiftUI
 
 struct AboutView: View {
     @Environment(\.dismiss) var dismiss
+    @Environment(\.openURL) private var openURL
+
+    private var appVersion: String {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+        return "\(version) (\(build))"
+    }
 
     var body: some View {
         VStack(spacing: 20) {
             // App Icon
-            Image(systemName: "waveform.circle.fill")
-                .font(.system(size: 80))
-                .foregroundStyle(.linearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing))
+            if let nsImage = NSImage(named: "AppIcon") {
+                Image(nsImage: nsImage)
+                    .resizable()
+                    .frame(width: 128, height: 128)
+                    .cornerRadius(22)
+                    .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
+            } else {
+                Image(systemName: "waveform.circle.fill")
+                    .font(.system(size: 80))
+                    .foregroundStyle(.linearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing))
+            }
 
             // App Name
             Text(NSLocalizedString("SkrivDetNed", comment: ""))
@@ -23,7 +38,7 @@ struct AboutView: View {
                 .fontWeight(.bold)
 
             // Version
-            Text(NSLocalizedString("Version 1.0", comment: ""))
+            Text("Version \(appVersion)")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
 
@@ -57,6 +72,22 @@ struct AboutView: View {
 
             Divider()
                 .padding(.vertical)
+
+            // Website link
+            Button(action: {
+                if let url = URL(string: "https://omdethele.dk/apps") {
+                    openURL(url)
+                }
+            }) {
+                HStack(spacing: 6) {
+                    Image(systemName: "globe")
+                    Text(NSLocalizedString("Besøg hjemmeside", comment: ""))
+                    Image(systemName: "arrow.up.forward")
+                        .font(.caption)
+                }
+            }
+            .buttonStyle(.link)
+            .controlSize(.large)
 
             // Copyright
             VStack(spacing: 4) {
