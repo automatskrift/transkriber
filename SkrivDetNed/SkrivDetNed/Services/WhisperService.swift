@@ -59,17 +59,35 @@ class WhisperService: ObservableObject {
             downloadingModelName = modelType.displayName
             downloadProgress = 0.0
 
-            // Try to initialize WhisperKit - it will handle download automatically if needed
-            // We set download: true so it downloads if not present
-            print("📥 Initializing WhisperKit (will download if needed): \(whisperKitModelName)")
+            // First, download the model with progress callback
+            print("📥 Downloading model with progress tracking: \(whisperKitModelName)")
 
+            do {
+                let modelFolder = try await WhisperKit.download(
+                    variant: whisperKitModelName,
+                    progressCallback: { [weak self] progress in
+                        Task { @MainActor in
+                            self?.downloadProgress = progress.fractionCompleted
+                            let percentage = Int(progress.fractionCompleted * 100)
+                            print("📊 Download progress: \(percentage)%")
+                        }
+                    }
+                )
+                print("✅ Model downloaded to: \(modelFolder.path)")
+            } catch {
+                print("⚠️ Download may have failed or model already exists: \(error)")
+                // Continue anyway - model might already be downloaded
+            }
+
+            // Now initialize WhisperKit with the model
+            print("🔧 Initializing WhisperKit with model: \(whisperKitModelName)")
             whisperKit = try await WhisperKit(
                 model: whisperKitModelName,
                 verbose: true,
                 logLevel: .debug,
                 prewarm: false,
                 load: true,
-                download: true  // Auto-download if not present
+                download: false  // Already downloaded above
             )
 
             currentModel = modelType
