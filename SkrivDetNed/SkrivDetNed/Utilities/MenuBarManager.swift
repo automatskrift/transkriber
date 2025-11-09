@@ -45,7 +45,7 @@ class MenuBarManager: ObservableObject {
         menu.removeAllItems()
 
         // Status item
-        let statusTitle = isMonitoring ? "● Overvåger..." : "○ Inaktiv"
+        let statusTitle = isMonitoring ? NSLocalizedString("● Overvåger...", comment: "") : NSLocalizedString("○ Inaktiv", comment: "")
         let statusItem = NSMenuItem(title: statusTitle, action: nil, keyEquivalent: "")
         statusItem.isEnabled = false
         menu.addItem(statusItem)
@@ -53,7 +53,7 @@ class MenuBarManager: ObservableObject {
         menu.addItem(NSMenuItem.separator())
 
         // Toggle monitoring
-        let toggleTitle = isMonitoring ? "Stop Overvågning" : "Start Overvågning"
+        let toggleTitle = isMonitoring ? NSLocalizedString("Stop Overvågning", comment: "") : NSLocalizedString("Start Overvågning", comment: "")
         let toggleItem = NSMenuItem(title: toggleTitle, action: #selector(toggleMonitoring), keyEquivalent: "m")
         toggleItem.target = self
         menu.addItem(toggleItem)
@@ -61,19 +61,19 @@ class MenuBarManager: ObservableObject {
         menu.addItem(NSMenuItem.separator())
 
         // Show window
-        let showItem = NSMenuItem(title: "Vis Vindue", action: #selector(showWindow), keyEquivalent: "w")
+        let showItem = NSMenuItem(title: NSLocalizedString("Vis Vindue", comment: ""), action: #selector(showWindow), keyEquivalent: "w")
         showItem.target = self
         menu.addItem(showItem)
 
         // Settings
-        let settingsItem = NSMenuItem(title: "Indstillinger...", action: #selector(openSettings), keyEquivalent: ",")
+        let settingsItem = NSMenuItem(title: NSLocalizedString("Indstillinger...", comment: ""), action: #selector(openSettings), keyEquivalent: ",")
         settingsItem.target = self
         menu.addItem(settingsItem)
 
         menu.addItem(NSMenuItem.separator())
 
         // Quit
-        let quitItem = NSMenuItem(title: "Afslut SkrivDetNed", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: NSLocalizedString("Afslut SkrivDetNed", comment: ""), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         menu.addItem(quitItem)
     }
 
@@ -105,7 +105,7 @@ class MenuBarManager: ObservableObject {
     func updateIcon(isTranscribing: Bool) {
         if let button = statusItem?.button {
             if isTranscribing {
-                button.image = NSImage(systemSymbolName: "waveform.circle.fill", accessibilityDescription: "Transkriberer...")
+                button.image = NSImage(systemSymbolName: "waveform.circle.fill", accessibilityDescription: NSLocalizedString("Transkriberer...", comment: ""))
             } else {
                 button.image = NSImage(systemSymbolName: "waveform.circle", accessibilityDescription: "SkrivDetNed")
             }

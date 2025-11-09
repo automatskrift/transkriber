@@ -22,7 +22,7 @@ struct SkrivDetNedApp: App {
         }
         .commands {
             CommandGroup(replacing: .appInfo) {
-                Button("Om SkrivDetNed") {
+                Button(String(format: NSLocalizedString("Om %@", comment: ""), NSLocalizedString("SkrivDetNed", comment: ""))) {
                     showingAbout = true
                 }
             }

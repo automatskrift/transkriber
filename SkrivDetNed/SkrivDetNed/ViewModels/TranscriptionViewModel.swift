@@ -614,8 +614,8 @@ class TranscriptionViewModel: ObservableObject {
 
     private func sendCompletionNotification(for task: TranscriptionTask) {
         let content = UNMutableNotificationContent()
-        content.title = "Transskription færdig"
-        content.body = "'\(task.fileName)' er blevet transkriberet"
+        content.title = NSLocalizedString("Transskription færdig", comment: "")
+        content.body = String(format: NSLocalizedString("'%@' er blevet transkriberet", comment: ""), task.fileName)
         content.sound = .default
 
         let request = UNNotificationRequest(
@@ -826,13 +826,13 @@ enum TranscriptionError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .modelNotDownloaded:
-            return "Whisper model er ikke downloadet. Download en model i indstillinger."
+            return NSLocalizedString("Whisper model er ikke downloadet. Download en model i indstillinger.", comment: "")
         case .fileNotFound:
-            return "Lydfilen blev ikke fundet"
+            return NSLocalizedString("Lydfilen blev ikke fundet", comment: "")
         case .invalidFile:
-            return "Ugyldig lydfil"
+            return NSLocalizedString("Ugyldig lydfil", comment: "")
         case .transcriptionFailed:
-            return "Transskription fejlede"
+            return NSLocalizedString("Transskription fejlede", comment: "")
         }
     }
 }

@@ -24,11 +24,11 @@ struct TranscriptionsView: View {
                     transcriptionsList
                 }
             }
-            .navigationTitle("Transskriptioner")
+            .navigationTitle(NSLocalizedString("Transskriptioner", comment: ""))
             .searchable(
                 text: $searchText,
                 placement: .navigationBarDrawer(displayMode: .always),
-                prompt: "Søg i transskriptioner"
+                prompt: NSLocalizedString("Søg i transskriptioner", comment: "")
             )
             .onAppear {
                 loadRecordings()
@@ -120,11 +120,11 @@ struct TranscriptionsView: View {
                 .font(.system(size: 80))
                 .foregroundColor(.secondary)
 
-            Text("Ingen transskriptioner endnu")
+            Text(NSLocalizedString("Ingen transskriptioner endnu", comment: ""))
                 .font(.title2)
                 .fontWeight(.semibold)
 
-            Text("Dine optagelser vil automatisk blive transskriberet når de uploades til iCloud")
+            Text(NSLocalizedString("Dine optagelser vil automatisk blive transskriberet når de uploades til iCloud", comment: ""))
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -139,11 +139,11 @@ struct TranscriptionsView: View {
                 .font(.system(size: 80))
                 .foregroundColor(.secondary)
 
-            Text("Ingen resultater")
+            Text(NSLocalizedString("Ingen resultater", comment: ""))
                 .font(.title2)
                 .fontWeight(.semibold)
 
-            Text("Prøv at søge efter noget andet")
+            Text(NSLocalizedString("Prøv at søge efter noget andet", comment: ""))
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)

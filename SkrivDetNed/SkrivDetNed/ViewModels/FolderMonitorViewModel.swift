@@ -206,8 +206,8 @@ class FolderMonitorViewModel: ObservableObject {
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
-        panel.prompt = "Vælg Folder"
-        panel.message = "Vælg en folder til overvågning af lydfiler"
+        panel.prompt = NSLocalizedString("Vælg Folder", comment: "")
+        panel.message = NSLocalizedString("Vælg en folder til overvågning af lydfiler", comment: "")
 
         panel.begin { [weak self] response in
             guard let self = self else { return }
@@ -261,12 +261,12 @@ class FolderMonitorViewModel: ObservableObject {
     var statusText: String {
         if isMonitoring {
             if pendingFiles.isEmpty {
-                return "Overvåger..."
+                return NSLocalizedString("Overvåger...", comment: "")
             } else {
-                return "Behandler \(pendingFiles.count) fil(er)..."
+                return String(format: NSLocalizedString("Behandler %lld fil(er)...", comment: ""), pendingFiles.count)
             }
         } else {
-            return "Ikke aktiv"
+            return NSLocalizedString("Ikke aktiv", comment: "")
         }
     }
 

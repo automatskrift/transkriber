@@ -23,7 +23,7 @@ struct ManualTranscriptionView: View {
         ScrollView {
             VStack(spacing: 24) {
                 // File Selection
-                GroupBox(label: Label("Vælg Lydfil", systemImage: "doc")) {
+                GroupBox(label: Label(NSLocalizedString("Vælg Lydfil", comment: ""), systemImage: "doc")) {
                     VStack(spacing: 16) {
                         if let fileURL = selectedFileURL {
                             // Selected file info
@@ -52,7 +52,7 @@ struct ManualTranscriptionView: View {
                                     HStack {
                                         Image(systemName: "clock")
                                             .foregroundColor(.secondary)
-                                        Text("Varighed: \(formatDuration(duration))")
+                                        Text(String(format: NSLocalizedString("Varighed: %@", comment: ""), formatDuration(duration)))
                                             .font(.caption)
                                             .foregroundColor(.secondary)
                                     }
@@ -66,7 +66,7 @@ struct ManualTranscriptionView: View {
                             HStack {
                                 Image(systemName: "arrow.right")
                                     .foregroundColor(.secondary)
-                                Text("Output:")
+                                Text(NSLocalizedString("Output:", comment: ""))
                                     .foregroundColor(.secondary)
                                 Text(fileURL.deletingPathExtension().appendingPathExtension("txt").lastPathComponent)
                                     .fontWeight(.medium)
@@ -80,11 +80,11 @@ struct ManualTranscriptionView: View {
                                     .font(.system(size: 48))
                                     .foregroundColor(.secondary)
 
-                                Text("Ingen fil valgt")
+                                Text(NSLocalizedString("Ingen fil valgt", comment: ""))
                                     .font(.headline)
                                     .foregroundColor(.secondary)
 
-                                Text("Vælg en lydfil til transskription")
+                                Text(NSLocalizedString("Vælg en lydfil til transskription", comment: ""))
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
@@ -95,14 +95,14 @@ struct ManualTranscriptionView: View {
                         // Buttons
                         HStack {
                             Button(action: selectFile) {
-                                Label("Vælg Fil", systemImage: "folder")
+                                Label(NSLocalizedString("Vælg Fil", comment: ""), systemImage: "folder")
                                     .frame(minWidth: 120)
                             }
                             .buttonStyle(.bordered)
 
                             if selectedFileURL != nil && !isTranscribing {
                                 Button(action: clearSelection) {
-                                    Label("Ryd", systemImage: "xmark")
+                                    Label(NSLocalizedString("Ryd", comment: ""), systemImage: "xmark")
                                 }
                                 .buttonStyle(.bordered)
                             }
@@ -111,7 +111,7 @@ struct ManualTranscriptionView: View {
 
                             if selectedFileURL != nil {
                                 Button(action: startTranscription) {
-                                    Label("Transkribér", systemImage: "play.fill")
+                                    Label(NSLocalizedString("Transkribér", comment: ""), systemImage: "play.fill")
                                         .frame(minWidth: 120)
                                 }
                                 .buttonStyle(.borderedProminent)
@@ -124,7 +124,7 @@ struct ManualTranscriptionView: View {
                             HStack {
                                 Image(systemName: "exclamationmark.triangle.fill")
                                     .foregroundColor(.orange)
-                                Text("Download en Whisper model i Indstillinger først")
+                                Text(NSLocalizedString("Download en Whisper model i Indstillinger først", comment: ""))
                                     .font(.caption)
                                     .foregroundColor(.orange)
                             }
@@ -135,7 +135,7 @@ struct ManualTranscriptionView: View {
 
                 // Progress
                 if isTranscribing {
-                    GroupBox(label: Label("Transkriberer...", systemImage: "waveform.circle")) {
+                    GroupBox(label: Label(NSLocalizedString("Transkriberer...", comment: ""), systemImage: "waveform.circle")) {
                         VStack(spacing: 12) {
                             ProgressView(value: transcriptionProgress)
                                 .progressViewStyle(.linear)
@@ -149,7 +149,7 @@ struct ManualTranscriptionView: View {
 
                                 if let fileURL = selectedFileURL,
                                    let duration = AudioFileService.shared.getAudioDuration(fileURL) {
-                                    Text("Estimeret tid: ~\(Int(duration / 10))s")
+                                    Text(String(format: NSLocalizedString("Estimeret tid: ~%llds", comment: ""), Int(duration / 10)))
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
@@ -175,16 +175,16 @@ struct ManualTranscriptionView: View {
 
                 // Success message
                 if let result = transcriptionResult {
-                    GroupBox(label: Label("Færdig!", systemImage: "checkmark.circle.fill")) {
+                    GroupBox(label: Label(NSLocalizedString("Færdig!", comment: ""), systemImage: "checkmark.circle.fill")) {
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("Transskriptionen er gemt")
+                            Text(NSLocalizedString("Transskriptionen er gemt", comment: ""))
                                 .font(.headline)
 
                             if let fileURL = selectedFileURL {
                                 let outputURL = fileURL.deletingPathExtension().appendingPathExtension("txt")
 
                                 HStack {
-                                    Text("Gemt til:")
+                                    Text(NSLocalizedString("Gemt til:", comment: ""))
                                         .foregroundColor(.secondary)
                                     Text(outputURL.lastPathComponent)
                                         .fontWeight(.medium)
@@ -194,7 +194,7 @@ struct ManualTranscriptionView: View {
                                 Button(action: {
                                     NSWorkspace.shared.activateFileViewerSelecting([outputURL])
                                 }) {
-                                    Label("Vis i Finder", systemImage: "folder")
+                                    Label(NSLocalizedString("Vis i Finder", comment: ""), systemImage: "folder")
                                 }
                                 .buttonStyle(.bordered)
                             }
@@ -210,7 +210,7 @@ struct ManualTranscriptionView: View {
                             .font(.system(size: 36))
                             .foregroundColor(.secondary)
 
-                        Text("Eller træk en lydfil hertil")
+                        Text(NSLocalizedString("Eller træk en lydfil hertil", comment: ""))
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
@@ -251,8 +251,8 @@ struct ManualTranscriptionView: View {
             UTType(filenameExtension: "aiff")!,
             UTType(filenameExtension: "caf")!
         ]
-        panel.prompt = "Vælg Lydfil"
-        panel.message = "Vælg en lydfil til transskription"
+        panel.prompt = NSLocalizedString("Vælg Lydfil", comment: "")
+        panel.message = NSLocalizedString("Vælg en lydfil til transskription", comment: "")
 
         panel.begin { response in
             if response == .OK, let url = panel.url {

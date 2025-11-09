@@ -147,11 +147,11 @@ enum RecordingStatus: String, Codable {
 
     var displayName: String {
         switch self {
-        case .pending: return "Afventer"
-        case .downloading: return "Downloader..."
-        case .transcribing: return "Transkriberer..."
-        case .completed: return "Færdig"
-        case .failed: return "Fejlet"
+        case .pending: return NSLocalizedString("Afventer", comment: "")
+        case .downloading: return NSLocalizedString("Downloader...", comment: "")
+        case .transcribing: return NSLocalizedString("Transkriberer...", comment: "")
+        case .completed: return NSLocalizedString("Færdig", comment: "")
+        case .failed: return NSLocalizedString("Fejlet", comment: "")
         }
     }
 

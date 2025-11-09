@@ -18,11 +18,11 @@ enum WhisperModelType: String, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .tiny: return "Tiny"
-        case .base: return "Base"
-        case .small: return "Small"
-        case .medium: return "Medium"
-        case .large: return "Large"
+        case .tiny: return NSLocalizedString("Tiny", comment: "")
+        case .base: return NSLocalizedString("Base", comment: "")
+        case .small: return NSLocalizedString("Small", comment: "")
+        case .medium: return NSLocalizedString("Medium", comment: "")
+        case .large: return NSLocalizedString("Large", comment: "")
         }
     }
 
@@ -43,15 +43,15 @@ enum WhisperModelType: String, CaseIterable, Identifiable {
     var description: String {
         switch self {
         case .tiny:
-            return "Hurtigste model, god til korte optagelser"
+            return NSLocalizedString("Hurtigste model, god til korte optagelser", comment: "")
         case .base:
-            return "God balance mellem hastighed og nøjagtighed"
+            return NSLocalizedString("God balance mellem hastighed og nøjagtighed", comment: "")
         case .small:
-            return "Bedre nøjagtighed, stadig rimelig hurtig"
+            return NSLocalizedString("Bedre nøjagtighed, stadig rimelig hurtig", comment: "")
         case .medium:
-            return "Høj nøjagtighed for længere optagelser"
+            return NSLocalizedString("Høj nøjagtighed for længere optagelser", comment: "")
         case .large:
-            return "Bedste nøjagtighed (v3), langsommere"
+            return NSLocalizedString("Bedste nøjagtighed (v3), langsommere", comment: "")
         }
     }
 

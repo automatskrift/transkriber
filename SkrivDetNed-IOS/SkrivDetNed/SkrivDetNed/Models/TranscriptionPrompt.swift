@@ -21,24 +21,24 @@ struct TranscriptionPrompt: Identifiable, Codable, Equatable {
     // Default prompts
     static let defaultPrompts: [TranscriptionPrompt] = [
         TranscriptionPrompt(
-            name: "Ingen",
+            name: NSLocalizedString("Ingen", comment: ""),
             text: ""
         ),
         TranscriptionPrompt(
-            name: "Uddrag pointer",
-            text: "Uddrag pointerne i følgende transkriberede tekst, og giv dem i punktform:\n\n"
+            name: NSLocalizedString("Uddrag pointer", comment: ""),
+            text: NSLocalizedString("Uddrag pointerne i følgende transkriberede tekst, og giv dem i punktform:\n\n", comment: "")
         ),
         TranscriptionPrompt(
-            name: "Opsummér",
-            text: "Opsummér følgende transkriberede tekst kort og præcist:\n\n"
+            name: NSLocalizedString("Opsummér", comment: ""),
+            text: NSLocalizedString("Opsummér følgende transkriberede tekst kort og præcist:\n\n", comment: "")
         ),
         TranscriptionPrompt(
-            name: "Handlingspunkter",
-            text: "Identificer alle handlingspunkter og opgaver i følgende transkriberede tekst:\n\n"
+            name: NSLocalizedString("Handlingspunkter", comment: ""),
+            text: NSLocalizedString("Identificer alle handlingspunkter og opgaver i følgende transkriberede tekst:\n\n", comment: "")
         ),
         TranscriptionPrompt(
-            name: "Mødereferat",
-            text: "Lav et professionelt mødereferat baseret på følgende transkriberede tekst:\n\n"
+            name: NSLocalizedString("Mødereferat", comment: ""),
+            text: NSLocalizedString("Lav et professionelt mødereferat baseret på følgende transkriberede tekst:\n\n", comment: "")
         )
     ]
 }

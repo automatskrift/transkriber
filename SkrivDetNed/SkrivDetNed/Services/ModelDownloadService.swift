@@ -264,16 +264,16 @@ enum DownloadError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .alreadyDownloading:
-            return "Model bliver allerede downloadet"
+            return NSLocalizedString("Model bliver allerede downloadet", comment: "")
         case .alreadyDownloaded:
-            return "Model er allerede downloadet"
+            return NSLocalizedString("Model er allerede downloadet", comment: "")
         case .cancelled:
-            return "Download annulleret"
+            return NSLocalizedString("Download annulleret", comment: "")
         case .networkError(let error):
-            return "Netværksfejl: \(error.localizedDescription)"
+            return String(format: NSLocalizedString("Netværksfejl: %@", comment: ""), error.localizedDescription)
         case .invalidFileSize(let size):
             let sizeStr = ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
-            return "Ugyldig filstørrelse: \(sizeStr). Filen ser ud til at være en fejlside i stedet for modellen. Prøv igen senere."
+            return String(format: NSLocalizedString("Ugyldig filstørrelse: %@. Filen ser ud til at være en fejlside i stedet for modellen. Prøv igen senere.", comment: ""), sizeStr)
         }
     }
 }

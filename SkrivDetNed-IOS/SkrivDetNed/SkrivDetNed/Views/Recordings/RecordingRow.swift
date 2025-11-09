@@ -100,25 +100,45 @@ struct RecordingRow: View {
         let interval = now.timeIntervalSince(recording.createdAt)
 
         if interval < 60 {
-            return "For et øjeblik siden"
+            return NSLocalizedString("For et øjeblik siden", comment: "")
         } else if interval < 3600 {
             let minutes = Int(interval / 60)
-            return "For \(minutes) minut\(minutes == 1 ? "" : "ter") siden"
+            if minutes == 1 {
+                return String(format: NSLocalizedString("For %lld minut siden", comment: ""), minutes)
+            } else {
+                return String(format: NSLocalizedString("For %lld minutter siden", comment: ""), minutes)
+            }
         } else if interval < 86400 {
             let hours = Int(interval / 3600)
-            return "For \(hours) time\(hours == 1 ? "" : "r") siden"
+            if hours == 1 {
+                return String(format: NSLocalizedString("For %lld time siden", comment: ""), hours)
+            } else {
+                return String(format: NSLocalizedString("For %lld timer siden", comment: ""), hours)
+            }
         } else if interval < 604800 {
             let days = Int(interval / 86400)
-            return "For \(days) dag\(days == 1 ? "" : "e") siden"
+            if days == 1 {
+                return String(format: NSLocalizedString("For %lld dag siden", comment: ""), days)
+            } else {
+                return String(format: NSLocalizedString("For %lld dage siden", comment: ""), days)
+            }
         } else if interval < 2592000 {
             let weeks = Int(interval / 604800)
-            return "For \(weeks) uge\(weeks == 1 ? "" : "r") siden"
+            if weeks == 1 {
+                return String(format: NSLocalizedString("For %lld uge siden", comment: ""), weeks)
+            } else {
+                return String(format: NSLocalizedString("For %lld uger siden", comment: ""), weeks)
+            }
         } else if interval < 31536000 {
             let months = Int(interval / 2592000)
-            return "For \(months) måned\(months == 1 ? "" : "er") siden"
+            if months == 1 {
+                return String(format: NSLocalizedString("For %lld måned siden", comment: ""), months)
+            } else {
+                return String(format: NSLocalizedString("For %lld måneder siden", comment: ""), months)
+            }
         } else {
             let years = Int(interval / 31536000)
-            return "For \(years) år siden"
+            return String(format: NSLocalizedString("For %lld år siden", comment: ""), years)
         }
     }
 

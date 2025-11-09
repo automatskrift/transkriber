@@ -46,7 +46,7 @@ struct PromptSelectionView: View {
                 .buttonStyle(.plain)
             }
         }
-        .navigationTitle("Vælg LLM Prompt")
+        .navigationTitle(NSLocalizedString("Vælg LLM Prompt", comment: ""))
         .navigationBarTitleDisplayMode(.inline)
     }
 }

@@ -35,7 +35,7 @@ struct RecordingView: View {
                             .frame(height: 100)
                             .padding(.horizontal)
                     } else if viewModel.isInitializingRecording {
-                        ProgressView("Forbereder optagelse...")
+                        ProgressView(NSLocalizedString("Forbereder optagelse...", comment: ""))
                             .frame(height: 100)
                     }
                 }
@@ -61,7 +61,7 @@ struct RecordingView: View {
                     // Pause/Resume button
                     Button(action: { viewModel.togglePause() }) {
                         Label(
-                            viewModel.isPaused ? "Fortsæt" : "Pause",
+                            viewModel.isPaused ? NSLocalizedString("Fortsæt", comment: "") : NSLocalizedString("Pause", comment: ""),
                             systemImage: viewModel.isPaused ? "play.fill" : "pause.fill"
                         )
                         .font(.headline)
@@ -82,7 +82,7 @@ struct RecordingView: View {
                             markButtonPressed = false
                         }
                     }) {
-                        Label("Mark", systemImage: "flag.fill")
+                        Label(NSLocalizedString("Mark", comment: ""), systemImage: "flag.fill")
                             .font(.headline)
                     }
                     .buttonStyle(.bordered)
@@ -99,7 +99,7 @@ struct RecordingView: View {
                             viewModel.cancelRecording()
                         }
                     }) {
-                        Label("Annuller", systemImage: "xmark")
+                        Label(NSLocalizedString("Annuller", comment: ""), systemImage: "xmark")
                             .font(.headline)
                     }
                     .buttonStyle(.bordered)
@@ -114,13 +114,13 @@ struct RecordingView: View {
                     Divider()
 
                     VStack(alignment: .leading, spacing: 8) {
-                        Label("LLM Prompt (valgfri)", systemImage: "brain")
+                        Label(NSLocalizedString("LLM Prompt (valgfri)", comment: ""), systemImage: "brain")
                             .font(.caption)
                             .foregroundColor(.secondary)
 
                         NavigationLink(destination: PromptSelectionView(selectedPrompt: $viewModel.selectedPrompt)) {
                             HStack {
-                                Text(viewModel.selectedPrompt?.name ?? "Ingen")
+                                Text(viewModel.selectedPrompt?.name ?? NSLocalizedString("Ingen", comment: ""))
                                     .foregroundColor(.primary)
                                 Spacer()
                                 Image(systemName: "chevron.right")
@@ -136,25 +136,25 @@ struct RecordingView: View {
                     }
 
                     VStack(alignment: .leading, spacing: 8) {
-                        Label("Titel (valgfri)", systemImage: "text.cursor")
+                        Label(NSLocalizedString("Titel (valgfri)", comment: ""), systemImage: "text.cursor")
                             .font(.caption)
                             .foregroundColor(.secondary)
 
-                        TextField("F.eks. Møde med team", text: $viewModel.recordingTitle)
+                        TextField(NSLocalizedString("F.eks. Møde med team", comment: ""), text: $viewModel.recordingTitle)
                             .textFieldStyle(.roundedBorder)
                     }
 
                     VStack(alignment: .leading, spacing: 8) {
-                        Label("Tags (valgfri)", systemImage: "tag")
+                        Label(NSLocalizedString("Tags (valgfri)", comment: ""), systemImage: "tag")
                             .font(.caption)
                             .foregroundColor(.secondary)
 
-                        TextField("F.eks. #møde #arbejde", text: $viewModel.recordingTags)
+                        TextField(NSLocalizedString("F.eks. #møde #arbejde", comment: ""), text: $viewModel.recordingTags)
                             .textFieldStyle(.roundedBorder)
                     }
 
                     VStack(alignment: .leading, spacing: 8) {
-                        Label("Noter (valgfri)", systemImage: "note.text")
+                        Label(NSLocalizedString("Noter (valgfri)", comment: ""), systemImage: "note.text")
                             .font(.caption)
                             .foregroundColor(.secondary)
 
@@ -194,9 +194,9 @@ struct RecordingView: View {
                                 .font(.title2)
 
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Optagelse gemt")
+                                Text(NSLocalizedString("Optagelse gemt", comment: ""))
                                     .font(.headline)
-                                Text("Uploades til iCloud")
+                                Text(NSLocalizedString("Uploades til iCloud", comment: ""))
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
@@ -224,7 +224,7 @@ struct RecordingView: View {
                     }
                 }
             )
-            .navigationTitle("Optag")
+            .navigationTitle(NSLocalizedString("Optag", comment: ""))
             .navigationBarTitleDisplayMode(.inline)
             .onChange(of: viewModel.isRecording) { _, newValue in
                 if newValue {
@@ -244,18 +244,18 @@ struct RecordingView: View {
                     }
                 }
             }
-            .alert("Fejl", isPresented: $viewModel.showError) {
-                Button("OK", role: .cancel) {}
+            .alert(NSLocalizedString("Fejl", comment: ""), isPresented: $viewModel.showError) {
+                Button(NSLocalizedString("OK", comment: ""), role: .cancel) {}
             } message: {
-                Text(viewModel.errorMessage ?? "Ukendt fejl")
+                Text(viewModel.errorMessage ?? NSLocalizedString("Ukendt fejl", comment: ""))
             }
-            .alert("Annuller optagelse?", isPresented: $showingCancelConfirmation) {
-                Button("Fortsæt optagelse", role: .cancel) {}
-                Button("Annuller", role: .destructive) {
+            .alert(NSLocalizedString("Annuller optagelse?", comment: ""), isPresented: $showingCancelConfirmation) {
+                Button(NSLocalizedString("Fortsæt optagelse", comment: ""), role: .cancel) {}
+                Button(NSLocalizedString("Annuller", comment: ""), role: .destructive) {
                     viewModel.cancelRecording()
                 }
             } message: {
-                Text("Er du sikker på at du vil annullere denne optagelse? Dette kan ikke fortrydes.")
+                Text(NSLocalizedString("Er du sikker på at du vil annullere denne optagelse? Dette kan ikke fortrydes.", comment: ""))
             }
         }
     }

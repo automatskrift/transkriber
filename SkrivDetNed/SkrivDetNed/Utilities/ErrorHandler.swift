@@ -41,10 +41,10 @@ class ErrorHandler: ObservableObject {
         alert.messageText = error.title
         alert.informativeText = error.message
         alert.alertStyle = error.alertStyle
-        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: NSLocalizedString("OK", comment: ""))
 
         if error.isRecoverable {
-            alert.addButton(withTitle: "Prøv Igen")
+            alert.addButton(withTitle: NSLocalizedString("Prøv Igen", comment: ""))
         }
 
         let response = alert.runModal()
@@ -82,16 +82,16 @@ struct AppError: LocalizedError {
     // Predefined errors
     static func noFolderSelected() -> AppError {
         AppError(
-            title: "Ingen Folder Valgt",
-            message: "Vælg en folder for at starte overvågning.",
+            title: NSLocalizedString("Ingen Folder Valgt", comment: ""),
+            message: NSLocalizedString("Vælg en folder for at starte overvågning.", comment: ""),
             alertStyle: .informational
         )
     }
 
     static func noModelDownloaded() -> AppError {
         AppError(
-            title: "Model Ikke Downloadet",
-            message: "Download en Whisper model i Indstillinger før du kan transkribere.",
+            title: NSLocalizedString("Model Ikke Downloadet", comment: ""),
+            message: NSLocalizedString("Download en Whisper model i Indstillinger før du kan transkribere.", comment: ""),
             alertStyle: .warning,
             isRecoverable: true,
             recoveryAction: {
@@ -103,24 +103,24 @@ struct AppError: LocalizedError {
 
     static func transcriptionFailed(file: String, error: Error) -> AppError {
         AppError(
-            title: "Transskription Fejlede",
-            message: "Kunne ikke transkribere '\(file)':\n\(error.localizedDescription)",
+            title: NSLocalizedString("Transskription Fejlede", comment: ""),
+            message: String(format: NSLocalizedString("Kunne ikke transkribere '%@':\n%@", comment: ""), file, error.localizedDescription),
             alertStyle: .critical
         )
     }
 
     static func folderAccessDenied(folder: String) -> AppError {
         AppError(
-            title: "Adgang Nægtet",
-            message: "Kunne ikke få adgang til folderen '\(folder)'. Kontroller at appen har tilladelse til at læse folderen.",
+            title: NSLocalizedString("Adgang Nægtet", comment: ""),
+            message: String(format: NSLocalizedString("Kunne ikke få adgang til folderen '%@'. Kontroller at appen har tilladelse til at læse folderen.", comment: ""), folder),
             alertStyle: .critical
         )
     }
 
     static func downloadFailed(model: String, error: Error) -> AppError {
         AppError(
-            title: "Download Fejlede",
-            message: "Kunne ikke downloade '\(model)' model:\n\(error.localizedDescription)",
+            title: NSLocalizedString("Download Fejlede", comment: ""),
+            message: String(format: NSLocalizedString("Kunne ikke downloade '%@' model:\n%@", comment: ""), model, error.localizedDescription),
             alertStyle: .critical,
             isRecoverable: true
         )
@@ -128,15 +128,15 @@ struct AppError: LocalizedError {
 
     static func diskSpaceLow() -> AppError {
         AppError(
-            title: "Lav Diskplads",
-            message: "Der er ikke nok diskplads til at fuldføre operationen.",
+            title: NSLocalizedString("Lav Diskplads", comment: ""),
+            message: NSLocalizedString("Der er ikke nok diskplads til at fuldføre operationen.", comment: ""),
             alertStyle: .critical
         )
     }
 
     static func unknown(_ error: Error) -> AppError {
         AppError(
-            title: "Ukendt Fejl",
+            title: NSLocalizedString("Ukendt Fejl", comment: ""),
             message: error.localizedDescription,
             alertStyle: .warning
         )

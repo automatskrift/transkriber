@@ -27,40 +27,40 @@ struct MainView: View {
                 .environmentObject(whisperService)
                 .environmentObject(folderMonitorVM)
                 .tabItem {
-                    Label("Overvågning", systemImage: "folder.badge.gearshape")
+                    Label(NSLocalizedString("Overvågning", comment: ""), systemImage: "folder.badge.gearshape")
                 }
                 .tag(Tab.monitor)
 
             TranscriptionsView()
                 .environmentObject(transcriptionVM)
                 .tabItem {
-                    Label("Transskriptioner", systemImage: "doc.text.magnifyingglass")
+                    Label(NSLocalizedString("Transskriptioner", comment: ""), systemImage: "doc.text.magnifyingglass")
                 }
                 .tag(Tab.transcriptions)
 
             ManualTranscriptionView()
                 .environmentObject(transcriptionVM)
                 .tabItem {
-                    Label("Manuel", systemImage: "doc.text")
+                    Label(NSLocalizedString("Manuel", comment: ""), systemImage: "doc.text")
                 }
                 .tag(Tab.manual)
 
             SettingsView()
                 .tabItem {
-                    Label("Indstillinger", systemImage: "gear")
+                    Label(NSLocalizedString("Indstillinger", comment: ""), systemImage: "gear")
                 }
                 .tag(Tab.settings)
         }
         .frame(minWidth: 700, minHeight: 600)
-        .alert("Eksisterende filer fundet", isPresented: $folderMonitorVM.showExistingFilesPrompt) {
-            Button("Proces alle (\(folderMonitorVM.existingFilesCount))") {
+        .alert(NSLocalizedString("Eksisterende filer fundet", comment: ""), isPresented: $folderMonitorVM.showExistingFilesPrompt) {
+            Button(String(format: NSLocalizedString("Proces alle (%lld)", comment: ""), folderMonitorVM.existingFilesCount)) {
                 folderMonitorVM.processExistingFiles()
             }
-            Button("Spring over", role: .cancel) {
+            Button(NSLocalizedString("Spring over", comment: ""), role: .cancel) {
                 folderMonitorVM.skipExistingFiles()
             }
         } message: {
-            Text("Der blev fundet \(folderMonitorVM.existingFilesCount) eksisterende lydfil(er) i iCloud. Vil du transskribere dem nu?")
+            Text(String(format: NSLocalizedString("Der blev fundet %lld eksisterende lydfil(er) i iCloud. Vil du transskribere dem nu?", comment: ""), folderMonitorVM.existingFilesCount))
         }
     }
 }

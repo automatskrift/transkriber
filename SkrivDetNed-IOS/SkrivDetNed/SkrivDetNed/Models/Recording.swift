@@ -100,13 +100,13 @@ struct Recording: Identifiable, Codable {
 
         var displayName: String {
             switch self {
-            case .local: return "Lokal"
-            case .uploading: return "Uploader..."
-            case .synced: return "Synkroniseret"
-            case .pending: return "Afventer"
-            case .transcribing: return "Transkriberes..."
-            case .completed: return "Færdig"
-            case .failed: return "Fejlet"
+            case .local: return NSLocalizedString("Lokal", comment: "")
+            case .uploading: return NSLocalizedString("Uploader...", comment: "")
+            case .synced: return NSLocalizedString("Synkroniseret", comment: "")
+            case .pending: return NSLocalizedString("Afventer", comment: "")
+            case .transcribing: return NSLocalizedString("Transkriberes...", comment: "")
+            case .completed: return NSLocalizedString("Færdig", comment: "")
+            case .failed: return NSLocalizedString("Fejlet", comment: "")
             }
         }
 

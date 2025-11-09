@@ -17,10 +17,10 @@ enum SortOrder: String, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .newestFirst: return "Nyeste først"
-        case .oldestFirst: return "Ældste først"
-        case .name: return "Navn"
-        case .size: return "Størrelse"
+        case .newestFirst: return NSLocalizedString("Nyeste først", comment: "")
+        case .oldestFirst: return NSLocalizedString("Ældste først", comment: "")
+        case .name: return NSLocalizedString("Navn", comment: "")
+        case .size: return NSLocalizedString("Størrelse", comment: "")
         }
     }
 }
