@@ -32,6 +32,9 @@ struct RecordingMetadata: Codable {
     var errorMessage: String?
     var lastAttemptedAt: Date?
 
+    // Marks (timestamps in seconds when user pressed "Mark" during recording)
+    var marks: [Double]?
+
     init(audioFileName: String, createdOnDevice: String = "Unknown") {
         self.id = UUID()
         self.audioFileName = audioFileName

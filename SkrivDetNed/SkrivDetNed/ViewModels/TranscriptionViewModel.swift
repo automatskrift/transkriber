@@ -310,12 +310,7 @@ class TranscriptionViewModel: ObservableObject {
             // Get selected model
             let modelType = AppSettings.shared.selectedModelType
 
-            // Ensure model is downloaded
-            guard FileSystemHelper.shared.modelExists(modelType) else {
-                throw TranscriptionError.modelNotDownloaded
-            }
-
-            // Transcribe
+            // Transcribe (WhisperKit will download model automatically if needed)
             let result = try await WhisperService.shared.transcribe(
                 audioURL: url,
                 modelType: modelType

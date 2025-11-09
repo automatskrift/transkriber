@@ -17,44 +17,42 @@ struct SettingsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 // Models Section
-                GroupBox(label: Label("Whisper Modeller", systemImage: "cpu")) {
-                    VStack(spacing: 12) {
-                        ForEach(viewModel.models) { model in
-                            ModelRow(
-                                model: model,
-                                isSelected: settings.selectedModel == model.type.rawValue,
-                                isDownloading: viewModel.isDownloading(model.type),
-                                downloadProgress: viewModel.downloadProgress(for: model.type),
-                                onSelect: {
-                                    settings.selectedModel = model.type.rawValue
-                                },
-                                onDownload: {
-                                    viewModel.downloadModel(model.type)
-                                },
-                                onCancel: {
-                                    viewModel.cancelDownload(model.type)
-                                },
-                                onDelete: {
-                                    viewModel.deleteModel(model.type)
+                GroupBox(label: Label("WhisperKit Modeller", systemImage: "cpu")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Modeller downloades automatisk første gang de bruges")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        Divider()
+
+                        ForEach(WhisperModelType.allCases) { modelType in
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(modelType.displayName)
+                                        .font(.headline)
+                                    Text(modelType.description)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
                                 }
-                            )
+
+                                Spacer()
+
+                                if settings.selectedModel == modelType.rawValue {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundColor(.green)
+                                }
+
+                                Button(settings.selectedModel == modelType.rawValue ? "Valgt" : "Vælg") {
+                                    settings.selectedModel = modelType.rawValue
+                                }
+                                .buttonStyle(.bordered)
+                                .disabled(settings.selectedModel == modelType.rawValue)
+                            }
+                            .padding(.vertical, 4)
                         }
                     }
                     .padding(.vertical, 8)
                 }
-
-                // Storage Info
-                HStack {
-                    Image(systemName: "internaldrive")
-                        .foregroundColor(.secondary)
-                    Text("Lager brugt:")
-                        .foregroundColor(.secondary)
-                    Spacer()
-                    Text(viewModel.formattedTotalStorage)
-                        .fontWeight(.medium)
-                }
-                .font(.subheadline)
-                .padding(.horizontal)
 
                 Divider()
 

@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		C3E8167A2EC0CB000065A3FA /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = C3E816792EC0CB000065A3FA /* WhisperKit */; };
-		C3E8167C2EC0CB000065A3FA /* whisperkit-cli in Frameworks */ = {isa = PBXBuildFile; productRef = C3E8167B2EC0CB000065A3FA /* whisperkit-cli */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,7 +28,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				C3E8167A2EC0CB000065A3FA /* WhisperKit in Frameworks */,
-				C3E8167C2EC0CB000065A3FA /* whisperkit-cli in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -73,7 +71,6 @@
 			name = SkrivDetNed;
 			packageProductDependencies = (
 				C3E816792EC0CB000065A3FA /* WhisperKit */,
-				C3E8167B2EC0CB000065A3FA /* whisperkit-cli */,
 			);
 			productName = SkrivDetNed;
 			productReference = C39AA82D2EBE767C003185E4 /* SkrivDetNed.app */;
@@ -381,8 +378,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/argmaxinc/WhisperKit.git";
 			requirement = {
-				branch = main;
-				kind = branch;
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.9.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -392,11 +389,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = C3E816782EC0CB000065A3FA /* XCRemoteSwiftPackageReference "WhisperKit" */;
 			productName = WhisperKit;
-		};
-		C3E8167B2EC0CB000065A3FA /* whisperkit-cli */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = C3E816782EC0CB000065A3FA /* XCRemoteSwiftPackageReference "WhisperKit" */;
-			productName = "whisperkit-cli";
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

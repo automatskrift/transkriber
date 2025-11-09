@@ -26,6 +26,9 @@ class WhisperService: ObservableObject {
 
     @Published var isTranscribing = false
     @Published var currentProgress: Double = 0.0
+    @Published var isDownloadingModel = false
+    @Published var downloadProgress: Double = 0.0
+    @Published var downloadingModelName: String?
 
     private var whisperKit: WhisperKit?
     private var currentModel: WhisperModelType?
@@ -33,21 +36,45 @@ class WhisperService: ObservableObject {
     private init() {}
 
     func loadModel(_ modelType: WhisperModelType) async throws {
-        guard FileSystemHelper.shared.modelExists(modelType) else {
-            throw WhisperError.modelNotDownloaded
-        }
-
         print("🔄 Loading WhisperKit model: \(modelType.displayName)")
 
         do {
+            // Initialize WhisperKit - it will download the model automatically if needed
+            // Map our model types to WhisperKit model names
+            let whisperKitModelName: String
+            switch modelType {
+            case .tiny:
+                whisperKitModelName = "tiny"
+            case .base:
+                whisperKitModelName = "base"
+            case .small:
+                whisperKitModelName = "small"
+            case .medium:
+                whisperKitModelName = "medium"
+            case .large:
+                whisperKitModelName = "large-v3"
+            }
+
+            isDownloadingModel = true
+            downloadingModelName = modelType.displayName
+            downloadProgress = 0.0
+
             whisperKit = try await WhisperKit(
-                model: modelType.modelPath,
+                model: whisperKitModelName,
                 verbose: true,
-                logLevel: .debug
+                logLevel: .debug,
+                prewarm: false,
+                load: true,
+                download: true
             )
+
             currentModel = modelType
-            print("✅ WhisperKit model loaded successfully")
+            isDownloadingModel = false
+            downloadProgress = 1.0
+            print("✅ WhisperKit model loaded successfully: \(whisperKitModelName)")
         } catch {
+            isDownloadingModel = false
+            downloadingModelName = nil
             print("❌ Failed to load WhisperKit: \(error)")
             throw WhisperError.modelNotDownloaded
         }
@@ -78,42 +105,25 @@ class WhisperService: ObservableObject {
 
         do {
             // Transcribe with WhisperKit
-            let result = try await whisperKit.transcribe(
-                audioPath: audioURL.path,
-                decodeOptions: DecodingOptions(
-                    verbose: true,
-                    task: .transcribe,
-                    language: AppSettings.shared.selectedLanguage,
-                    temperature: Float(AppSettings.shared.whisperTemperature),
-                    temperatureFallbackCount: 5,
-                    sampleLength: 224,
-                    skipSpecialTokens: true,
-                    withoutTimestamps: false,  // We need timestamps for marks!
-                    clipTimestamps: [],
-                    promptTokens: nil
+            let results = try await whisperKit.transcribe(audioPath: audioURL.path)
+
+            // Extract text and segments from first result
+            guard let firstResult = results.first else {
+                throw WhisperError.transcriptionFailed("No transcription result")
+            }
+
+            let fullText = firstResult.text
+            let segments = firstResult.segments.map { segment in
+                TranscriptionSegment(
+                    start: Double(segment.start),
+                    end: Double(segment.end),
+                    text: segment.text
                 )
-            ) { progressUpdate in
-                Task { @MainActor in
-                    self.currentProgress = progressUpdate.progress
-                    progress(progressUpdate.progress)
-                }
             }
 
-            // Extract text and segments
-            let fullText = result?.text ?? ""
-            var segments: [TranscriptionSegment] = []
+            print("✅ Transcription complete: \(segments.count) segments")
 
-            if let resultSegments = result?.segments {
-                segments = resultSegments.map { segment in
-                    TranscriptionSegment(
-                        start: segment.start,
-                        end: segment.end,
-                        text: segment.text
-                    )
-                }
-                print("✅ Transcription complete: \(segments.count) segments")
-            }
-
+            progress(1.0)
             return TranscriptionResult(text: fullText, segments: segments)
 
         } catch {

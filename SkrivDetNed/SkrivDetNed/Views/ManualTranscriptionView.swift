@@ -292,9 +292,9 @@ struct ManualTranscriptionView: View {
 
                 // Save to file
                 let outputURL = fileURL.deletingPathExtension().appendingPathExtension("txt")
-                try transcription.write(to: outputURL, atomically: true, encoding: .utf8)
+                try transcription.text.write(to: outputURL, atomically: true, encoding: .utf8)
 
-                transcriptionResult = transcription
+                transcriptionResult = transcription.text
                 isTranscribing = false
 
             } catch {

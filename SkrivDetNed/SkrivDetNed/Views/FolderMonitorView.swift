@@ -10,6 +10,7 @@ import SwiftUI
 struct FolderMonitorView: View {
     @ObservedObject private var viewModel = FolderMonitorViewModel.shared
     @ObservedObject private var transcriptionVM = TranscriptionViewModel.shared
+    @ObservedObject private var whisperService = WhisperService.shared
 
     var body: some View {
         ScrollView {
@@ -120,6 +121,44 @@ struct FolderMonitorView: View {
                     }
                 ) {
                     VStack(spacing: 16) {
+                        // Model downloading banner
+                        if whisperService.isDownloadingModel {
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack {
+                                    Image(systemName: "arrow.down.circle.fill")
+                                        .foregroundColor(.blue)
+                                        .imageScale(.large)
+
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Downloader WhisperKit model")
+                                            .font(.headline)
+
+                                        if let modelName = whisperService.downloadingModelName {
+                                            Text(modelName)
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+
+                                    Spacer()
+
+                                    if whisperService.downloadProgress > 0 {
+                                        Text("\(Int(whisperService.downloadProgress * 100))%")
+                                            .font(.headline)
+                                            .foregroundColor(.blue)
+                                    }
+                                }
+
+                                ProgressView(value: whisperService.downloadProgress)
+                                    .progressViewStyle(.linear)
+                            }
+                            .padding(12)
+                            .background(Color.blue.opacity(0.1))
+                            .cornerRadius(8)
+
+                            Divider()
+                        }
+
                         // Currently transcribing
                         if !transcriptionVM.activeTasks.isEmpty {
                             VStack(alignment: .leading, spacing: 8) {
@@ -286,6 +325,56 @@ struct FolderMonitorView: View {
                             .font(.caption)
                     }
                     .buttonStyle(.borderless)
+
+                    Menu {
+                        Button(action: {
+                            Task {
+                                // Redo transcription - update metadata to pending
+                                if let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL() {
+                                    do {
+                                        var updatedMetadata = try RecordingMetadata.load(for: url.lastPathComponent, from: recordingsFolder)
+                                            ?? RecordingMetadata(audioFileName: url.lastPathComponent, createdOnDevice: "macOS")
+
+                                        // Clear error and reset to pending
+                                        updatedMetadata.status = .pending
+                                        updatedMetadata.errorMessage = nil
+                                        updatedMetadata.lastAttemptedAt = nil
+                                        updatedMetadata.transcriptionFileName = nil
+                                        updatedMetadata.updatedAt = Date()
+
+                                        try updatedMetadata.save(to: recordingsFolder)
+                                        print("🔄 Reset completed file to pending for redo: \(url.lastPathComponent)")
+
+                                        // Remove from processed files list so it can be retried
+                                        FolderMonitorService.shared.removeFromProcessed(url)
+                                        print("🔄 Removed from processed files list")
+
+                                        // Delete old transcription file if exists
+                                        let txtURL = url.deletingPathExtension().appendingPathExtension("txt")
+                                        if FileManager.default.fileExists(atPath: txtURL.path) {
+                                            try? FileManager.default.removeItem(at: txtURL)
+                                            print("🗑️ Deleted old transcription file")
+                                        }
+
+                                        // Now add to queue
+                                        await transcriptionVM.addToQueue(url)
+
+                                        // Trigger immediate refresh to update UI
+                                        await viewModel.refreshiCloudFileLists()
+                                    } catch {
+                                        print("❌ Failed to reset metadata for redo: \(error)")
+                                    }
+                                }
+                            }
+                        }) {
+                            Label("Transcrriber igen", systemImage: "arrow.clockwise")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                            .font(.caption)
+                    }
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
                 }
 
                 if status == .queued {
