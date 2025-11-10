@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Skriv det ned - Din personlige tale-til-tekst assistent til macOS og iOS. Konverter tale til tekst nemt og privat.">
+    <meta name="keywords" content="tale til tekst, transskription, speech to text, macOS, iOS, privatliv">
+    <title>Skriv det ned - Tale-til-Tekst App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --text-dark: #333;
+            --text-light: #666;
+            --bg-light: #f8f9fa;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            overflow-x: hidden;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: var(--primary-gradient);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: moveBackground 20s linear infinite;
+        }
+
+        @keyframes moveBackground {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+        }
+
+        .app-icon {
+            width: 180px;
+            height: 180px;
+            margin: 0 auto 30px;
+            border-radius: 40px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .hero h1 {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .hero .tagline {
+            font-size: 1.5em;
+            margin-bottom: 40px;
+            opacity: 0.95;
+        }
+
+        .lang-switch {
+            margin-bottom: 40px;
+        }
+
+        .lang-switch button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 10px 25px;
+            margin: 0 10px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .lang-switch button.active {
+            background: white;
+            color: var(--primary-color);
+        }
+
+        .lang-switch button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 40px;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: white;
+            color: var(--primary-color);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+            40% { transform: translateX(-50%) translateY(-10px); }
+            60% { transform: translateX(-50%) translateY(-5px); }
+        }
+
+        /* Sections */
+        section {
+            padding: 80px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.2em;
+            color: var(--text-light);
+            margin-bottom: 60px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Platforms Section */
+        .platforms {
+            background: var(--bg-light);
+        }
+
+        .platform-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-top: 40px;
+        }
+
+        .platform-card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .platform-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .platform-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .platform-card h3 {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+
+        .platform-card p {
+            color: var(--text-light);
+            line-height: 1.8;
+        }
+
+        /* Features Section */
+        .features {
+            background: white;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .feature-item {
+            padding: 30px;
+            text-align: center;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-item:hover {
+            background: var(--bg-light);
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+
+        .feature-item h3 {
+            font-size: 1.4em;
+            margin-bottom: 10px;
+            color: var(--text-dark);
+        }
+
+        .feature-item p {
+            color: var(--text-light);
+        }
+
+        /* How it Works */
+        .how-it-works {
+            background: var(--bg-light);
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .step {
+            text-align: center;
+            position: relative;
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: var(--primary-gradient);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 0 auto 20px;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .step h3 {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+            color: var(--text-dark);
+        }
+
+        .step p {
+            color: var(--text-light);
+        }
+
+        /* Privacy Section */
+        .privacy-highlight {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .privacy-highlight h2 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .privacy-highlight p {
+            font-size: 1.3em;
+            max-width: 800px;
+            margin: 0 auto 40px;
+            line-height: 1.8;
+        }
+
+        .privacy-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .privacy-feature {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .privacy-feature h4 {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        /* Footer */
+        footer {
+            background: #2d3748;
+            color: white;
+            padding: 60px 20px 30px;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-section h3 {
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-section a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-section a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Language switching */
+        .lang-content {
+            display: none;
+        }
+
+        .lang-content.active {
+            display: block;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5em;
+            }
+
+            .hero .tagline {
+                font-size: 1.2em;
+            }
+
+            .app-icon {
+                width: 140px;
+                height: 140px;
+            }
+
+            .section-title {
+                font-size: 2em;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 300px;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <img src="app-icon.png" alt="Skriv det ned App Icon" class="app-icon">
+
+            <div class="lang-switch">
+                <button onclick="switchLanguage('da')" id="lang-btn-da" class="active">🇩🇰 Dansk</button>
+                <button onclick="switchLanguage('en')" id="lang-btn-en">🇬🇧 English</button>
+            </div>
+
+            <!-- Danish Content -->
+            <div id="content-da" class="lang-content active">
+                <h1>Skriv det ned</h1>
+                <p class="tagline">Din personlige tale-til-tekst assistent</p>
+                <p class="tagline">Tilgængelig på macOS og iOS</p>
+
+                <div class="cta-buttons">
+                    <a href="#" class="btn btn-primary">
+                        <span>📱</span>
+                        Download til iOS
+                    </a>
+                    <a href="#" class="btn btn-primary">
+                        <span>💻</span>
+                        Download til macOS
+                    </a>
+                    <a href="privacy.html" class="btn btn-secondary">
+                        <span>🔒</span>
+                        Privatlivspolitik
+                    </a>
+                </div>
+            </div>
+
+            <!-- English Content -->
+            <div id="content-en" class="lang-content">
+                <h1>Skriv det ned</h1>
+                <p class="tagline">Your personal speech-to-text assistant</p>
+                <p class="tagline">Available on macOS and iOS</p>
+
+                <div class="cta-buttons">
+                    <a href="#" class="btn btn-primary">
+                        <span>📱</span>
+                        Download for iOS
+                    </a>
+                    <a href="#" class="btn btn-primary">
+                        <span>💻</span>
+                        Download for macOS
+                    </a>
+                    <a href="privacy.html" class="btn btn-secondary">
+                        <span>🔒</span>
+                        Privacy Policy
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="scroll-indicator">
+            <svg width="30" height="30" viewBox="0 0 30 30" fill="none" stroke="white" stroke-width="2">
+                <path d="M15 5 L15 20 M10 15 L15 20 L20 15"/>
+            </svg>
+        </div>
+    </section>
+
+    <!-- Platforms Section -->
+    <section class="platforms">
+        <div class="container">
+            <div id="platforms-da" class="lang-content active">
+                <h2 class="section-title">Tilgængelig på Alle Dine Enheder</h2>
+                <p class="section-subtitle">Sømløs oplevelse på tværs af macOS og iOS</p>
+
+                <div class="platform-grid">
+                    <div class="platform-card">
+                        <div class="platform-icon">💻</div>
+                        <h3>macOS</h3>
+                        <p>Kraftfuld desktop-oplevelse med fuld funktionalitet. Perfekt til længere transskriptioner og professionelt arbejde.</p>
+                    </div>
+
+                    <div class="platform-card">
+                        <div class="platform-icon">📱</div>
+                        <h3>iOS</h3>
+                        <p>Tag dine notater med dig overalt. Optag og transskriber på farten med din iPhone eller iPad.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="platforms-en" class="lang-content">
+                <h2 class="section-title">Available on All Your Devices</h2>
+                <p class="section-subtitle">Seamless experience across macOS and iOS</p>
+
+                <div class="platform-grid">
+                    <div class="platform-card">
+                        <div class="platform-icon">💻</div>
+                        <h3>macOS</h3>
+                        <p>Powerful desktop experience with full functionality. Perfect for longer transcriptions and professional work.</p>
+                    </div>
+
+                    <div class="platform-card">
+                        <div class="platform-icon">📱</div>
+                        <h3>iOS</h3>
+                        <p>Take your notes anywhere. Record and transcribe on the go with your iPhone or iPad.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <div id="features-da" class="lang-content active">
+                <h2 class="section-title">Funktioner</h2>
+                <p class="section-subtitle">Alt du har brug for til at konvertere tale til tekst</p>
+
+                <div class="features-grid">
+                    <div class="feature-item">
+                        <div class="feature-icon">🎤</div>
+                        <h3>Høj Kvalitet</h3>
+                        <p>Brug Apples avancerede talegenkendelse for præcis transskription</p>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="feature-icon">⚡</div>
+                        <h3>Lynhurtigt</h3>
+                        <p>Realtids transskription mens du taler</p>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="feature-icon">🔒</div>
+                        <h3>100% Privat</h3>
+                        <p>Ingen data sendes til eksterne servere</p>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="feature-icon">☁️</div>
+                        <h3>iCloud Sync</h3>
+                        <p>Valgfri synkronisering mellem dine enheder</p>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="feature-icon">📝</div>
+                        <h3>Nem Redigering</h3>
+                        <p>Rediger og organiser dine transskriptioner</p>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="feature-icon">🌐</div>
+                        <h3>Dansk & Engelsk</h3>
+                        <p>Fuldt understøttet på begge sprog</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="features-en" class="lang-content">
+                <h2 class="section-title">Features</h2>
+                <p class="section-subtitle">Everything you need to convert speech to text</p>
+
+                <div class="features-grid">
+                    <div class="feature-item">
+                        <div class="feature-icon">🎤</div>
+                        <h3>High Quality</h3>
+                        <p>Uses Apple's advanced speech recognition for accurate transcription</p>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="feature-icon">⚡</div>
+                        <h3>Lightning Fast</h3>
+                        <p>Real-time transcription as you speak</p>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="feature-icon">🔒</div>
+                        <h3>100% Private</h3>
+                        <p>No data sent to external servers</p>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="feature-icon">☁️</div>
+                        <h3>iCloud Sync</h3>
+                        <p>Optional synchronization between your devices</p>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="feature-icon">📝</div>
+                        <h3>Easy Editing</h3>
+                        <p>Edit and organize your transcriptions</p>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="feature-icon">🌐</div>
+                        <h3>Danish & English</h3>
+                        <p>Fully supported in both languages</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How it Works -->
+    <section class="how-it-works">
+        <div class="container">
+            <div id="howitworks-da" class="lang-content active">
+                <h2 class="section-title">Sådan Virker Det</h2>
+                <p class="section-subtitle">Tre enkle trin til perfekt transskription</p>
+
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <h3>Optag</h3>
+                        <p>Tryk på optag-knappen og begynd at tale</p>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <h3>Transskriber</h3>
+                        <p>Appen konverterer automatisk din tale til tekst</p>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <h3>Gem & Del</h3>
+                        <p>Gem, rediger eller del din transskription</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="howitworks-en" class="lang-content">
+                <h2 class="section-title">How It Works</h2>
+                <p class="section-subtitle">Three simple steps to perfect transcription</p>
+
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <h3>Record</h3>
+                        <p>Press the record button and start speaking</p>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <h3>Transcribe</h3>
+                        <p>The app automatically converts your speech to text</p>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <h3>Save & Share</h3>
+                        <p>Save, edit, or share your transcription</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Privacy Highlight -->
+    <section class="privacy-highlight">
+        <div class="container">
+            <div id="privacy-da" class="lang-content active">
+                <h2>Dit Privatliv Er Vores Prioritet</h2>
+                <p>Vi tager dit privatliv alvorligt. Derfor gemmes alle dine optagelser og transskriptioner kun lokalt på din enhed. Ingen data deles nogensinde med os eller tredjeparter.</p>
+
+                <div class="privacy-features">
+                    <div class="privacy-feature">
+                        <h4>🔐 Ingen Tracking</h4>
+                        <p>Vi sporer ikke din brug</p>
+                    </div>
+
+                    <div class="privacy-feature">
+                        <h4>📍 Lokalt Gemt</h4>
+                        <p>Alt er kun på din enhed</p>
+                    </div>
+
+                    <div class="privacy-feature">
+                        <h4>🚫 Ingen Annoncer</h4>
+                        <p>Ingen irriterende ads</p>
+                    </div>
+
+                    <div class="privacy-feature">
+                        <h4>✅ Open Source</h4>
+                        <p>Gennemsigtig og pålidelig</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="privacy-en" class="lang-content">
+                <h2>Your Privacy Is Our Priority</h2>
+                <p>We take your privacy seriously. That's why all your recordings and transcriptions are stored only locally on your device. No data is ever shared with us or third parties.</p>
+
+                <div class="privacy-features">
+                    <div class="privacy-feature">
+                        <h4>🔐 No Tracking</h4>
+                        <p>We don't track your usage</p>
+                    </div>
+
+                    <div class="privacy-feature">
+                        <h4>📍 Locally Stored</h4>
+                        <p>Everything stays on your device</p>
+                    </div>
+
+                    <div class="privacy-feature">
+                        <h4>🚫 No Ads</h4>
+                        <p>No annoying advertisements</p>
+                    </div>
+
+                    <div class="privacy-feature">
+                        <h4>✅ Open Source</h4>
+                        <p>Transparent and trustworthy</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section" id="footer-about-da" class="lang-content active">
+                <h3>Om Skriv det ned</h3>
+                <p>En simpel, privat og kraftfuld tale-til-tekst app til macOS og iOS.</p>
+            </div>
+            <div class="footer-section" id="footer-about-en" class="lang-content">
+                <h3>About Skriv det ned</h3>
+                <p>A simple, private, and powerful speech-to-text app for macOS and iOS.</p>
+            </div>
+
+            <div class="footer-section">
+                <h3>Links</h3>
+                <ul>
+                    <li><a href="privacy.html">Privacy Policy / Privatlivspolitik</a></li>
+                    <li><a href="#">App Store (iOS)</a></li>
+                    <li><a href="#">Mac App Store</a></li>
+                    <li><a href="https://github.com/automatskrift/transkriber">GitHub</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section" id="footer-contact-da" class="lang-content active">
+                <h3>Kontakt</h3>
+                <p>Email: <a href="mailto:privacy@skrivdetnedapp.com">privacy@skrivdetnedapp.com</a></p>
+            </div>
+            <div class="footer-section" id="footer-contact-en" class="lang-content">
+                <h3>Contact</h3>
+                <p>Email: <a href="mailto:privacy@skrivdetnedapp.com">privacy@skrivdetnedapp.com</a></p>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>© 2024 Skriv det ned. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        function switchLanguage(lang) {
+            // Update all content sections
+            document.querySelectorAll('.lang-content').forEach(content => {
+                if (content.id.includes('-' + lang)) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+
+            // Update language buttons
+            document.querySelectorAll('.lang-switch button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById('lang-btn-' + lang).classList.add('active');
+
+            // Update HTML lang attribute
+            document.documentElement.lang = lang;
+
+            // Save preference
+            localStorage.setItem('preferredLanguage', lang);
+        }
+
+        // Load saved language preference
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedLang = localStorage.getItem('preferredLanguage');
+            if (savedLang) {
+                switchLanguage(savedLang);
+            }
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
