@@ -1,74 +1,74 @@
 {
-  "sourceLanguage" : "da",
-  "strings" : {
-    "CFBundleDisplayName" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SkrivDetNed"
+  "sourceLanguage": "da",
+  "strings": {
+    "CFBundleDisplayName": {
+      "extractionState": "manual",
+      "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SkrivDetNed"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Write it down"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write it up"
           }
         }
       }
     },
-    "CFBundleName" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SkrivDetNed"
+    "CFBundleName": {
+      "extractionState": "manual",
+      "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SkrivDetNed"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Write it down"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write it up"
           }
         }
       }
     },
-    "NSLocationWhenInUseUsageDescription" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SkrivDetNed kan tilføje din lokation til optagelser for bedre organisering."
+    "NSLocationWhenInUseUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SkrivDetNed kan tilføje din lokation til optagelser for bedre organisering."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Write it down can add your location to recordings for better organization."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write it up can add your location to recordings for better organization."
           }
         }
       }
     },
-    "NSMicrophoneUsageDescription" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SkrivDetNed har brug for adgang til mikrofonen for at kunne optage lyd."
+    "NSMicrophoneUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SkrivDetNed har brug for adgang til mikrofonen for at kunne optage lyd."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Write it down needs access to the microphone to record audio."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write it up needs access to the microphone to record audio."
           }
         }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

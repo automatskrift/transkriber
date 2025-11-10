@@ -1,86 +1,86 @@
 {
-  "sourceLanguage" : "da",
-  "strings" : {
-    "CFBundleDisplayName" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SkrivDetNed"
+  "sourceLanguage": "da",
+  "strings": {
+    "CFBundleDisplayName": {
+      "extractionState": "manual",
+      "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SkrivDetNed"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Write it down"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write it up"
           }
         }
       }
     },
-    "CFBundleName" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SkrivDetNed"
+    "CFBundleName": {
+      "extractionState": "manual",
+      "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SkrivDetNed"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Write it down"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write it up"
           }
         }
       }
     },
-    "NSHumanReadableCopyright" : {
-      "comment" : "Copyright (human-readable)",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : ""
+    "NSHumanReadableCopyright": {
+      "comment": "Copyright (human-readable)",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "new",
+            "value": ""
           }
         }
       }
     },
-    "NSMicrophoneUsageDescription" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SkrivDetNed har brug for adgang til mikrofon for at kunne transkribere lydoptagelser."
+    "NSMicrophoneUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SkrivDetNed har brug for adgang til mikrofon for at kunne transkribere lydoptagelser."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Write it down needs access to the microphone to transcribe audio recordings."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write it up needs access to the microphone to transcribe audio recordings."
           }
         }
       }
     },
-    "NSSpeechRecognitionUsageDescription" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SkrivDetNed bruger talegenkendelse til at transkribere dine lydoptagelser."
+    "NSSpeechRecognitionUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SkrivDetNed bruger talegenkendelse til at transkribere dine lydoptagelser."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Write it down uses speech recognition to transcribe your audio recordings."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write it up uses speech recognition to transcribe your audio recordings."
           }
         }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

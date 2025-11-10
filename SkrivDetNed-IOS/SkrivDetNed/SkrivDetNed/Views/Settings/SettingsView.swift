@@ -123,7 +123,7 @@ struct SettingsView: View {
                 } header: {
                     Label(NSLocalizedString("Transskribering", comment: ""), systemImage: "doc.text")
                 } footer: {
-                    Text(String(format: NSLocalizedString("Transskribering sker på din Mac via %@ macOS appen", comment: ""), NSLocalizedString("SkrivDetNed", comment: "")))
+                    Text(String(format: NSLocalizedString("Transskribering sker på din Mac via %@ macOS appen", comment: ""), NSLocalizedString("app_name", comment: "")))
                 }
 
                 // LLM Prompts Settings
@@ -178,7 +178,7 @@ struct SettingsView: View {
                             .foregroundColor(.secondary)
                     }
 
-                    Button(String(format: NSLocalizedString("Om %@", comment: ""), NSLocalizedString("SkrivDetNed", comment: ""))) {
+                    Button(String(format: NSLocalizedString("Om %@", comment: ""), NSLocalizedString("app_name", comment: ""))) {
                         showingAbout = true
                     }
 
@@ -345,7 +345,7 @@ struct AboutView: View {
                         .font(.system(size: 100))
                         .foregroundColor(.blue)
 
-                    Text(NSLocalizedString("SkrivDetNed", comment: ""))
+                    Text(NSLocalizedString("app_name", comment: ""))
                         .font(.title)
                         .fontWeight(.bold)
 
@@ -360,7 +360,7 @@ struct AboutView: View {
                         Text(NSLocalizedString("Om appen", comment: ""))
                             .font(.headline)
 
-                        Text(String(format: NSLocalizedString("%@ gør det nemt at optage lyd på din iPhone og automatisk få det transskriberet til tekst via din Mac.", comment: ""), NSLocalizedString("SkrivDetNed", comment: "")))
+                        Text(String(format: NSLocalizedString("%@ gør det nemt at optage lyd på din iPhone og automatisk få det transskriberet til tekst via din Mac.", comment: ""), NSLocalizedString("app_name", comment: "")))
                             .font(.body)
 
                         Text(NSLocalizedString("Funktioner", comment: ""))

@@ -13,6 +13,7 @@ struct RecordingView: View {
     @State private var showingCancelConfirmation = false
     @State private var showRecordingUI = false
     @State private var markButtonPressed = false
+    @State private var showingHelp = false
 
     var body: some View {
         NavigationStack {
@@ -57,14 +58,17 @@ struct RecordingView: View {
                 }
 
                 // Control buttons
-                HStack(spacing: 40) {
+                HStack(spacing: 16) {
                     // Pause/Resume button
                     Button(action: { viewModel.togglePause() }) {
-                        Label(
-                            viewModel.isPaused ? NSLocalizedString("Fortsæt", comment: "") : NSLocalizedString("Pause", comment: ""),
-                            systemImage: viewModel.isPaused ? "play.fill" : "pause.fill"
-                        )
-                        .font(.headline)
+                        VStack(spacing: 6) {
+                            Image(systemName: viewModel.isPaused ? "play.fill" : "pause.fill")
+                                .font(.title2)
+                            Text(viewModel.isPaused ? NSLocalizedString("Fortsæt", comment: "") : NSLocalizedString("Pause", comment: ""))
+                                .font(.caption)
+                                .fontWeight(.medium)
+                        }
+                        .frame(minWidth: 80)
                     }
                     .buttonStyle(.bordered)
                     .disabled(viewModel.isInitializingRecording)
@@ -82,8 +86,14 @@ struct RecordingView: View {
                             markButtonPressed = false
                         }
                     }) {
-                        Label(NSLocalizedString("Mark", comment: ""), systemImage: "flag.fill")
-                            .font(.headline)
+                        VStack(spacing: 6) {
+                            Image(systemName: "flag.fill")
+                                .font(.title2)
+                            Text(NSLocalizedString("Mark", comment: ""))
+                                .font(.caption)
+                                .fontWeight(.medium)
+                        }
+                        .frame(minWidth: 70)
                     }
                     .buttonStyle(.bordered)
                     .tint(markButtonPressed ? .orange : .blue)
@@ -99,8 +109,14 @@ struct RecordingView: View {
                             viewModel.cancelRecording()
                         }
                     }) {
-                        Label(NSLocalizedString("Annuller", comment: ""), systemImage: "xmark")
-                            .font(.headline)
+                        VStack(spacing: 6) {
+                            Image(systemName: "xmark")
+                                .font(.title2)
+                            Text(NSLocalizedString("Annuller", comment: ""))
+                                .font(.caption)
+                                .fontWeight(.medium)
+                        }
+                        .frame(minWidth: 80)
                     }
                     .buttonStyle(.bordered)
                     .disabled(viewModel.isInitializingRecording)
@@ -238,11 +254,20 @@ struct RecordingView: View {
                 }
             }
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: { showingHelp = true }) {
+                        Image(systemName: "questionmark.circle")
+                    }
+                }
+
                 ToolbarItem(placement: .navigationBarTrailing) {
                     NavigationLink(destination: SettingsView()) {
                         Image(systemName: "gearshape")
                     }
                 }
+            }
+            .sheet(isPresented: $showingHelp) {
+                HelpSheetView()
             }
             .alert(NSLocalizedString("Fejl", comment: ""), isPresented: $viewModel.showError) {
                 Button(NSLocalizedString("OK", comment: ""), role: .cancel) {}
@@ -256,6 +281,130 @@ struct RecordingView: View {
                 }
             } message: {
                 Text(NSLocalizedString("Er du sikker på at du vil annullere denne optagelse? Dette kan ikke fortrydes.", comment: ""))
+            }
+        }
+    }
+}
+
+// MARK: - Help Sheet View
+struct HelpSheetView: View {
+    @Environment(\.dismiss) var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    // Icon
+                    HStack {
+                        Spacer()
+                        Image(systemName: "questionmark.circle.fill")
+                            .font(.system(size: 60))
+                            .foregroundColor(.blue)
+                        Spacer()
+                    }
+                    .padding(.top)
+
+                    // Title
+                    Text(NSLocalizedString("Sådan bruges appen", comment: ""))
+                        .font(.title2)
+                        .fontWeight(.bold)
+
+                    // Main description
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text(NSLocalizedString("Denne app er designet til at arbejde sammen med macOS-appen af samme navn.", comment: ""))
+                            .font(.body)
+
+                        Text(NSLocalizedString("Sådan fungerer det:", comment: ""))
+                            .font(.headline)
+                            .padding(.top, 8)
+
+                        VStack(alignment: .leading, spacing: 12) {
+                            HelpStepRow(
+                                number: "1",
+                                title: NSLocalizedString("Optag på iPhone", comment: ""),
+                                description: NSLocalizedString("Tryk på den store optagelsesknap for at starte optagelse", comment: "")
+                            )
+
+                            HelpStepRow(
+                                number: "2",
+                                title: NSLocalizedString("Automatisk upload", comment: ""),
+                                description: NSLocalizedString("Optagelsen uploades automatisk til iCloud", comment: "")
+                            )
+
+                            HelpStepRow(
+                                number: "3",
+                                title: NSLocalizedString("Mac transskriberer", comment: ""),
+                                description: NSLocalizedString("Din Mac detecterer den nye optagelse og transskriberer den automatisk med Whisper AI", comment: "")
+                            )
+
+                            HelpStepRow(
+                                number: "4",
+                                title: NSLocalizedString("Hent resultat", comment: ""),
+                                description: NSLocalizedString("Transskriptionen synkroniseres tilbage til din iPhone", comment: "")
+                            )
+                        }
+
+                        Divider()
+                            .padding(.vertical, 8)
+
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack(spacing: 12) {
+                                Image(systemName: "info.circle.fill")
+                                    .foregroundColor(.blue)
+                                Text(NSLocalizedString("Du skal have macOS-appen installeret og køre for at få transskriptioner", comment: ""))
+                                    .font(.callout)
+                            }
+
+                            HStack(spacing: 12) {
+                                Image(systemName: "icloud.fill")
+                                    .foregroundColor(.blue)
+                                Text(NSLocalizedString("Sørg for at iCloud Sync er aktiveret i Indstillinger", comment: ""))
+                                    .font(.callout)
+                            }
+                        }
+                        .padding(.vertical, 8)
+                    }
+                }
+                .padding()
+            }
+            .navigationTitle(NSLocalizedString("Hjælp", comment: ""))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(NSLocalizedString("Luk", comment: "")) {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct HelpStepRow: View {
+    let number: String
+    let title: String
+    let description: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(Color.blue.opacity(0.2))
+                    .frame(width: 32, height: 32)
+
+                Text(number)
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.blue)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+
+                Text(description)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
         }
     }
