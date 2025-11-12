@@ -117,30 +117,38 @@ struct RecordingMetadata: Codable {
         // Use NSFileCoordinator for iCloud files to ensure consistent reads
         let data: Data
         if directory.path.contains("Mobile Documents") {
+            // Use immediate reading to avoid blocking on iCloud downloads
             var coordinatorError: NSError?
             var readData: Data?
             var readError: Error?
 
             let coordinator = NSFileCoordinator(filePresenter: nil)
-            coordinator.coordinate(readingItemAt: metadataURL, options: [], error: &coordinatorError) { url in
+
+            // Use .immediatelyAvailableMetadataOnly to avoid blocking on downloads
+            coordinator.coordinate(readingItemAt: metadataURL,
+                                  options: [.immediatelyAvailableMetadataOnly],
+                                  error: &coordinatorError) { url in
                 do {
                     readData = try Data(contentsOf: url)
                 } catch {
                     readError = error
+                    print("⚠️ Error reading metadata file: \(error)")
                 }
             }
 
             if let error = coordinatorError {
+                print("⚠️ NSFileCoordinator error: \(error)")
+                // Fall back to direct read on coordinator error
+                data = try Data(contentsOf: metadataURL)
+            } else if let error = readError {
+                print("⚠️ Read error: \(error)")
                 throw error
+            } else if let loadedData = readData {
+                data = loadedData
+            } else {
+                // Fall back to direct read if no data
+                data = try Data(contentsOf: metadataURL)
             }
-            if let error = readError {
-                throw error
-            }
-
-            guard let loadedData = readData else {
-                return nil
-            }
-            data = loadedData
         } else {
             data = try Data(contentsOf: metadataURL)
         }

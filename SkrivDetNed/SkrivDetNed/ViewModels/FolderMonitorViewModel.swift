@@ -320,19 +320,21 @@ class FolderMonitorViewModel: ObservableObject {
     func refreshiCloudFileLists() async {
         let msg = "🔄 refreshiCloudFileLists called at \(Date())"
         print(msg)
-        try? msg.appending("\n").write(toFile: "/tmp/skrivdetned_debug.log", atomically: true, encoding: .utf8)
 
         guard settings.iCloudSyncEnabled,
               let recordingsFolder = iCloudService.getRecordingsFolderURL() else {
-            let failMsg = "   ❌ iCloud disabled or no folder"
-            print(failMsg)
-            if var log = try? String(contentsOfFile: "/tmp/skrivdetned_debug.log", encoding: .utf8) {
-                log.append(failMsg + "\n")
-                try? log.write(toFile: "/tmp/skrivdetned_debug.log", atomically: true, encoding: .utf8)
-            }
+            print("   ❌ iCloud disabled or no folder")
             return
         }
 
+        // Run the file processing in a background task to avoid blocking UI
+        await Task.detached(priority: .background) { [weak self] in
+            guard let self = self else { return }
+            await self.performiCloudFileRefresh(recordingsFolder: recordingsFolder)
+        }.value
+    }
+
+    private func performiCloudFileRefresh(recordingsFolder: URL) async {
         var queued: [(URL, RecordingMetadata)] = []
         var completed: [(URL, RecordingMetadata)] = []
         var failed: [(URL, RecordingMetadata)] = []
@@ -354,12 +356,25 @@ class FolderMonitorViewModel: ObservableObject {
 
             for jsonFile in jsonFiles {
                 let audioFileName = jsonFile.deletingPathExtension().lastPathComponent + ".m4a"
+
+                // Add protection against hanging on metadata load
+                let startTime = Date()
                 guard let metadata = try? RecordingMetadata.load(
                     for: audioFileName,
                     from: recordingsFolder
                 ) else {
+                    let loadTime = Date().timeIntervalSince(startTime)
+                    if loadTime > 1.0 {
+                        print("⚠️ Slow metadata load (\(loadTime)s) for: \(audioFileName)")
+                    }
                     print("⚠️ Could not load metadata for: \(audioFileName)")
                     continue
+                }
+
+                // Log if loading was slow
+                let loadTime = Date().timeIntervalSince(startTime)
+                if loadTime > 0.5 {
+                    print("⚠️ Metadata load took \(loadTime)s for: \(audioFileName)")
                 }
 
                 let audioURL = recordingsFolder.appendingPathComponent(metadata.audioFileName)
@@ -428,7 +443,8 @@ class FolderMonitorViewModel: ObservableObject {
             completed.sort { $0.1.updatedAt > $1.1.updatedAt }
             failed.sort { $0.1.updatedAt > $1.1.updatedAt }
 
-            await MainActor.run {
+            await MainActor.run { [weak self] in
+                guard let self = self else { return }
                 print("📊 Refresh summary: \(queued.count) queued, \(completed.count) completed, \(failed.count) failed")
                 self.iCloudQueuedFiles = queued
                 self.iCloudCompletedFiles = completed
@@ -439,8 +455,13 @@ class FolderMonitorViewModel: ObservableObject {
             if !queued.isEmpty {
                 print("🔍 Checking \(queued.count) queued file(s) for auto-start")
                 for (url, _) in queued {
-                    let isInQueue = transcriptionVM.isInQueue(url)
-                    let isActive = transcriptionVM.activeTasks.contains { $0.audioFileURL.lastPathComponent == url.lastPathComponent }
+                    // Access transcriptionVM on MainActor
+                    let (isInQueue, isActive) = await MainActor.run { [weak self] in
+                        guard let self = self else { return (false, false) }
+                        let inQueue = self.transcriptionVM.isInQueue(url)
+                        let active = self.transcriptionVM.activeTasks.contains { $0.audioFileURL.lastPathComponent == url.lastPathComponent }
+                        return (inQueue, active)
+                    }
 
                     print("   File: \(url.lastPathComponent) - inQueue: \(isInQueue), isActive: \(isActive)")
 
@@ -458,7 +479,12 @@ class FolderMonitorViewModel: ObservableObject {
                             try? log.write(toFile: "/tmp/skrivdetned_debug.log", atomically: true, encoding: .utf8)
                         }
 
-                        await transcriptionVM.addToQueue(url)
+                        await MainActor.run { [weak self] in
+                            guard let self = self else { return }
+                            Task {
+                                await self.transcriptionVM.addToQueue(url)
+                            }
+                        }
                         let afterMsg = "   ✅ addToQueue completed for: \(url.lastPathComponent)"
                         print(afterMsg)
                         if var log = try? String(contentsOfFile: "/tmp/skrivdetned_debug.log", encoding: .utf8) {

@@ -4874,9 +4874,6 @@
     "When you transcribe files, they will appear here" : {
       "comment" : "Empty state description"
     },
-    "Whisper Model" : {
-      "comment" : "Default model name"
-    },
     "Whisper model er ikke downloadet. Download en model i indstillinger." : {
       "extractionState" : "manual",
       "localizations" : {
