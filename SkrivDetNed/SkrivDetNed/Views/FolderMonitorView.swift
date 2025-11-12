@@ -30,7 +30,7 @@ struct FolderMonitorView: View {
                 // MARK: - Active Transcription Section
                 // Only show tasks that are actively processing, not pending ones
                 if whisperService.isDownloadingModel || whisperService.isLoadingModel || !processingTasks.isEmpty {
-                    GroupBox(label: Label(NSLocalizedString("Aktuel Opgave", comment: "Current task"), systemImage: "waveform.circle")) {
+                    GroupBox(label: Label(NSLocalizedString("Aktuel opgave", comment: "Current task"), systemImage: "waveform.circle")) {
                         VStack(spacing: 16) {
                             // Model downloading banner
                             if whisperService.isDownloadingModel {

@@ -81,7 +81,7 @@ struct AboutView: View {
                 }) {
                     HStack(spacing: 4) {
                         Image(systemName: "globe")
-                        Text(NSLocalizedString("Website", comment: "Website link"))
+                        Text("omdethele.dk")
                     }
                     .font(.caption)
                 }

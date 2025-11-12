@@ -27,6 +27,7 @@ struct AdvancedSettingsView: View {
                         .foregroundColor(.secondary)
                 }
                 .buttonStyle(.plain)
+                .keyboardShortcut(.cancelAction)
             }
             .padding()
             .background(Color(nsColor: .windowBackgroundColor))
