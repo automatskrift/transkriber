@@ -140,7 +140,7 @@ struct SettingsView: View {
                 } header: {
                     Label(NSLocalizedString("LLM Prompts", comment: ""), systemImage: "brain")
                 } footer: {
-                    Text(NSLocalizedString("Forudindstillede prompts til at bearbejde transskriptioner med LLM'er", comment: ""))
+                    Text(NSLocalizedString("Forudindstillede prompts til at bearbejde transskriptioner med LLM'er. Når du vælger en prompt under optagelse, sættes den valgte tekst først i transskriptionen. Dette gør det nemt at kopiere og indsætte direkte i en LLM (f.eks. ChatGPT). Du kan også bruge funktionen til at starte din transskription med en bestemt tekst.", comment: "LLM Prompts explanation"))
                 }
 
                 // Privacy Settings

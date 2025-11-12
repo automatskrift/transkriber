@@ -436,6 +436,7 @@ class iCloudSyncService: ObservableObject {
             metadata.duration = recording.duration
             metadata.promptPrefix = recording.promptPrefix
             metadata.marks = recording.marks
+            metadata.language = AppSettings.shared.selectedLanguage // Include language from iOS settings
 
             // Debug metadata
             print("🔍 DEBUG Metadata before save:")

@@ -129,7 +129,7 @@ class RecordingsListViewModel: ObservableObject {
         await iCloudService.checkForExistingTranscriptions()
 
         // Reload again after iCloud check
-        await Task.sleep(1_000_000_000) // Wait 1 second for iCloud updates
+        try? await Task.sleep(nanoseconds: 1_000_000_000) // Wait 1 second for iCloud updates
         loadRecordings()
     }
 

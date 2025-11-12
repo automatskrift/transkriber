@@ -1170,23 +1170,6 @@
         }
       }
     },
-    "Forudindstillede prompts til at bearbejde transskriptioner med LLM'er": {
-      "extractionState": "manual",
-      "localizations": {
-        "da": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Forudindstillede prompts til at bearbejde transskriptioner med LLM'er"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preset prompts for processing transcriptions with LLMs"
-          }
-        }
-      }
-    },
     "Fransk": {
       "extractionState": "manual",
       "localizations": {
@@ -3860,6 +3843,23 @@
           }
         }
       }
+    },
+    "Forudindstillede prompts til at bearbejde transskriptioner med LLM'er. Når du vælger en prompt under optagelse, sættes den valgte tekst først i transskriptionen. Dette gør det nemt at kopiere og indsætte direkte i en LLM (f.eks. ChatGPT). Du kan også bruge funktionen til at starte din transskription med en bestemt tekst.": {
+      "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forudindstillede prompts til at bearbejde transskriptioner med LLM'er. Når du vælger en prompt under optagelse, sættes den valgte tekst først i transskriptionen. Dette gør det nemt at kopiere og indsætte direkte i en LLM (f.eks. ChatGPT). Du kan også bruge funktionen til at starte din transskription med en bestemt tekst."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preset prompts for processing transcriptions with LLMs. When you select a prompt during recording, the selected text is placed at the beginning of the transcription. This makes it easy to copy and paste directly into an LLM (e.g. ChatGPT). You can also use this feature to start your transcription with specific text."
+          }
+        }
+      },
+      "extractionState": "manual"
     }
   },
   "version": "1.0"

@@ -325,6 +325,9 @@ class TranscriptionViewModel: ObservableObject {
             // Get selected model
             let modelType = AppSettings.shared.selectedModelType
 
+            // Determine the language to use for transcription
+            var transcriptionLanguage: String? = nil
+
             // NOW update iCloud metadata to "transcribing" right before actual transcription starts
             if url.path.contains("Mobile Documents") {
                 do {
@@ -337,6 +340,12 @@ class TranscriptionViewModel: ObservableObject {
                             print("🔄 Retrying previously failed file - clearing error message")
                             metadata.errorMessage = nil
                             metadata.lastAttemptedAt = nil
+                        }
+
+                        // Use language from metadata if available (respecting iOS app settings)
+                        if let metadataLanguage = metadata.language, !metadataLanguage.isEmpty {
+                            transcriptionLanguage = metadataLanguage
+                            print("🌍 Using language from iOS metadata: \(metadataLanguage)")
                         }
 
                         metadata.status = .transcribing
@@ -355,7 +364,8 @@ class TranscriptionViewModel: ObservableObject {
             print("📁 [ViewModel] Transcribing file directly (no security scope): \(url.lastPathComponent)")
             let result = try await WhisperService.shared.transcribe(
                 audioURL: url,
-                modelType: modelType
+                modelType: modelType,
+                language: transcriptionLanguage
             ) { progress in
                 Task { @MainActor in
                     if let index = self.activeTasks.firstIndex(where: { $0.id == task.id }) {

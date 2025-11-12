@@ -98,11 +98,24 @@ class AudioRecordingService: NSObject, ObservableObject {
     /// Request microphone permission
     func requestPermission() async -> Bool {
         print("🎤 Requesting microphone permission...")
-        let granted = await withCheckedContinuation { continuation in
-            audioSession.requestRecordPermission { granted in
-                continuation.resume(returning: granted)
+
+        let granted: Bool
+        if #available(iOS 17.0, *) {
+            // Use the new AVAudioApplication API for iOS 17.0+
+            granted = await withCheckedContinuation { continuation in
+                AVAudioApplication.requestRecordPermission { granted in
+                    continuation.resume(returning: granted)
+                }
+            }
+        } else {
+            // Fall back to the deprecated method for older iOS versions
+            granted = await withCheckedContinuation { continuation in
+                audioSession.requestRecordPermission { granted in
+                    continuation.resume(returning: granted)
+                }
             }
         }
+
         print(granted ? "✅ Microphone permission granted" : "❌ Microphone permission denied")
         return granted
     }
@@ -302,14 +315,14 @@ class AudioRecordingService: NSObject, ObservableObject {
 
         // Monitor duration
         durationTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] timer in
-            Task { @MainActor in
-                guard let self else {
-                    timer.invalidate()
-                    return
-                }
+            guard let self else {
+                timer.invalidate()
+                return
+            }
 
+            Task { @MainActor in
                 guard let recorder = self.audioRecorder else {
-                    timer.invalidate()
+                    self.stopMonitoring()
                     return
                 }
 
@@ -411,12 +424,8 @@ class AudioRecordingService: NSObject, ObservableObject {
             totalPausedDuration: 0 // TODO: Track total paused time if needed
         )
 
-        do {
-            await activity.update(.init(state: contentState, staleDate: nil))
-            print("🔄 Live Activity updated: paused: \(isPaused)")
-        } catch {
-            print("❌ Failed to update Live Activity: \(error)")
-        }
+        await activity.update(.init(state: contentState, staleDate: nil))
+        print("🔄 Live Activity updated: paused: \(isPaused)")
     }
 
     private func endLiveActivity() async {

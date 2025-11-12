@@ -268,6 +268,7 @@ class WhisperService: ObservableObject {
     func transcribe(
         audioURL: URL,
         modelType: WhisperModelType,
+        language: String? = nil,
         progress: @escaping (Double) -> Void
     ) async throws -> TranscriptionResult {
         // Check if already transcribing (safety check - should be prevented by queue)
@@ -340,8 +341,19 @@ class WhisperService: ObservableObject {
             // - Always provide explicit language (don't use nil) unless user explicitly wants auto-detect
             // - Set detectLanguage to false when using explicit language
             // - Use usePrefillPrompt to force the language tokens
-            let language: String? = settings.whisperAutoDetectLanguage ? nil : settings.selectedLanguage
-            let shouldDetectLanguage = settings.whisperAutoDetectLanguage
+
+            // Use provided language parameter (from iOS metadata) if available, otherwise use macOS settings
+            let languageToUse: String?
+            if let providedLanguage = language {
+                // Language explicitly provided (e.g., from iOS metadata)
+                languageToUse = providedLanguage
+                print("🌐 Using provided language: \(providedLanguage)")
+            } else {
+                // Use macOS app settings
+                languageToUse = settings.whisperAutoDetectLanguage ? nil : settings.selectedLanguage
+            }
+
+            let shouldDetectLanguage = (languageToUse == nil) || settings.whisperAutoDetectLanguage
 
 
             // Get initial prompt from settings (for advanced users)
@@ -354,7 +366,7 @@ class WhisperService: ObservableObject {
             let decodeOptions = DecodingOptions(
                 verbose: true,
                 task: task,
-                language: language,
+                language: languageToUse,
                 temperature: Float(settings.whisperTemperature),
                 temperatureIncrementOnFallback: 0.2,
                 temperatureFallbackCount: 5,
