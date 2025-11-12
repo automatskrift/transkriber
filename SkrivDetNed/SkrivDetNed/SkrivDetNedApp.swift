@@ -52,10 +52,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     private var menuBarManager: MenuBarManager?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Setup menu bar
-        Task { @MainActor in
-            menuBarManager = MenuBarManager.shared
-        }
+        // Setup menu bar immediately for responsiveness
+        menuBarManager = MenuBarManager.shared
 
         // Request notification permissions
         UNUserNotificationCenter.current().delegate = self
@@ -65,38 +63,48 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             }
         }
 
-        // Setup application support directories
-        do {
-            _ = try FileSystemHelper.shared.createApplicationSupportDirectory()
-            _ = try FileSystemHelper.shared.createModelsDirectory()
-        } catch {
-            print("Failed to create application support directories: \(error)")
-        }
+        // Defer heavy initialization to background
+        Task {
+            // Small delay to let UI render first
+            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
 
-        // Start heartbeat to let iOS know Mac is online
-        Task { @MainActor in
-            iCloudSyncService.shared.startHeartbeat()
-        }
+            // Setup application support directories
+            do {
+                _ = try FileSystemHelper.shared.createApplicationSupportDirectory()
+                _ = try FileSystemHelper.shared.createModelsDirectory()
+            } catch {
+                print("Failed to create application support directories: \(error)")
+            }
 
-        // Restore folder monitoring if it was enabled
-        Task { @MainActor in
-            if AppSettings.shared.isMonitoringEnabled {
-                print("📂 Restoring folder monitoring on app launch...")
-                let restored = FolderMonitorService.shared.restoreMonitoringFromBookmark()
-                if restored {
-                    print("✅ Folder monitoring restored successfully")
-                } else {
-                    print("⚠️ Failed to restore folder monitoring")
-                    // Reset the flag if restoration failed
-                    AppSettings.shared.isMonitoringEnabled = false
+            // Start heartbeat to let iOS know Mac is online
+            await MainActor.run {
+                iCloudSyncService.shared.startHeartbeat()
+            }
+
+            // Restore folder monitoring if it was enabled
+            await MainActor.run {
+                if AppSettings.shared.isMonitoringEnabled {
+                    print("📂 Restoring folder monitoring on app launch...")
+                    let restored = FolderMonitorService.shared.restoreMonitoringFromBookmark()
+                    if restored {
+                        print("✅ Folder monitoring restored successfully")
+                    } else {
+                        print("⚠️ Failed to restore folder monitoring")
+                        // Reset the flag if restoration failed
+                        AppSettings.shared.isMonitoringEnabled = false
+                    }
                 }
             }
-        }
 
-        // Migrate existing transcriptions to Core Data (first launch after update)
-        Task { @MainActor in
-            print("🗄️ Checking for existing transcriptions to import...")
-            await TranscriptionDatabase.shared.importExistingTranscriptions()
+            // Migrate existing transcriptions to Core Data (first launch after update)
+            // Do this last and with a longer delay as it's not urgent
+            try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+            await MainActor.run {
+                print("🗄️ Checking for existing transcriptions to import...")
+                Task {
+                    await TranscriptionDatabase.shared.importExistingTranscriptions()
+                }
+            }
         }
     }
 

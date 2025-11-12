@@ -40,20 +40,24 @@ class FolderMonitorViewModel: ObservableObject {
 
     private init() {
         setupObservers()
-        loadSavedFolder()
-        setupiCloudMonitoring()
 
-        // Start refresh timer for iCloud files (every 5 seconds)
-        if settings.iCloudSyncEnabled {
-            iCloudRefreshTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { @Sendable [weak self] _ in
-                Task { @MainActor [weak self] in
-                    await self?.refreshiCloudFileLists()
+        // Defer heavy initialization to avoid blocking app startup
+        Task {
+            // Small delay to let UI render first
+            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+
+            loadSavedFolder()
+            await setupiCloudMonitoring()
+
+            // Start refresh timer for iCloud files (every 5 seconds)
+            if settings.iCloudSyncEnabled {
+                iCloudRefreshTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { @Sendable [weak self] _ in
+                    Task { @MainActor [weak self] in
+                        await self?.refreshiCloudFileLists()
+                    }
                 }
-            }
-            // Initial refresh - delayed to not block app startup
-            Task {
-                // Wait 1 second before first refresh to let UI show up
-                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                // Initial refresh - delayed to not block app startup
+                try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
                 await refreshiCloudFileLists()
             }
         }
@@ -63,34 +67,27 @@ class FolderMonitorViewModel: ObservableObject {
         iCloudRefreshTimer?.invalidate()
     }
 
-    private func setupiCloudMonitoring() {
+    private func setupiCloudMonitoring() async {
         // Start iCloud monitoring if enabled
         if settings.iCloudSyncEnabled {
-            // Don't block app startup - do this in background
-            Task.detached { [weak self] in
-                guard let self = self else { return }
+            // Check availability first
+            await iCloudSyncService.shared.checkiCloudAvailability()
 
-                // Check availability first
-                await iCloudSyncService.shared.checkiCloudAvailability()
+            // Wait a moment for iCloud to be ready
+            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
 
-                // Wait a moment for iCloud to be ready
-                try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
-
-                // Start monitoring
-                await MainActor.run {
-                    iCloudSyncService.shared.startMonitoring { [weak self] url in
-                        Task { @MainActor in
-                            await self?.handleiCloudFile(url)
-                        }
-                    }
+            // Start monitoring
+            iCloudSyncService.shared.startMonitoring { [weak self] url in
+                Task { @MainActor in
+                    await self?.handleiCloudFile(url)
                 }
+            }
 
-                // Check for pending files that need retry
-                let pendingFiles = await self.iCloudService.checkForPendingFiles()
-                if !pendingFiles.isEmpty {
-                    for url in pendingFiles {
-                        await self.handleiCloudFile(url)
-                    }
+            // Check for pending files that need retry
+            let pendingFiles = await self.iCloudService.checkForPendingFiles()
+            if !pendingFiles.isEmpty {
+                for url in pendingFiles {
+                    await self.handleiCloudFile(url)
                 }
             }
         }
