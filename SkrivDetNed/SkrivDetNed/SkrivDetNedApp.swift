@@ -49,11 +49,8 @@ struct SkrivDetNedApp: App {
 }
 
 class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
-    private var menuBarManager: MenuBarManager?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Setup menu bar immediately for responsiveness
-        menuBarManager = MenuBarManager.shared
 
         // Request notification permissions
         UNUserNotificationCenter.current().delegate = self
@@ -125,8 +122,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-        // Don't quit when window is closed, keep running in background
-        return false
+        // Quit when window is closed since we don't have menubar
+        return true
     }
 
     // MARK: - UNUserNotificationCenterDelegate

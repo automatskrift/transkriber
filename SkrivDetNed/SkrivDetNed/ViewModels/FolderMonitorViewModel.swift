@@ -13,11 +13,7 @@ import Combine
 class FolderMonitorViewModel: ObservableObject {
     static let shared = FolderMonitorViewModel()
 
-    @Published var isMonitoring = false {
-        didSet {
-            MenuBarManager.shared.isMonitoring = isMonitoring
-        }
-    }
+    @Published var isMonitoring = false
     @Published var selectedFolderURL: URL?
     @Published var pendingFiles: [URL] = []
     @Published var recentlyCompleted: [TranscriptionTask] = []
