@@ -40,11 +40,61 @@ class WhisperService: ObservableObject {
     private var currentModel: WhisperModelType?
     private var lastReportedProgress: Double = 0.0
     private var isLocked = false  // Prevent concurrent transcriptions
+    private var lastTranscriptionTime: Date?
+    private var modelUnloadTimer: Timer?
 
     private init() {}
 
+    /// Unload the current WhisperKit model to free up memory
+    func unloadModel() async {
+        // Cancel any unload timer
+        modelUnloadTimer?.invalidate()
+        modelUnloadTimer = nil
+
+        if whisperKit != nil {
+            print("♻️ Freeing memory from WhisperKit model")
+
+            // Cancel any ongoing transcription
+            if isTranscribing {
+                cancelTranscription()
+            }
+
+            // Release the WhisperKit instance
+            whisperKit = nil
+            currentModel = nil
+
+            // Give the system a moment to reclaim memory
+            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+
+            print("✅ Model unloaded, memory freed")
+        }
+    }
+
+    /// Schedule automatic unloading of model after inactivity
+    private func scheduleModelUnload() {
+        // Cancel any existing timer
+        modelUnloadTimer?.invalidate()
+
+        // Schedule unload after 5 minutes of inactivity (to save memory)
+        modelUnloadTimer = Timer.scheduledTimer(withTimeInterval: 300, repeats: false) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+                if !self.isTranscribing {
+                    print("⏰ Auto-unloading model after 5 minutes of inactivity")
+                    await self.unloadModel()
+                }
+            }
+        }
+    }
+
     func loadModel(_ modelType: WhisperModelType) async throws {
         print("🔄 Loading WhisperKit model: \(modelType.displayName)")
+
+        // Clean up existing model if switching to a different one
+        if let existingModel = currentModel, existingModel != modelType {
+            print("🧹 Unloading previous model: \(existingModel.displayName)")
+            await unloadModel()
+        }
 
         // Pre-flight checks before attempting to load model
         let sysReq = SystemRequirements.shared
@@ -269,6 +319,9 @@ class WhisperService: ObservableObject {
             isTranscribing = false
             currentProgress = 0.0
             currentTranscribingText = ""
+            lastTranscriptionTime = Date()
+            // Schedule automatic unload after inactivity
+            scheduleModelUnload()
         }
 
         print("🎙️ Transcribing: \(audioURL.lastPathComponent) with \(modelType.displayName)")
