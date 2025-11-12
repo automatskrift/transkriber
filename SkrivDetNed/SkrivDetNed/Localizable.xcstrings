@@ -794,7 +794,7 @@
       }
     },
     "Cancel" : {
-      "comment" : "Cancel\nCancel loading"
+      "comment" : "Cancel"
     },
     "Choose folder" : {
       "comment" : "Step 1 title",

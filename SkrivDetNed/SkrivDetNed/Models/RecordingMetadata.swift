@@ -117,28 +117,39 @@ struct RecordingMetadata: Codable {
         // Use NSFileCoordinator for iCloud files to ensure consistent reads
         let data: Data
         if directory.path.contains("Mobile Documents") {
-            // Use immediate reading to avoid blocking on iCloud downloads
+            // Try NSFileCoordinator first, but with a timeout
             var coordinatorError: NSError?
             var readData: Data?
             var readError: Error?
 
             let coordinator = NSFileCoordinator(filePresenter: nil)
+            let semaphore = DispatchSemaphore(value: 0)
 
-            // Use .immediatelyAvailableMetadataOnly to avoid blocking on downloads
-            coordinator.coordinate(readingItemAt: metadataURL,
-                                  options: [.immediatelyAvailableMetadataOnly],
-                                  error: &coordinatorError) { url in
-                do {
-                    readData = try Data(contentsOf: url)
-                } catch {
-                    readError = error
-                    print("⚠️ Error reading metadata file: \(error)")
+            // Start coordinated read in background
+            DispatchQueue.global(qos: .userInitiated).async {
+                coordinator.coordinate(readingItemAt: metadataURL,
+                                      options: [],  // No special options, let it work normally
+                                      error: &coordinatorError) { url in
+                    do {
+                        readData = try Data(contentsOf: url)
+                    } catch {
+                        readError = error
+                    }
                 }
+                semaphore.signal()
             }
 
-            if let error = coordinatorError {
-                print("⚠️ NSFileCoordinator error: \(error)")
-                // Fall back to direct read on coordinator error
+            // Wait for max 1 second
+            let timeout = DispatchTime.now() + .seconds(1)
+            let result = semaphore.wait(timeout: timeout)
+
+            if result == .timedOut {
+                print("⚠️ NSFileCoordinator timed out, using direct read")
+                // Timeout - fall back to direct read
+                data = try Data(contentsOf: metadataURL)
+            } else if let error = coordinatorError {
+                print("⚠️ NSFileCoordinator error: \(error), falling back to direct read")
+                // Permission error - fall back to direct read
                 data = try Data(contentsOf: metadataURL)
             } else if let error = readError {
                 print("⚠️ Read error: \(error)")
