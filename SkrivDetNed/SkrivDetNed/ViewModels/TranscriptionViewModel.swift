@@ -262,6 +262,24 @@ class TranscriptionViewModel: ObservableObject {
         let pendingTask = TranscriptionTask(audioFileURL: url)
         activeTasks.append(pendingTask)
 
+        // Update iCloud metadata to "queued" status if this is from iCloud
+        if url.path.contains("Mobile Documents"),
+           let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL() {
+            do {
+                if var metadata = try RecordingMetadata.load(for: url.lastPathComponent, from: recordingsFolder) {
+                    // Only update to queued if status is pending (don't override failed, completed, etc.)
+                    if metadata.status == .pending {
+                        metadata.status = .queued
+                        metadata.updatedAt = Date()
+                        try metadata.save(to: recordingsFolder)
+                        print("   📝 Updated iCloud metadata to 'queued' status")
+                    }
+                }
+            } catch {
+                print("   ⚠️ Failed to update metadata to queued: \(error)")
+            }
+        }
+
         print("➕ Added to transcription queue: \(url.lastPathComponent)")
         print("   Queue length: \(taskQueue.count)")
         print("   Active tasks (including pending): \(activeTasks.count)")
@@ -841,6 +859,24 @@ class TranscriptionViewModel: ObservableObject {
             currentTask = nil
         }
 
+        // Update iCloud metadata back to "pending" if this was from iCloud
+        if url.path.contains("Mobile Documents"),
+           let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL() {
+            do {
+                if var metadata = try RecordingMetadata.load(for: url.lastPathComponent, from: recordingsFolder) {
+                    // Only update if status was queued (don't override completed, failed, etc.)
+                    if metadata.status == .queued {
+                        metadata.status = .pending
+                        metadata.updatedAt = Date()
+                        try metadata.save(to: recordingsFolder)
+                        print("   📝 Updated iCloud metadata back to 'pending' status")
+                    }
+                }
+            } catch {
+                print("   ⚠️ Failed to update metadata to pending: \(error)")
+            }
+        }
+
         print("🗑️ Removed \(url.lastPathComponent) from transcription processing")
     }
 
@@ -871,6 +907,12 @@ class TranscriptionViewModel: ObservableObject {
 
         taskQueue = newQueue
         print("📝 Moved \(fileURL.lastPathComponent) to position \(destinationIndex)")
+    }
+
+    /// Update the entire queue order (used by drag and drop)
+    func updateQueueOrder(_ newOrder: [URL]) {
+        taskQueue = newOrder
+        print("📝 Queue reordered via drag and drop: \(taskQueue.map { $0.lastPathComponent })")
     }
 
     /// Cancel the current transcription

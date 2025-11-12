@@ -375,6 +375,9 @@ class FolderMonitorViewModel: ObservableObject {
                 }
 
                 switch metadata.status {
+                case .uploading:
+                    // Still being uploaded from iPhone, skip for now
+                    continue
                 case .pending, .downloading:
                     // Check if currently being transcribed
                     let isActive = transcriptionVM.activeTasks.contains { $0.audioFileURL.lastPathComponent == metadata.audioFileName }
@@ -387,6 +390,12 @@ class FolderMonitorViewModel: ObservableObject {
                             continue
                         }
 
+                        queued.append((audioURL, metadata))
+                    }
+                case .queued:
+                    // Already in queue on Mac
+                    let isActive = transcriptionVM.activeTasks.contains { $0.audioFileURL.lastPathComponent == metadata.audioFileName }
+                    if !isActive {
                         queued.append((audioURL, metadata))
                     }
                 case .completed:

@@ -160,7 +160,9 @@ struct RecordingMetadata: Codable {
 }
 
 enum RecordingStatus: String, Codable {
-    case pending = "pending"           // Waiting to be transcribed
+    case uploading = "uploading"       // Being uploaded to iCloud (from iPhone)
+    case pending = "pending"           // In iCloud, waiting to be queued
+    case queued = "queued"             // Added to transcription queue on Mac
     case downloading = "downloading"   // Downloading from iCloud
     case transcribing = "transcribing" // Currently being transcribed
     case completed = "completed"       // Transcription completed
@@ -168,17 +170,21 @@ enum RecordingStatus: String, Codable {
 
     var displayName: String {
         switch self {
-        case .pending: return NSLocalizedString("Afventer", comment: "")
-        case .downloading: return NSLocalizedString("Downloader...", comment: "")
-        case .transcribing: return NSLocalizedString("Transkriberer...", comment: "")
-        case .completed: return NSLocalizedString("Færdig", comment: "")
-        case .failed: return NSLocalizedString("Fejlet", comment: "")
+        case .uploading: return NSLocalizedString("Uploading", comment: "Status: Uploading")
+        case .pending: return NSLocalizedString("Pending", comment: "Status: Pending")
+        case .queued: return NSLocalizedString("In Queue", comment: "Status: In Queue")
+        case .downloading: return NSLocalizedString("Downloading...", comment: "Status: Downloading")
+        case .transcribing: return NSLocalizedString("Transcribing...", comment: "Status: Transcribing")
+        case .completed: return NSLocalizedString("Completed", comment: "Status: Completed")
+        case .failed: return NSLocalizedString("Failed", comment: "Status: Failed")
         }
     }
 
     var icon: String {
         switch self {
+        case .uploading: return "icloud.and.arrow.up"
         case .pending: return "clock"
+        case .queued: return "text.badge.plus"
         case .downloading: return "icloud.and.arrow.down"
         case .transcribing: return "waveform"
         case .completed: return "checkmark.circle.fill"

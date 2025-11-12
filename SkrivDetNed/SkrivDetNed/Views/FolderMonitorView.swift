@@ -141,12 +141,35 @@ struct FolderMonitorView: View {
                                     ForEach(Array(transcriptionVM.pendingQueue.enumerated()), id: \.element) { index, fileURL in
                                         PendingFileCard(fileURL: fileURL)
                                             .environmentObject(transcriptionVM)
-                                            .onDrop(of: [.fileURL], delegate: QueueDropDelegate(
-                                                item: fileURL,
-                                                items: transcriptionVM.pendingQueue,
-                                                transcriptionVM: transcriptionVM,
-                                                currentIndex: index
-                                            ))
+                                            .onDrop(of: [.url], isTargeted: nil) { providers in
+                                                // Handle drop
+                                                guard let provider = providers.first else { return false }
+
+                                                provider.loadItem(forTypeIdentifier: UTType.url.identifier, options: nil) { item, error in
+                                                    guard let data = item as? Data,
+                                                          let droppedURL = URL(dataRepresentation: data, relativeTo: nil) else { return }
+
+                                                    DispatchQueue.main.async {
+                                                        // Find source index
+                                                        if let sourceIndex = transcriptionVM.pendingQueue.firstIndex(of: droppedURL) {
+                                                            // Don't move if dropping on same position
+                                                            if sourceIndex != index {
+                                                                // Remove from old position
+                                                                var newQueue = transcriptionVM.pendingQueue
+                                                                newQueue.remove(at: sourceIndex)
+
+                                                                // Insert at new position
+                                                                let destinationIndex = sourceIndex < index ? index - 1 : index
+                                                                newQueue.insert(droppedURL, at: destinationIndex)
+
+                                                                // Update the queue through proper channel
+                                                                transcriptionVM.updateQueueOrder(newQueue)
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                return true
+                                            }
                                     }
                                 }
                             }
@@ -517,41 +540,6 @@ struct FolderMonitorView: View {
     }
 }
 
-// MARK: - Queue Drop Delegate for drag and drop reordering
-struct QueueDropDelegate: DropDelegate {
-    let item: URL
-    let items: [URL]
-    let transcriptionVM: TranscriptionViewModel
-    let currentIndex: Int
-
-    func dropEntered(info: DropInfo) {
-        // Visual feedback could be added here if needed
-    }
-
-    func dropUpdated(info: DropInfo) -> DropProposal? {
-        return DropProposal(operation: .move)
-    }
-
-    func performDrop(info: DropInfo) -> Bool {
-        // Find the source item
-        guard let provider = info.itemProviders(for: [.fileURL]).first else { return false }
-
-        provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { (item, error) in
-            guard let data = item as? Data,
-                  let sourceURL = URL(dataRepresentation: data, relativeTo: nil),
-                  let sourceIndex = items.firstIndex(of: sourceURL) else { return }
-
-            DispatchQueue.main.async {
-                // Calculate the destination index
-                let destinationIndex = currentIndex > sourceIndex ? currentIndex + 1 : currentIndex
-
-                // Move the item in the queue
-                transcriptionVM.moveFileInQueue(fileURL: sourceURL, to: destinationIndex)
-            }
-        }
-        return true
-    }
-}
 
 // MARK: - Pending File Card (Simple version for unified queue)
 struct PendingFileCard: View {
