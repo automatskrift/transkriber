@@ -160,6 +160,14 @@ struct AdvancedSettingsView: View {
                             Text(NSLocalizedString("Flere workers kan øge hastigheden på kraftige Macs, men bruger mere hukommelse.", comment: ""))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
+
+                            Divider()
+
+                            Toggle(NSLocalizedString("Automatisk frigør hukommelse efter 5 minutter", comment: "Auto-unload model setting"), isOn: $settings.autoUnloadModel)
+
+                            Text(NSLocalizedString("Frigører modellen fra hukommelsen efter 5 minutters inaktivitet. Anbefales for at spare RAM, især ved brug af Large modellen.", comment: "Auto-unload description"))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
                         }
                         .padding(8)
                     }
@@ -187,6 +195,7 @@ struct AdvancedSettingsView: View {
 
     private func resetToDefaults() {
         settings.whisperTemperature = 0.0
+        settings.autoUnloadModel = true
         settings.whisperTranslateToEnglish = false
         settings.whisperInitialPrompt = ""
         settings.whisperIncludeTimestamps = false

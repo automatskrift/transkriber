@@ -46,6 +46,7 @@ class AppSettings: ObservableObject {
     @AppStorage("whisperWordLevelTimestamps") var whisperWordLevelTimestamps: Bool = false
     @AppStorage("whisperThreadCount") var whisperThreadCount: Int = 1 // Number of concurrent workers (default 1 for stability)
     @AppStorage("whisperAutoDetectLanguage") var whisperAutoDetectLanguage: Bool = false
+    @AppStorage("autoUnloadModel") var autoUnloadModel: Bool = true // Auto-unload model after inactivity to save memory
 
     static let shared = AppSettings()
 

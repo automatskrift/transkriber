@@ -75,6 +75,11 @@ class WhisperService: ObservableObject {
         // Cancel any existing timer
         modelUnloadTimer?.invalidate()
 
+        // Only schedule if auto-unload is enabled
+        guard AppSettings.shared.autoUnloadModel else {
+            return
+        }
+
         // Schedule unload after 5 minutes of inactivity (to save memory)
         modelUnloadTimer = Timer.scheduledTimer(withTimeInterval: 300, repeats: false) { [weak self] _ in
             Task { @MainActor [weak self] in
