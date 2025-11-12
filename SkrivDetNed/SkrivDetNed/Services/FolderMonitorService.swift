@@ -35,6 +35,20 @@ class FolderMonitorService: ObservableObject {
     func startMonitoring(folder: URL) {
         guard !isMonitoring else { return }
 
+        // Save security-scoped bookmark for this folder
+        do {
+            try BookmarkManager.shared.saveBookmark(for: folder)
+        } catch {
+            print("❌ Failed to save bookmark: \(error)")
+            return
+        }
+
+        // Start accessing the security-scoped resource
+        guard folder.startAccessingSecurityScopedResource() else {
+            print("❌ Failed to start accessing security-scoped resource")
+            return
+        }
+
         self.monitoredFolder = folder
         self.isMonitoring = true
 
@@ -47,8 +61,35 @@ class FolderMonitorService: ObservableObject {
         }
     }
 
+    /// Restores monitoring from a saved bookmark (used on app launch)
+    func restoreMonitoringFromBookmark() -> Bool {
+        guard let folder = BookmarkManager.shared.resolveBookmark() else {
+            print("⚠️ Could not restore monitoring: no valid bookmark")
+            return false
+        }
+
+        self.monitoredFolder = folder
+        self.isMonitoring = true
+
+        // Start FSEvents monitoring
+        setupFSEvents(for: folder)
+
+        // Initial scan of folder
+        Task {
+            await scanFolderForNewFiles(folder)
+        }
+
+        print("✅ Restored monitoring for: \(folder.path)")
+        return true
+    }
+
     func stopMonitoring() {
         guard isMonitoring else { return }
+
+        // Stop accessing security-scoped resource
+        if let folder = monitoredFolder {
+            folder.stopAccessingSecurityScopedResource()
+        }
 
         isMonitoring = false
         monitoredFolder = nil
@@ -241,6 +282,8 @@ class FolderMonitorService: ObservableObject {
     }
 
     private func scanFolderForNewFiles(_ folder: URL) async {
+        print("🔍 scanFolderForNewFiles called for: \(folder.path)")
+
         let urls: [URL]
         do {
             urls = try FileManager.default.contentsOfDirectory(
@@ -248,10 +291,14 @@ class FolderMonitorService: ObservableObject {
                 includingPropertiesForKeys: [.isRegularFileKey],
                 options: [.skipsHiddenFiles]
             )
+            print("   📁 Found \(urls.count) files in folder")
         } catch {
             print("❌ Failed to scan folder: \(error)")
             return
         }
+
+        let audioFiles = urls.filter { FileSystemHelper.shared.isAudioFile($0) }
+        print("   🎵 Found \(audioFiles.count) audio files")
 
         for fileURL in urls {
             // Check if it's an audio file
@@ -259,18 +306,23 @@ class FolderMonitorService: ObservableObject {
                 continue
             }
 
+            print("   🔎 Checking audio file: \(fileURL.lastPathComponent)")
+
             // Check if file is ignored
             if AppSettings.shared.ignoredFiles.contains(fileURL.path) {
+                print("      ⏭️ File is ignored")
                 continue
             }
 
             // Check if already processed
             guard !processedFiles.contains(fileURL.path) else {
+                print("      ⏭️ Already processed")
                 continue
             }
 
             // Check if transcription already exists
             guard !FileSystemHelper.shared.transcriptionFileExists(for: fileURL) else {
+                print("      ⏭️ Transcription already exists")
                 continue
             }
 
@@ -296,8 +348,11 @@ class FolderMonitorService: ObservableObject {
             }
 
             // Add to pending queue
+            print("      ✅ File passes all checks, processing...")
             await handleFileSystemEvent(at: fileURL)
         }
+
+        print("   🏁 Finished scanning folder")
     }
 
     private func addToPendingQueue(_ url: URL) async {

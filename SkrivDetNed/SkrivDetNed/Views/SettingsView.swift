@@ -12,6 +12,9 @@ struct SettingsView: View {
     @ObservedObject private var settings = AppSettings.shared
     @State private var showingAdvancedSettings = false
     @State private var showingIgnoredFiles = false
+    @State private var downloadedModels: Set<String> = []
+    @State private var showDeleteAlert = false
+    @State private var modelToDelete: WhisperModelType?
 
     var body: some View {
         ScrollView {
@@ -19,23 +22,55 @@ struct SettingsView: View {
                 // Models Section
                 GroupBox(label: Label(NSLocalizedString("WhisperKit Modeller", comment: ""), systemImage: "cpu")) {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text(NSLocalizedString("Modeller downloades automatisk første gang de bruges", comment: ""))
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        HStack {
+                            Text(NSLocalizedString("Modeller downloades automatisk første gang de bruges", comment: ""))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+
+                            Spacer()
+
+                            Button(action: openModelsFolder) {
+                                Label(NSLocalizedString("Åbn model-folder", comment: ""), systemImage: "folder")
+                                    .font(.caption)
+                            }
+                            .buttonStyle(.borderless)
+                        }
 
                         Divider()
 
                         ForEach(WhisperModelType.allCases) { modelType in
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text(modelType.displayName)
-                                        .font(.headline)
+                                    HStack(spacing: 6) {
+                                        Text(modelType.displayName)
+                                            .font(.headline)
+
+                                        // Show downloaded indicator
+                                        if isModelDownloaded(modelType) {
+                                            Image(systemName: "checkmark.circle.fill")
+                                                .foregroundColor(.blue)
+                                                .font(.caption)
+                                        }
+                                    }
                                     Text(modelType.description)
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
 
                                 Spacer()
+
+                                // Delete button for downloaded models
+                                if isModelDownloaded(modelType) {
+                                    Button(action: {
+                                        modelToDelete = modelType
+                                        showDeleteAlert = true
+                                    }) {
+                                        Image(systemName: "trash")
+                                            .foregroundColor(.red)
+                                    }
+                                    .buttonStyle(.borderless)
+                                    .help(NSLocalizedString("Slet model", comment: ""))
+                                }
 
                                 if settings.selectedModel == modelType.rawValue {
                                     Image(systemName: "checkmark.circle.fill")
@@ -81,12 +116,6 @@ struct SettingsView: View {
                                     .foregroundColor(.red)
                             }
                         }
-
-                        Divider()
-
-                        Toggle(NSLocalizedString("Overvåg også lokal mappe", comment: ""), isOn: $settings.monitorLocalFolderEnabled)
-                            .help(NSLocalizedString("Overvåg både iCloud og en lokal mappe samtidig", comment: ""))
-                            .disabled(!settings.iCloudSyncEnabled)
 
                         if let iCloudURL = iCloudSyncService.shared.getRecordingsFolderURL() {
                             HStack {
@@ -191,8 +220,137 @@ struct SettingsView: View {
         .sheet(isPresented: $showingIgnoredFiles) {
             IgnoredFilesView()
         }
+        .alert(NSLocalizedString("Slet model?", comment: ""), isPresented: $showDeleteAlert) {
+            Button(NSLocalizedString("Slet", comment: ""), role: .destructive) {
+                if let model = modelToDelete {
+                    deleteModel(model)
+                }
+            }
+            Button(NSLocalizedString("Annuller", comment: ""), role: .cancel) {}
+        } message: {
+            if let model = modelToDelete {
+                Text(String(format: NSLocalizedString("Er du sikker på at du vil slette %@? Du kan altid downloade den igen senere.", comment: ""), model.displayName))
+            }
+        }
         .onAppear {
             viewModel.refreshModels()
+            checkDownloadedModels()
+        }
+    }
+
+    private func openModelsFolder() {
+        // WhisperKit stores models in ~/Documents/huggingface/models/ by default
+        let fileManager = FileManager.default
+        guard let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            print("❌ Could not get documents directory")
+            return
+        }
+
+        let huggingfaceModelsDir = documentsURL
+            .appendingPathComponent("huggingface")
+            .appendingPathComponent("models")
+            .appendingPathComponent("argmaxinc")
+            .appendingPathComponent("whisperkit-coreml")
+
+        // Check if folder exists, if not open the huggingface folder or documents folder
+        var folderToOpen = huggingfaceModelsDir
+        if !fileManager.fileExists(atPath: huggingfaceModelsDir.path) {
+            let huggingfaceDir = documentsURL.appendingPathComponent("huggingface")
+            if fileManager.fileExists(atPath: huggingfaceDir.path) {
+                folderToOpen = huggingfaceDir
+            } else {
+                folderToOpen = documentsURL
+            }
+        }
+
+        print("📂 Opening models folder: \(folderToOpen.path)")
+        NSWorkspace.shared.activateFileViewerSelecting([folderToOpen])
+    }
+
+    private func checkDownloadedModels() {
+        let fileManager = FileManager.default
+        guard let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            return
+        }
+
+        let modelsBaseDir = documentsURL
+            .appendingPathComponent("huggingface")
+            .appendingPathComponent("models")
+            .appendingPathComponent("argmaxinc")
+            .appendingPathComponent("whisperkit-coreml")
+
+        guard fileManager.fileExists(atPath: modelsBaseDir.path) else {
+            downloadedModels = []
+            return
+        }
+
+        var downloaded = Set<String>()
+
+        // Check each model type
+        for modelType in WhisperModelType.allCases {
+            let modelVariant: String
+            switch modelType {
+            case .tiny: modelVariant = "openai_whisper-tiny"
+            case .base: modelVariant = "openai_whisper-base"
+            case .small: modelVariant = "openai_whisper-small"
+            case .medium: modelVariant = "openai_whisper-medium"
+            case .large: modelVariant = "openai_whisper-large-v3"
+            }
+
+            let modelPath = modelsBaseDir.appendingPathComponent(modelVariant)
+            if fileManager.fileExists(atPath: modelPath.path) {
+                downloaded.insert(modelType.rawValue)
+                print("✅ Found downloaded model: \(modelVariant)")
+            }
+        }
+
+        downloadedModels = downloaded
+    }
+
+    private func isModelDownloaded(_ modelType: WhisperModelType) -> Bool {
+        return downloadedModels.contains(modelType.rawValue)
+    }
+
+    private func deleteModel(_ modelType: WhisperModelType) {
+        let fileManager = FileManager.default
+        guard let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            print("❌ Could not get documents directory")
+            return
+        }
+
+        let modelsBaseDir = documentsURL
+            .appendingPathComponent("huggingface")
+            .appendingPathComponent("models")
+            .appendingPathComponent("argmaxinc")
+            .appendingPathComponent("whisperkit-coreml")
+
+        let modelVariant: String
+        switch modelType {
+        case .tiny: modelVariant = "openai_whisper-tiny"
+        case .base: modelVariant = "openai_whisper-base"
+        case .small: modelVariant = "openai_whisper-small"
+        case .medium: modelVariant = "openai_whisper-medium"
+        case .large: modelVariant = "openai_whisper-large-v3"
+        }
+
+        let modelPath = modelsBaseDir.appendingPathComponent(modelVariant)
+
+        do {
+            if fileManager.fileExists(atPath: modelPath.path) {
+                try fileManager.removeItem(at: modelPath)
+                print("🗑️ Deleted model: \(modelVariant) at \(modelPath.path)")
+
+                // Update downloaded models set
+                downloadedModels.remove(modelType.rawValue)
+
+                // If this was the selected model, reset to tiny
+                if settings.selectedModel == modelType.rawValue {
+                    settings.selectedModel = WhisperModelType.tiny.rawValue
+                    print("⚠️ Deleted selected model, reset to Tiny")
+                }
+            }
+        } catch {
+            print("❌ Failed to delete model: \(error)")
         }
     }
 }

@@ -199,12 +199,42 @@ class FolderMonitorViewModel: ObservableObject {
     }
 
     private func loadSavedFolder() {
-        if let folderURL = settings.monitoredFolderURL {
+        print("📂 loadSavedFolder called")
+        print("   hasBookmark: \(BookmarkManager.shared.hasBookmark)")
+        print("   isMonitoringEnabled: \(settings.isMonitoringEnabled)")
+
+        // Try to restore from bookmark first (more reliable with sandboxing)
+        if BookmarkManager.shared.hasBookmark {
+            if settings.isMonitoringEnabled {
+                print("   🔄 Attempting to restore monitoring from bookmark...")
+                // Restore monitoring using the saved bookmark
+                let restored = monitorService.restoreMonitoringFromBookmark()
+                if restored {
+                    print("   ✅ Restored monitoring from bookmark")
+                    // Update selectedFolderURL to match what's being monitored
+                    if let folderURL = monitorService.monitoredFolder {
+                        selectedFolderURL = folderURL
+                        print("   📁 Set selectedFolderURL to: \(folderURL.path)")
+                    }
+                } else {
+                    print("   ⚠️ Failed to restore monitoring from bookmark")
+                }
+            } else if let path = BookmarkManager.shared.getSavedBookmarkPath() {
+                // Just set the selected folder (don't start monitoring)
+                selectedFolderURL = URL(fileURLWithPath: path)
+                print("   📁 Set selectedFolderURL (monitoring disabled): \(path)")
+            }
+        } else if let folderURL = settings.monitoredFolderURL {
+            print("   🔄 Fallback: Using old settings.monitoredFolderURL")
+            // Fallback to old method (for migration)
             selectedFolderURL = folderURL
 
             if settings.isMonitoringEnabled {
+                print("   ▶️ Starting monitoring via old method...")
                 startMonitoring()
             }
+        } else {
+            print("   ℹ️ No saved folder found")
         }
     }
 
@@ -237,24 +267,15 @@ class FolderMonitorViewModel: ObservableObject {
             return
         }
 
-        // Request security scoped access
-        guard folderURL.startAccessingSecurityScopedResource() else {
-            print("Failed to access security scoped resource")
-            return
-        }
-
+        // FolderMonitorService now handles security-scoped access and bookmark saving
         monitorService.startMonitoring(folder: folderURL)
         settings.isMonitoringEnabled = true
     }
 
     func stopMonitoring() {
+        // FolderMonitorService now handles security-scoped access cleanup
         monitorService.stopMonitoring()
         settings.isMonitoringEnabled = false
-
-        // Stop accessing security scoped resource
-        if let folderURL = selectedFolderURL {
-            folderURL.stopAccessingSecurityScopedResource()
-        }
     }
 
     func toggleMonitoring() {

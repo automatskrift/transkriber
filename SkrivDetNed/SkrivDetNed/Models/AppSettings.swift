@@ -23,7 +23,6 @@ class AppSettings: ObservableObject {
 
     // iCloud sync settings
     @AppStorage("iCloudSyncEnabled") var iCloudSyncEnabled: Bool = true
-    @AppStorage("monitorLocalFolderEnabled") var monitorLocalFolderEnabled: Bool = true
 
     // Ignored files (failed transcriptions that user wants to skip)
     @AppStorage("ignoredFiles") private var ignoredFilesData: Data = Data()

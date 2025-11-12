@@ -51,7 +51,7 @@ enum WhisperModelType: String, CaseIterable, Identifiable {
         case .medium:
             return NSLocalizedString("Høj nøjagtighed for længere optagelser", comment: "")
         case .large:
-            return NSLocalizedString("Bedste nøjagtighed (v3), langsommere", comment: "")
+            return NSLocalizedString("Bedste nøjagtighed (v3) - anbefales til andre sprog end engelsk", comment: "")
         }
     }
 

@@ -54,6 +54,7 @@ struct MainView: View {
                 if selectedTab == .manual {
                     ManualTranscriptionView()
                         .environmentObject(transcriptionVM)
+                        .environmentObject(whisperService)
                 } else {
                     Color.clear
                 }

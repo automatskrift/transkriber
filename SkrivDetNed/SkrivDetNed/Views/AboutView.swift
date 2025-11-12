@@ -18,113 +18,108 @@ struct AboutView: View {
     }
 
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 16) {
             // App Icon
             if let nsImage = NSImage(named: "AppIcon") {
                 Image(nsImage: nsImage)
                     .resizable()
-                    .frame(width: 128, height: 128)
-                    .cornerRadius(22)
-                    .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
+                    .frame(width: 96, height: 96)
+                    .cornerRadius(18)
+                    .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
             } else {
                 Image(systemName: "waveform.circle.fill")
-                    .font(.system(size: 80))
+                    .font(.system(size: 60))
                     .foregroundStyle(.linearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing))
             }
 
-            // App Name
-            Text(NSLocalizedString("SkrivDetNed", comment: ""))
-                .font(.largeTitle)
-                .fontWeight(.bold)
+            // App Name & Version
+            VStack(spacing: 4) {
+                Text(NSLocalizedString("SkrivDetNed", comment: "App name"))
+                    .font(.title2)
+                    .fontWeight(.bold)
 
-            // Version
-            Text("Version \(appVersion)")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+                Text("Version \(appVersion)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
 
             Divider()
-                .padding(.vertical)
+                .padding(.vertical, 4)
 
             // Description
             VStack(alignment: .leading, spacing: 12) {
-                Text(String(format: NSLocalizedString("Om %@", comment: ""), NSLocalizedString("SkrivDetNed", comment: "")))
-                    .font(.headline)
+                // Main description with iPhone integration
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "iphone.and.laptop")
+                        .font(.title3)
+                        .foregroundColor(.accentColor)
 
-                Text(String(format: NSLocalizedString("%@ er en intelligent macOS-applikation der automatisk transkriberer dine lydoptagelser ved hjælp af avanceret talegenkendelse.", comment: ""), NSLocalizedString("SkrivDetNed", comment: "")))
-                    .font(.body)
-                    .foregroundColor(.secondary)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(NSLocalizedString("Mac companion app for automatic transcription", comment: "About description"))
+                            .font(.body)
+                            .fontWeight(.medium)
 
-                Text(NSLocalizedString("Funktioner:", comment: ""))
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .padding(.top, 8)
-
-                VStack(alignment: .leading, spacing: 6) {
-                    FeatureRow(icon: "folder.badge.gearshape", text: NSLocalizedString("Automatisk mappeovervågning", comment: ""))
-                    FeatureRow(icon: "waveform", text: NSLocalizedString("AI-baseret transskribering", comment: ""))
-                    FeatureRow(icon: "icloud", text: NSLocalizedString("iCloud Drive support", comment: ""))
-                    FeatureRow(icon: "bell", text: NSLocalizedString("Notifikationer", comment: ""))
-                    FeatureRow(icon: "lock.shield", text: NSLocalizedString("Lokal behandling - ingen cloud", comment: ""))
+                        Text(NSLocalizedString("Record audio on your iPhone using the companion app. Your recordings sync via iCloud and are automatically transcribed on your Mac.", comment: "About iPhone integration"))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
-                .font(.caption)
+                .padding(.horizontal, 8)
             }
-            .frame(maxWidth: 400)
+            .frame(maxWidth: 340)
 
             Divider()
-                .padding(.vertical)
+                .padding(.vertical, 4)
 
-            // Website link
-            Button(action: {
-                if let url = URL(string: "https://omdethele.dk/apps") {
-                    openURL(url)
+            // Links
+            HStack(spacing: 16) {
+                Button(action: {
+                    if let url = URL(string: "https://omdethele.dk/apps") {
+                        openURL(url)
+                    }
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "globe")
+                        Text(NSLocalizedString("Website", comment: "Website link"))
+                    }
+                    .font(.caption)
                 }
-            }) {
-                HStack(spacing: 6) {
-                    Image(systemName: "globe")
-                    Text(NSLocalizedString("Besøg hjemmeside", comment: ""))
-                    Image(systemName: "arrow.up.forward")
-                        .font(.caption)
+                .buttonStyle(.link)
+
+                Text("•")
+                    .foregroundColor(.secondary)
+                    .font(.caption)
+
+                Button(action: {
+                    if let url = URL(string: "https://apps.apple.com/app/skrivdetned") {
+                        openURL(url)
+                    }
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "iphone")
+                        Text(NSLocalizedString("iPhone App", comment: "iPhone app link"))
+                    }
+                    .font(.caption)
                 }
+                .buttonStyle(.link)
             }
-            .buttonStyle(.link)
-            .controlSize(.large)
 
             // Copyright
-            VStack(spacing: 4) {
-                Text(NSLocalizedString("Copyright © 2025 Tomas Thøfner", comment: ""))
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-
-                Text(NSLocalizedString("Alle rettigheder forbeholdes", comment: ""))
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-            }
+            Text(NSLocalizedString("© 2025 Tomas Thøfner", comment: "Copyright"))
+                .font(.caption2)
+                .foregroundColor(.secondary)
 
             // Close button
-            Button(NSLocalizedString("Luk", comment: "")) {
+            Button(NSLocalizedString("Close", comment: "Close button")) {
                 dismiss()
             }
             .keyboardShortcut(.defaultAction)
             .buttonStyle(.borderedProminent)
-            .padding(.top)
+            .controlSize(.small)
         }
-        .padding(32)
-        .frame(width: 500)
-    }
-}
-
-struct FeatureRow: View {
-    let icon: String
-    let text: String
-
-    var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: icon)
-                .foregroundColor(.accentColor)
-                .frame(width: 20)
-            Text(text)
-                .foregroundColor(.secondary)
-        }
+        .padding(24)
+        .frame(width: 400)
     }
 }
 

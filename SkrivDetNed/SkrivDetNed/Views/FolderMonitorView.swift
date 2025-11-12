@@ -12,6 +12,16 @@ struct FolderMonitorView: View {
     @EnvironmentObject private var transcriptionVM: TranscriptionViewModel
     @EnvironmentObject private var whisperService: WhisperService
 
+    // Computed property to avoid AttributeGraph cycle
+    private var processingTasks: [TranscriptionTask] {
+        transcriptionVM.activeTasks.filter { task in
+            if case .processing = task.status {
+                return true
+            }
+            return false
+        }
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
@@ -104,6 +114,96 @@ struct FolderMonitorView: View {
                 Divider()
                     .padding(.vertical, 8)
 
+                // MARK: - Active Transcription Section
+                // Only show tasks that are actively processing, not pending ones
+                if whisperService.isDownloadingModel || whisperService.isLoadingModel || !processingTasks.isEmpty {
+                    GroupBox(label: Label(NSLocalizedString("Aktuel Opgave", comment: "Current task"), systemImage: "waveform.circle")) {
+                        VStack(spacing: 16) {
+                            // Model downloading banner
+                            if whisperService.isDownloadingModel {
+                                VStack(alignment: .leading, spacing: 12) {
+                                    HStack {
+                                        Image(systemName: "arrow.down.circle.fill")
+                                            .foregroundColor(.blue)
+                                            .imageScale(.large)
+
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(NSLocalizedString("Downloader WhisperKit model", comment: ""))
+                                                .font(.headline)
+
+                                            if let modelName = whisperService.downloadingModelName {
+                                                Text(modelName)
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                            }
+
+                                            // Show percentage progress if available
+                                            if whisperService.downloadProgress > 0 {
+                                                Text("Download: \(Int(whisperService.downloadProgress * 100))%")
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                            }
+                                        }
+
+                                        Spacer()
+
+                                        ProgressView(value: whisperService.downloadProgress)
+                                            .frame(width: 60)
+                                    }
+                                }
+                                .padding(12)
+                                .background(Color.blue.opacity(0.1))
+                                .cornerRadius(8)
+                            }
+
+                            // Model loading banner
+                            if whisperService.isLoadingModel {
+                                VStack(alignment: .leading, spacing: 12) {
+                                    HStack {
+                                        Image(systemName: "cpu")
+                                            .foregroundColor(.orange)
+                                            .imageScale(.large)
+
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(NSLocalizedString("Indlæser WhisperKit model", comment: ""))
+                                                .font(.headline)
+
+                                            if let modelName = whisperService.downloadingModelName {
+                                                Text(modelName)
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                            }
+
+                                            Text(NSLocalizedString("Indlæser model i hukommelsen...", comment: ""))
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+
+                                        Spacer()
+
+                                        ProgressView()
+                                            .frame(width: 60)
+                                    }
+                                }
+                                .padding(12)
+                                .background(Color.orange.opacity(0.1))
+                                .cornerRadius(8)
+                            }
+
+                            // Currently transcribing (only show tasks that are actually processing)
+                            if !processingTasks.isEmpty {
+                                ForEach(processingTasks) { task in
+                                    TranscriptionTaskRow(task: task)
+                                }
+                            }
+                        }
+                        .padding(.vertical, 8)
+                    }
+
+                    Divider()
+                        .padding(.vertical, 8)
+                }
+
                 // MARK: - iCloud Section
                 GroupBox(label:
                     HStack {
@@ -121,54 +221,6 @@ struct FolderMonitorView: View {
                     }
                 ) {
                     VStack(spacing: 16) {
-                        // Model downloading banner
-                        // Note: WhisperKit initializer doesn't expose download progress
-                        // This banner shows during model initialization but progress won't update
-                        if whisperService.isDownloadingModel {
-                            VStack(alignment: .leading, spacing: 12) {
-                                HStack {
-                                    Image(systemName: "arrow.down.circle.fill")
-                                        .foregroundColor(.blue)
-                                        .imageScale(.large)
-
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(NSLocalizedString("Indlæser WhisperKit model", comment: ""))
-                                            .font(.headline)
-
-                                        if let modelName = whisperService.downloadingModelName {
-                                            Text(modelName)
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-                                        }
-                                    }
-
-                                    Spacer()
-
-                                    // Show indeterminate progress since we can't track download progress
-                                    ProgressView()
-                                        .scaleEffect(0.8)
-                                }
-                            }
-                            .padding(12)
-                            .background(Color.blue.opacity(0.1))
-                            .cornerRadius(8)
-
-                            Divider()
-                        }
-
-                        // Currently transcribing
-                        if !transcriptionVM.activeTasks.isEmpty {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text(NSLocalizedString("Under Transkribering", comment: ""))
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-
-                                ForEach(transcriptionVM.activeTasks) { task in
-                                    TranscriptionTaskRow(task: task)
-                                }
-                            }
-                            Divider()
-                        }
 
                         // Queued files
                         if !viewModel.iCloudQueuedFiles.isEmpty {
@@ -568,6 +620,8 @@ struct LocalPendingFileCard: View {
 // MARK: - Transcription Task Row
 struct TranscriptionTaskRow: View {
     let task: TranscriptionTask
+    @EnvironmentObject private var transcriptionVM: TranscriptionViewModel
+    @EnvironmentObject private var whisperService: WhisperService
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -591,7 +645,30 @@ struct TranscriptionTaskRow: View {
                     Text("\(Int(progress * 100))%")
                         .font(.headline)
                         .foregroundColor(.accentColor)
+
+                    // Cancel button for active transcription
+                    Button(action: {
+                        transcriptionVM.cancelCurrentTranscription()
+                    }) {
+                        Image(systemName: "stop.circle.fill")
+                            .font(.title3)
+                    }
+                    .buttonStyle(.borderless)
+                    .foregroundColor(.red)
+                    .help(NSLocalizedString("Stop transskription", comment: "Stop transcription"))
                 }
+            }
+
+            // Real-time transcription preview
+            if case .processing = task.status, !whisperService.currentTranscribingText.isEmpty {
+                Text(whisperService.currentTranscribingText)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(8)
+                    .background(Color.accentColor.opacity(0.1))
+                    .cornerRadius(6)
             }
 
             // Progress bar
@@ -752,8 +829,10 @@ struct MetadataInfoView: View {
 }
 
 #Preview {
-    FolderMonitorView()
-        .environmentObject(FolderMonitorViewModel.shared)
-        .environmentObject(TranscriptionViewModel.shared)
-        .environmentObject(WhisperService.shared)
+    MainActor.assumeIsolated {
+        FolderMonitorView()
+            .environmentObject(FolderMonitorViewModel.shared)
+            .environmentObject(TranscriptionViewModel.shared)
+            .environmentObject(WhisperService.shared)
+    }
 }
