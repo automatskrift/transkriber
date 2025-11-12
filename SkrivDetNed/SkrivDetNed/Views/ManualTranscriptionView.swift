@@ -285,21 +285,6 @@ struct ManualTranscriptionView: View {
             .padding()
         }
         .frame(minWidth: 600, minHeight: 500)
-        .overlay {
-            // Show download alert only when actually downloading (not when just loading)
-            if whisperService.isDownloadingModel, let modelName = whisperService.downloadingModelName {
-                ZStack {
-                    Color.black.opacity(0.3)
-                        .ignoresSafeArea()
-
-                    ModelDownloadAlert(
-                        modelName: modelName,
-                        isPresented: .constant(true)
-                    )
-                    .environmentObject(whisperService)
-                }
-            }
-        }
         .alert(NSLocalizedString("Fil er ignoreret", comment: "File is ignored"), isPresented: $showIgnoredFileAlert) {
             Button(NSLocalizedString("Ja, transkribér alligevel", comment: "Yes, transcribe anyway")) {
                 // Remove from ignored list and proceed with transcription

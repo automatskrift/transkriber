@@ -92,6 +92,7 @@ class WhisperService: ObservableObject {
                 print("   Will be downloaded automatically by WhisperKit...")
 
                 // Model needs to be downloaded
+                print("🚨 DOWNLOAD ALERT: Setting isDownloadingModel = true for \(modelType.displayName)")
                 isDownloadingModel = true
                 isLoadingModel = false
                 downloadingModelName = modelType.displayName
@@ -100,6 +101,9 @@ class WhisperService: ObservableObject {
 
             print("🔧 Initializing WhisperKit with model: \(whisperKitModelName)")
             print("   (WhisperKit will auto-download if needed)")
+
+            // Keep download flag active if we're downloading
+            let wasDownloading = isDownloadingModel
 
             // Initialize WhisperKit - let it handle download internally
             // Note: WhisperKit doesn't expose progress for download in init, only in .download() method
@@ -115,10 +119,26 @@ class WhisperService: ObservableObject {
             print("✅ WhisperKit initialized successfully")
 
             currentModel = modelType
-            // Always reset flags after initialization completes
-            isDownloadingModel = false
+
+            // Only reset download flags after a short delay if we were downloading
+            // This gives the UI time to show the alert
+            if wasDownloading {
+                // Keep the download alert visible for at least 2 seconds
+                Task {
+                    try? await Task.sleep(nanoseconds: 2_000_000_000)
+                    await MainActor.run {
+                        self.isDownloadingModel = false
+                        self.downloadingModelName = nil
+                        self.downloadProgress = 0.0
+                    }
+                }
+            } else {
+                // If we were just loading, reset immediately
+                isDownloadingModel = false
+                downloadingModelName = nil
+            }
+
             isLoadingModel = false
-            downloadingModelName = nil
             downloadProgress = 0.0
             print("✅ WhisperKit model loaded successfully: \(whisperKitModelName)")
         } catch {

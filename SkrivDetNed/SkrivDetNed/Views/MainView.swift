@@ -92,6 +92,21 @@ struct MainView: View {
             .tag(Tab.settings)
         }
         .frame(minWidth: 700, minHeight: 600)
+        .overlay {
+            // Show download alert globally when WhisperKit is downloading a model
+            if whisperService.isDownloadingModel, let modelName = whisperService.downloadingModelName {
+                ZStack {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea()
+
+                    ModelDownloadAlert(
+                        modelName: modelName,
+                        isPresented: .constant(true)
+                    )
+                    .environmentObject(whisperService)
+                }
+            }
+        }
         .alert(NSLocalizedString("Eksisterende filer fundet", comment: ""), isPresented: $folderMonitorVM.showExistingFilesPrompt) {
             Button(String(format: NSLocalizedString("Proces alle (%lld)", comment: ""), folderMonitorVM.existingFilesCount)) {
                 folderMonitorVM.processExistingFiles()
@@ -102,9 +117,6 @@ struct MainView: View {
         } message: {
             Text(String(format: NSLocalizedString("Der blev fundet %lld eksisterende lydfil(er) i iCloud. Vil du transskribere dem nu?", comment: ""), folderMonitorVM.existingFilesCount))
         }
-        // Download alert removed - it was showing incorrectly
-        // The download happens automatically in the background
-        // Users can see progress in the console if needed
     }
 }
 
