@@ -346,7 +346,8 @@ class TranscriptionViewModel: ObservableObject {
             // Get selected model
             let modelType = AppSettings.shared.selectedModelType
 
-            // Transcribe (WhisperKit will download model automatically if needed)
+            // Transcribe directly without any security-scoped access
+            print("📁 [ViewModel] Transcribing file directly (no security scope): \(url.lastPathComponent)")
             let result = try await WhisperService.shared.transcribe(
                 audioURL: url,
                 modelType: modelType

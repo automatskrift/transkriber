@@ -151,9 +151,36 @@ struct ManualTranscriptionView: View {
                     .padding(.vertical, 8)
                 }
 
-                // Model Loading Progress (combines download + initialization)
+                // Model Download Progress
                 if whisperService.isDownloadingModel {
-                    GroupBox(label: Label(NSLocalizedString("Indlæser WhisperKit model", comment: ""), systemImage: "arrow.down.circle.fill")) {
+                    GroupBox(label: Label(NSLocalizedString("Downloader WhisperKit model", comment: ""), systemImage: "arrow.down.circle.fill")) {
+                        VStack(spacing: 12) {
+                            if let modelName = whisperService.downloadingModelName {
+                                Text(modelName)
+                                    .font(.headline)
+                            }
+
+                            ProgressView(value: whisperService.downloadProgress)
+                                .progressViewStyle(.linear)
+
+                            // Show percentage progress if available
+                            if whisperService.downloadProgress > 0 {
+                                Text("Download: \(Int(whisperService.downloadProgress * 100))%")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            } else {
+                                Text(NSLocalizedString("Dette kan tage flere minutter første gang", comment: ""))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding(.vertical, 8)
+                    }
+                }
+
+                // Model Loading Progress
+                if whisperService.isLoadingModel {
+                    GroupBox(label: Label(NSLocalizedString("Indlæser WhisperKit model", comment: ""), systemImage: "cpu")) {
                         VStack(spacing: 12) {
                             if let modelName = whisperService.downloadingModelName {
                                 Text(modelName)
@@ -163,7 +190,7 @@ struct ManualTranscriptionView: View {
                             ProgressView()
                                 .progressViewStyle(.linear)
 
-                            Text(NSLocalizedString("Dette kan tage flere minutter første gang", comment: ""))
+                            Text(NSLocalizedString("Indlæser model i hukommelsen...", comment: ""))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }

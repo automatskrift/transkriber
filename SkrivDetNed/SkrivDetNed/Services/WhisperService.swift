@@ -27,8 +27,11 @@ class WhisperService: ObservableObject {
     @Published var isTranscribing = false
     @Published var currentProgress: Double = 0.0
     @Published var isDownloadingModel = false
+    @Published var isLoadingModel = false  // Loading model after download
     @Published var downloadProgress: Double = 0.0
     @Published var downloadingModelName: String?
+    @Published var downloadCompletedUnits: Int64 = 0  // Download progress: completed units
+    @Published var downloadTotalUnits: Int64 = 0      // Download progress: total units
     @Published var currentTranscribingText: String = ""  // Real-time transcription preview
 
     private var whisperKit: WhisperKit?
@@ -63,8 +66,10 @@ class WhisperService: ObservableObject {
             downloadProgress = 0.0
 
             print("🔧 Initializing WhisperKit with model: \(whisperKitModelName)")
+            print("   (WhisperKit will auto-download if needed)")
 
             // Initialize WhisperKit - let it handle download internally
+            // Note: WhisperKit doesn't expose progress for download in init, only in .download() method
             whisperKit = try await WhisperKit(
                 model: whisperKitModelName,
                 verbose: true,
@@ -82,6 +87,7 @@ class WhisperService: ObservableObject {
             print("✅ WhisperKit model loaded successfully: \(whisperKitModelName)")
         } catch {
             isDownloadingModel = false
+            isLoadingModel = false
             downloadingModelName = nil
             downloadProgress = 0.0
             print("❌ Failed to load WhisperKit: \(error)")
@@ -179,7 +185,7 @@ class WhisperService: ObservableObject {
                 print("💬 Initial prompt: '\(initialPrompt)'")
             }
 
-            // Create decode options with all settings
+            // Create decode options with all settings (for WhisperKit 0.9.4)
             let decodeOptions = DecodingOptions(
                 verbose: true,
                 task: task,
@@ -189,26 +195,19 @@ class WhisperService: ObservableObject {
                 temperatureFallbackCount: 5,
                 sampleLength: 224,
                 topK: 5,
-                usePrefillPrompt: true,  // Always use prefill to enforce language setting
+                usePrefillPrompt: true,
                 usePrefillCache: true,
                 detectLanguage: shouldDetectLanguage,
                 skipSpecialTokens: true,
-                withoutTimestamps: !settings.whisperIncludeTimestamps,
+                withoutTimestamps: true,
                 wordTimestamps: settings.whisperWordLevelTimestamps,
-                maxInitialTimestamp: nil,
-                maxWindowSeek: nil,
                 clipTimestamps: [],
-                windowClipTime: 30.0,
-                promptTokens: nil,
-                prefixTokens: nil,
                 suppressBlank: true,
                 supressTokens: [],
                 compressionRatioThreshold: 2.4,
                 logProbThreshold: -1.0,
-                firstTokenLogProbThreshold: nil,
                 noSpeechThreshold: 0.6,
-                concurrentWorkerCount: settings.whisperThreadCount,
-                chunkingStrategy: nil
+                concurrentWorkerCount: settings.whisperThreadCount
             )
 
             print("⚙️ Settings: temp=\(settings.whisperTemperature), timestamps=\(settings.whisperIncludeTimestamps), wordTimestamps=\(settings.whisperWordLevelTimestamps), workers=\(settings.whisperThreadCount)")
