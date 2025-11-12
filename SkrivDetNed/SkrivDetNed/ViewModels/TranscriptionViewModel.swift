@@ -14,11 +14,7 @@ import Combine
 class TranscriptionViewModel: ObservableObject {
     static let shared = TranscriptionViewModel()
 
-    @Published var activeTasks: [TranscriptionTask] = [] {
-        didSet {
-            MenuBarManager.shared.updateIcon(isTranscribing: !activeTasks.isEmpty)
-        }
-    }
+    @Published var activeTasks: [TranscriptionTask] = []
     @Published var completedTasks: [TranscriptionTask] = []
     @Published var currentTask: TranscriptionTask?
     @Published var pendingQueue: [URL] = [] // Exposed for UI to show pending files
