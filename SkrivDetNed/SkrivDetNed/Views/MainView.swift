@@ -105,6 +105,36 @@ struct MainView: View {
                     )
                     .environmentObject(whisperService)
                 }
+            } else if whisperService.isLoadingModel {
+                // Show loading indicator when model is being loaded into memory
+                ZStack {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea()
+
+                    VStack(spacing: 20) {
+                        ProgressView()
+                            .scaleEffect(1.5)
+                            .progressViewStyle(CircularProgressViewStyle())
+
+                        Text(NSLocalizedString("Loading model...", comment: "Loading model message"))
+                            .font(.headline)
+                            .foregroundColor(.primary)
+
+                        if let modelName = whisperService.loadingModelName {
+                            Text(modelName)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+
+                        Text(NSLocalizedString("This may take a moment for large models", comment: "Loading model info"))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(40)
+                    .background(Color(NSColor.windowBackgroundColor))
+                    .cornerRadius(12)
+                    .shadow(radius: 20)
+                }
             }
         }
         .alert(NSLocalizedString("Eksisterende filer fundet", comment: ""), isPresented: $folderMonitorVM.showExistingFilesPrompt) {

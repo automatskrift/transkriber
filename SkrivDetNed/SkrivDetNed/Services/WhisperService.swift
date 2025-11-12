@@ -30,6 +30,7 @@ class WhisperService: ObservableObject {
     @Published var isLoadingModel = false  // Loading model after download
     @Published var downloadProgress: Double = 0.0
     @Published var downloadingModelName: String?
+    @Published var loadingModelName: String?  // Name of model being loaded
     // Removed needsModelDownload - we'll handle this differently
     @Published var downloadCompletedUnits: Int64 = 0  // Download progress: completed units
     @Published var downloadTotalUnits: Int64 = 0      // Download progress: total units
@@ -84,7 +85,9 @@ class WhisperService: ObservableObject {
             if isModelDownloaded {
                 print("📦 Model already downloaded at: \(modelPath.path)")
                 // Model exists on disk, we're just loading it
+                print("🔄 Setting isLoadingModel = true for \(modelType.displayName)")
                 isLoadingModel = true
+                loadingModelName = modelType.displayName
                 isDownloadingModel = false
                 downloadingModelName = nil
             } else {
@@ -139,12 +142,14 @@ class WhisperService: ObservableObject {
             }
 
             isLoadingModel = false
+            loadingModelName = nil
             downloadProgress = 0.0
             print("✅ WhisperKit model loaded successfully: \(whisperKitModelName)")
         } catch {
             isDownloadingModel = false
             isLoadingModel = false
             downloadingModelName = nil
+            loadingModelName = nil
             downloadProgress = 0.0
             print("❌ Failed to load WhisperKit: \(error)")
             print("❌ Error details: \(error.localizedDescription)")
