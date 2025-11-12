@@ -27,11 +27,8 @@ class WhisperService: ObservableObject {
     @Published var isTranscribing = false
     @Published var currentProgress: Double = 0.0
     @Published var isDownloadingModel = false
-    @Published var isLoadingModel = false  // Loading model after download
     @Published var downloadProgress: Double = 0.0
     @Published var downloadingModelName: String?
-    @Published var downloadCompletedUnits: Int64 = 0  // Download progress: completed units
-    @Published var downloadTotalUnits: Int64 = 0      // Download progress: total units
     @Published var currentTranscribingText: String = ""  // Real-time transcription preview
 
     private var whisperKit: WhisperKit?
@@ -61,89 +58,30 @@ class WhisperService: ObservableObject {
                 whisperKitModelName = "large-v3"
             }
 
-            let startTime = Date()
-
-            // First, download the model with progress tracking
-            print("📥 Downloading model: \(whisperKitModelName)")
+            isDownloadingModel = true
             downloadingModelName = modelType.displayName
-            let modelPath = try await WhisperKit.download(
-                variant: whisperKitModelName,
-                progressCallback: { [weak self] progress in
-                    Task { @MainActor in
-                        guard let self = self else { return }
-                        let fractionCompleted = progress.fractionCompleted
+            downloadProgress = 0.0
 
-                        // Only show download UI if there's actual downloading happening (progress < 1.0)
-                        if fractionCompleted < 1.0 && !self.isDownloadingModel {
-                            self.isDownloadingModel = true
-                            print("📥 Starting download UI (progress: \(Int(fractionCompleted * 100))%)")
-                        }
+            print("🔧 Initializing WhisperKit with model: \(whisperKitModelName)")
 
-                        self.downloadProgress = fractionCompleted
-
-                        // Get completed/total from progress
-                        let completed = progress.completedUnitCount
-                        let total = progress.totalUnitCount
-                        self.downloadCompletedUnits = completed
-                        self.downloadTotalUnits = total
-
-                        if fractionCompleted < 1.0 {
-                            print("📊 Download progress: \(Int(fractionCompleted * 100))% (\(completed)/\(total))")
-                        }
-                    }
-                }
+            // Initialize WhisperKit - let it handle download internally
+            whisperKit = try await WhisperKit(
+                model: whisperKitModelName,
+                verbose: true,
+                logLevel: .debug,
+                prewarm: false,
+                load: true,
+                download: true  // Let WhisperKit handle download
             )
-            print("✅ Model path: \(modelPath.path)")
 
-            // Switch from downloading to loading state
-            isDownloadingModel = false
-            isLoadingModel = true
-            downloadingModelName = modelType.displayName
-            print("🔄 Starting model loading phase")
-
-            // Now initialize WhisperKit with the downloaded model
-            print("🔧 Initializing WhisperKit with downloaded model")
-            whisperKit = try await withThrowingTaskGroup(of: WhisperKit?.self) { group in
-                group.addTask {
-                    try await WhisperKit(
-                        modelFolder: modelPath.path,
-                        verbose: true,
-                        logLevel: .debug,
-                        prewarm: false,
-                        load: true,
-                        download: false  // Already downloaded
-                    )
-                }
-
-                group.addTask {
-                    try await Task.sleep(nanoseconds: 300_000_000_000) // 5 minutes timeout for loading
-                    return nil
-                }
-
-                // Return first result (either WhisperKit or timeout)
-                if let result = try await group.next() {
-                    group.cancelAll()
-                    if let whisperKit = result {
-                        return whisperKit
-                    } else {
-                        throw WhisperError.transcriptionFailed("WhisperKit initialization timed out after 5 minutes")
-                    }
-                }
-                throw WhisperError.transcriptionFailed("WhisperKit initialization failed")
-            }
-
-            let duration = Date().timeIntervalSince(startTime)
-
-            print("✅ WhisperKit initialized successfully (took \(Int(duration))s)")
+            print("✅ WhisperKit initialized successfully")
 
             currentModel = modelType
             isDownloadingModel = false
-            isLoadingModel = false
             downloadProgress = 1.0
             print("✅ WhisperKit model loaded successfully: \(whisperKitModelName)")
         } catch {
             isDownloadingModel = false
-            isLoadingModel = false
             downloadingModelName = nil
             downloadProgress = 0.0
             print("❌ Failed to load WhisperKit: \(error)")
@@ -251,8 +189,8 @@ class WhisperService: ObservableObject {
                 temperatureFallbackCount: 5,
                 sampleLength: 224,
                 topK: 5,
-                usePrefillPrompt: !shouldDetectLanguage,  // Only use prefill when NOT auto-detecting
-                usePrefillCache: !shouldDetectLanguage,
+                usePrefillPrompt: true,  // Always use prefill to enforce language setting
+                usePrefillCache: true,
                 detectLanguage: shouldDetectLanguage,
                 skipSpecialTokens: true,
                 withoutTimestamps: !settings.whisperIncludeTimestamps,

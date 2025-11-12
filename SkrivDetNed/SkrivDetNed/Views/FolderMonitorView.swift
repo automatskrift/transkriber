@@ -116,52 +116,15 @@ struct FolderMonitorView: View {
 
                 // MARK: - Active Transcription Section
                 // Only show tasks that are actively processing, not pending ones
-                if whisperService.isDownloadingModel || whisperService.isLoadingModel || !processingTasks.isEmpty {
+                if whisperService.isDownloadingModel || !processingTasks.isEmpty {
                     GroupBox(label: Label(NSLocalizedString("Aktuel Opgave", comment: "Current task"), systemImage: "waveform.circle")) {
                         VStack(spacing: 16) {
-                            // Model downloading banner
+                            // Model loading banner (combines download + initialization)
                             if whisperService.isDownloadingModel {
                                 VStack(alignment: .leading, spacing: 12) {
                                     HStack {
                                         Image(systemName: "arrow.down.circle.fill")
                                             .foregroundColor(.blue)
-                                            .imageScale(.large)
-
-                                        VStack(alignment: .leading, spacing: 4) {
-                                            Text(NSLocalizedString("Downloader WhisperKit model", comment: ""))
-                                                .font(.headline)
-
-                                            if let modelName = whisperService.downloadingModelName {
-                                                Text(modelName)
-                                                    .font(.caption)
-                                                    .foregroundColor(.secondary)
-                                            }
-
-                                            // Show percentage progress if available
-                                            if whisperService.downloadProgress > 0 {
-                                                Text("Download: \(Int(whisperService.downloadProgress * 100))%")
-                                                    .font(.caption)
-                                                    .foregroundColor(.secondary)
-                                            }
-                                        }
-
-                                        Spacer()
-
-                                        ProgressView(value: whisperService.downloadProgress)
-                                            .frame(width: 60)
-                                    }
-                                }
-                                .padding(12)
-                                .background(Color.blue.opacity(0.1))
-                                .cornerRadius(8)
-                            }
-
-                            // Model loading banner
-                            if whisperService.isLoadingModel {
-                                VStack(alignment: .leading, spacing: 12) {
-                                    HStack {
-                                        Image(systemName: "cpu")
-                                            .foregroundColor(.orange)
                                             .imageScale(.large)
 
                                         VStack(alignment: .leading, spacing: 4) {
@@ -174,7 +137,7 @@ struct FolderMonitorView: View {
                                                     .foregroundColor(.secondary)
                                             }
 
-                                            Text(NSLocalizedString("Indlæser model i hukommelsen...", comment: ""))
+                                            Text(NSLocalizedString("Dette kan tage flere minutter første gang", comment: ""))
                                                 .font(.caption)
                                                 .foregroundColor(.secondary)
                                         }
@@ -186,7 +149,7 @@ struct FolderMonitorView: View {
                                     }
                                 }
                                 .padding(12)
-                                .background(Color.orange.opacity(0.1))
+                                .background(Color.blue.opacity(0.1))
                                 .cornerRadius(8)
                             }
 

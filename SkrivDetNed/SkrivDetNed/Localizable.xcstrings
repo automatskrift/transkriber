@@ -938,9 +938,6 @@
         }
       }
     },
-    "Download: %lld%%" : {
-
-    },
     "Downloader WhisperKit model" : {
       "extractionState" : "manual",
       "localizations" : {
