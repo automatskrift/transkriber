@@ -132,16 +132,15 @@ struct MainView: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
 
-                        // Add cancel button
+                        // OK button to acknowledge the information
                         Button(action: {
                             whisperService.isLoadingModel = false
                             whisperService.loadingModelName = nil
                         }) {
-                            Text(NSLocalizedString("Cancel", comment: "Cancel loading"))
-                                .font(.caption)
-                                .foregroundColor(.red)
+                            Text(NSLocalizedString("OK", comment: "OK button"))
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.borderedProminent)
+                        .keyboardShortcut(.defaultAction)
                     }
                     .padding(40)
                     .background(Color(NSColor.windowBackgroundColor))
