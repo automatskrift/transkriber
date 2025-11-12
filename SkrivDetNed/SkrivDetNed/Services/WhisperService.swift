@@ -108,6 +108,18 @@ class WhisperService: ObservableObject {
             // Keep download flag active if we're downloading
             let wasDownloading = isDownloadingModel
 
+            // Add timeout for loading indicator (30 seconds max)
+            Task {
+                try? await Task.sleep(nanoseconds: 30_000_000_000)  // 30 seconds
+                await MainActor.run {
+                    if self.isLoadingModel {
+                        print("⚠️ Loading timeout - dismissing loading indicator")
+                        self.isLoadingModel = false
+                        self.loadingModelName = nil
+                    }
+                }
+            }
+
             // Initialize WhisperKit - let it handle download internally
             // Note: WhisperKit doesn't expose progress for download in init, only in .download() method
             whisperKit = try await WhisperKit(
@@ -122,6 +134,11 @@ class WhisperService: ObservableObject {
             print("✅ WhisperKit initialized successfully")
 
             currentModel = modelType
+
+            // Always reset loading flags immediately after initialization
+            print("🔄 Resetting loading flags")
+            isLoadingModel = false
+            loadingModelName = nil
 
             // Only reset download flags after a short delay if we were downloading
             // This gives the UI time to show the alert
@@ -141,18 +158,17 @@ class WhisperService: ObservableObject {
                 downloadingModelName = nil
             }
 
-            isLoadingModel = false
-            loadingModelName = nil
             downloadProgress = 0.0
             print("✅ WhisperKit model loaded successfully: \(whisperKitModelName)")
         } catch {
+            print("❌ Failed to load WhisperKit: \(error)")
+            print("❌ Error details: \(error.localizedDescription)")
+            // Always reset all flags on error
             isDownloadingModel = false
             isLoadingModel = false
             downloadingModelName = nil
             loadingModelName = nil
             downloadProgress = 0.0
-            print("❌ Failed to load WhisperKit: \(error)")
-            print("❌ Error details: \(error.localizedDescription)")
             throw WhisperError.modelNotDownloaded
         }
     }

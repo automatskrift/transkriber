@@ -108,8 +108,10 @@ struct MainView: View {
             } else if whisperService.isLoadingModel {
                 // Show loading indicator when model is being loaded into memory
                 ZStack {
+                    // Semi-transparent background that allows interaction underneath
                     Color.black.opacity(0.3)
                         .ignoresSafeArea()
+                        .allowsHitTesting(false)  // Allow clicks to pass through
 
                     VStack(spacing: 20) {
                         ProgressView()
@@ -129,6 +131,17 @@ struct MainView: View {
                         Text(NSLocalizedString("This may take a moment for large models", comment: "Loading model info"))
                             .font(.caption)
                             .foregroundColor(.secondary)
+
+                        // Add cancel button
+                        Button(action: {
+                            whisperService.isLoadingModel = false
+                            whisperService.loadingModelName = nil
+                        }) {
+                            Text(NSLocalizedString("Cancel", comment: "Cancel loading"))
+                                .font(.caption)
+                                .foregroundColor(.red)
+                        }
+                        .buttonStyle(.plain)
                     }
                     .padding(40)
                     .background(Color(NSColor.windowBackgroundColor))

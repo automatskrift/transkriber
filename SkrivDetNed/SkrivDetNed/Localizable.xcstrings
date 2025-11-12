@@ -2530,6 +2530,9 @@
         }
       }
     },
+    "Loading model..." : {
+      "comment" : "Loading model message"
+    },
     "Loading transcriptions..." : {
 
     },
@@ -4050,6 +4053,9 @@
     },
     "This is a one-time download." : {
       "comment" : "One-time download"
+    },
+    "This may take a moment for large models" : {
+      "comment" : "Loading model info"
     },
     "This will remove the transcription from the database. The original files will not be deleted." : {
       "comment" : "Delete message"
