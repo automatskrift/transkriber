@@ -33,11 +33,6 @@ class iCloudSyncService: ObservableObject {
         }.value
 
         isAvailable = token != nil
-        if isAvailable {
-            print("✅ iCloud is available")
-        } else {
-            print("⚠️ iCloud is not available. User needs to sign in to iCloud.")
-        }
     }
 
     /// Get the iCloud container URL
@@ -50,7 +45,6 @@ class iCloudSyncService: ObservableObject {
         }
 
         let documentsURL = containerURL.appendingPathComponent("Documents")
-        print("📁 iCloud container URL: \(documentsURL.path)")
         return documentsURL
     }
 
@@ -75,14 +69,6 @@ class iCloudSyncService: ObservableObject {
                 return name.hasPrefix("Recordings") && name != "Recordings"
             }
 
-            if !duplicateFolders.isEmpty {
-                print("⚠️ WARNING: Found duplicate Recordings folders:")
-                for folder in duplicateFolders {
-                    print("   - \(folder.lastPathComponent)")
-                }
-                print("   This can happen due to iCloud sync conflicts.")
-                print("   Please manually merge and delete duplicates in iCloud Drive.")
-            }
         } catch {
             print("⚠️ Could not check for duplicate folders: \(error)")
         }
@@ -92,7 +78,6 @@ class iCloudSyncService: ObservableObject {
         let localExists = FileManager.default.fileExists(atPath: recordingsURL.path, isDirectory: &isDirectory)
 
         if localExists && isDirectory.boolValue {
-            print("📁 Recordings folder exists locally")
             return recordingsURL
         }
 
@@ -106,19 +91,12 @@ class iCloudSyncService: ObservableObject {
         // Try to start downloading if it exists in iCloud
         do {
             try FileManager.default.startDownloadingUbiquitousItem(at: recordingsURL)
-            print("📥 Started downloading Recordings folder from iCloud")
             // Check again after attempting download
             if FileManager.default.fileExists(atPath: recordingsURL.path, isDirectory: &isDirectory) && isDirectory.boolValue {
-                print("📁 Recordings folder downloaded successfully")
                 return recordingsURL
             }
-        } catch let error as NSError {
+        } catch {
             // If error is "file doesn't exist", we need to create it
-            if error.domain == NSCocoaErrorDomain && (error.code == NSFileReadNoSuchFileError || error.code == NSFileNoSuchFileError) {
-                print("📁 Recordings folder doesn't exist in iCloud, creating...")
-            } else {
-                print("⚠️ Download attempt error: \(error) - will try to create")
-            }
         }
 
         // Directory doesn't exist locally or in iCloud - create it
@@ -136,7 +114,6 @@ class iCloudSyncService: ObservableObject {
                 // Double-check if it exists now (another process might have created it)
                 var isDir: ObjCBool = false
                 if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir) && isDir.boolValue {
-                    print("📁 Recordings folder already exists (created during coordination)")
                     return
                 }
 
@@ -145,7 +122,6 @@ class iCloudSyncService: ObservableObject {
                     withIntermediateDirectories: true,
                     attributes: nil
                 )
-                print("📁 Created Recordings folder in iCloud with coordination")
             } catch {
                 createError = error
             }
@@ -154,9 +130,7 @@ class iCloudSyncService: ObservableObject {
         if let error = coordinatorError ?? createError {
             let nsError = error as NSError
             // Ignore "already exists" error (can happen with race conditions)
-            if nsError.domain == NSCocoaErrorDomain && nsError.code == NSFileWriteFileExistsError {
-                print("📁 Recordings folder already exists")
-            } else {
+            if !(nsError.domain == NSCocoaErrorDomain && nsError.code == NSFileWriteFileExistsError) {
                 print("❌ Failed to create Recordings folder: \(error)")
                 return nil
             }
@@ -220,17 +194,12 @@ class iCloudSyncService: ObservableObject {
         self.newFileCallback = onNewFile
 
         // Start the query
-        if query.start() {
-            print("✅ NSMetadataQuery started successfully")
-            print("   Predicate: \(query.predicate?.description ?? "none")")
-            print("   Search scopes: \(query.searchScopes)")
-        } else {
+        if !query.start() {
             print("❌ Failed to start NSMetadataQuery")
         }
 
         // Enable live updates (important for real-time monitoring)
         query.enableUpdates()
-        print("🔍 Started monitoring iCloud for new audio files (live updates enabled)")
 
         // Start periodic check as backup (every 30 seconds)
         // This helps catch files that NSMetadataQuery might miss
@@ -240,7 +209,6 @@ class iCloudSyncService: ObservableObject {
                 await self?.performPeriodicCheck()
             }
         }
-        print("⏰ Started periodic check timer (every 30s)")
     }
 
     /// Periodic check for new files (backup for NSMetadataQuery)
@@ -274,13 +242,11 @@ class iCloudSyncService: ObservableObject {
 
                 // Check if we've already processed this file
                 if !existingFiles.contains(audioFile) && !hasBeenNotified(audioFile) {
-                    print("🔔 Periodic check found new file: \(audioFile.lastPathComponent)")
                     newFileCallback?(audioFile)
                     markAsNotified(audioFile)
                 }
             }
         } catch {
-            print("⚠️ Periodic check failed: \(error)")
         }
     }
 

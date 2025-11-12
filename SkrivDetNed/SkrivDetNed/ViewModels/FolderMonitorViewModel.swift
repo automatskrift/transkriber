@@ -39,23 +39,12 @@ class FolderMonitorViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
 
     private init() {
-        let initMsg = "🏁 FolderMonitorViewModel INIT at \(Date()) - iCloudSyncEnabled: \(settings.iCloudSyncEnabled)"
-        print(initMsg)
-        try? initMsg.appending("\n").write(toFile: "/tmp/skrivdetned_debug.log", atomically: true, encoding: .utf8)
-
         setupObservers()
         loadSavedFolder()
         setupiCloudMonitoring()
 
         // Start refresh timer for iCloud files (every 5 seconds)
         if settings.iCloudSyncEnabled {
-            let timerMsg = "   ✅ Starting iCloud refresh timer (every 5s)"
-            print(timerMsg)
-            if var log = try? String(contentsOfFile: "/tmp/skrivdetned_debug.log", encoding: .utf8) {
-                log.append(timerMsg + "\n")
-                try? log.write(toFile: "/tmp/skrivdetned_debug.log", atomically: true, encoding: .utf8)
-            }
-
             iCloudRefreshTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { @Sendable [weak self] _ in
                 Task { @MainActor [weak self] in
                     await self?.refreshiCloudFileLists()
@@ -67,13 +56,6 @@ class FolderMonitorViewModel: ObservableObject {
                 try? await Task.sleep(nanoseconds: 1_000_000_000)
                 await refreshiCloudFileLists()
             }
-        } else {
-            let noTimerMsg = "   ❌ iCloud sync disabled - no refresh timer"
-            print(noTimerMsg)
-            if var log = try? String(contentsOfFile: "/tmp/skrivdetned_debug.log", encoding: .utf8) {
-                log.append(noTimerMsg + "\n")
-                try? log.write(toFile: "/tmp/skrivdetned_debug.log", atomically: true, encoding: .utf8)
-            }
         }
     }
 
@@ -83,15 +65,12 @@ class FolderMonitorViewModel: ObservableObject {
 
     private func setupiCloudMonitoring() {
         // Start iCloud monitoring if enabled
-        print("🔧 setupiCloudMonitoring called, iCloudSyncEnabled: \(settings.iCloudSyncEnabled)")
-
         if settings.iCloudSyncEnabled {
             // Don't block app startup - do this in background
             Task.detached { [weak self] in
                 guard let self = self else { return }
 
                 // Check availability first
-                print("🔍 Checking iCloud availability...")
                 await iCloudSyncService.shared.checkiCloudAvailability()
 
                 // Wait a moment for iCloud to be ready
@@ -99,7 +78,6 @@ class FolderMonitorViewModel: ObservableObject {
 
                 // Start monitoring
                 await MainActor.run {
-                    print("🚀 Starting iCloud monitoring...")
                     iCloudSyncService.shared.startMonitoring { [weak self] url in
                         Task { @MainActor in
                             await self?.handleiCloudFile(url)
@@ -110,16 +88,11 @@ class FolderMonitorViewModel: ObservableObject {
                 // Check for pending files that need retry
                 let pendingFiles = await self.iCloudService.checkForPendingFiles()
                 if !pendingFiles.isEmpty {
-                    await MainActor.run {
-                        print("🔄 Processing \(pendingFiles.count) pending file(s) for retry")
-                    }
                     for url in pendingFiles {
                         await self.handleiCloudFile(url)
                     }
                 }
             }
-        } else {
-            print("⏭️ iCloud monitoring disabled in settings")
         }
     }
 
@@ -213,33 +186,21 @@ class FolderMonitorViewModel: ObservableObject {
     }
 
     private func loadSavedFolder() {
-        print("📂 loadSavedFolder called")
-        print("   hasBookmark: \(BookmarkManager.shared.hasBookmark)")
-        print("   isMonitoringEnabled: \(settings.isMonitoringEnabled)")
-
         // Try to restore from bookmark first (more reliable with sandboxing)
         if BookmarkManager.shared.hasBookmark {
             if settings.isMonitoringEnabled {
-                print("   🔄 Attempting to restore monitoring from bookmark...")
                 // Restore monitoring using the saved bookmark
                 let restored = monitorService.restoreMonitoringFromBookmark()
                 if restored {
-                    print("   ✅ Restored monitoring from bookmark")
                     // Update selectedFolderURL to match what's being monitored
                     if let folderURL = monitorService.monitoredFolder {
                         selectedFolderURL = folderURL
-                        print("   📁 Set selectedFolderURL to: \(folderURL.path)")
                     }
-                } else {
-                    print("   ⚠️ Failed to restore monitoring from bookmark")
                 }
             } else if let path = BookmarkManager.shared.getSavedBookmarkPath() {
                 // Just set the selected folder (don't start monitoring)
                 selectedFolderURL = URL(fileURLWithPath: path)
-                print("   📁 Set selectedFolderURL (monitoring disabled): \(path)")
             }
-        } else {
-            print("   ℹ️ No saved folder found")
         }
     }
 
@@ -358,31 +319,15 @@ class FolderMonitorViewModel: ObservableObject {
                 let audioFileName = jsonFile.deletingPathExtension().lastPathComponent + ".m4a"
 
                 // Add protection against hanging on metadata load
-                let startTime = Date()
                 guard let metadata = try? RecordingMetadata.load(
                     for: audioFileName,
                     from: recordingsFolder
                 ) else {
-                    let loadTime = Date().timeIntervalSince(startTime)
-                    if loadTime > 1.0 {
-                        print("⚠️ Slow metadata load (\(loadTime)s) for: \(audioFileName)")
-                    }
-                    print("⚠️ Could not load metadata for: \(audioFileName)")
                     continue
-                }
-
-                // Log if loading was slow
-                let loadTime = Date().timeIntervalSince(startTime)
-                if loadTime > 0.5 {
-                    print("⚠️ Metadata load took \(loadTime)s for: \(audioFileName)")
                 }
 
                 let audioURL = recordingsFolder.appendingPathComponent(metadata.audioFileName)
 
-                // Debug failed files
-                if metadata.status == .failed {
-                    print("   🔍 Processing failed file: \(metadata.audioFileName), error: \(metadata.errorMessage ?? "none")")
-                }
 
                 // Only include if audio file exists
                 guard FileManager.default.fileExists(atPath: audioURL.path) else {
@@ -400,7 +345,6 @@ class FolderMonitorViewModel: ObservableObject {
                     if !isActive {
                         // If file has an error message, it should be marked as failed, not pending
                         if metadata.errorMessage != nil {
-                            print("⚠️ File \(metadata.audioFileName) has pending status but has error - should be failed")
                             // Don't add to queue, skip it
                             continue
                         }
@@ -416,7 +360,6 @@ class FolderMonitorViewModel: ObservableObject {
                 case .completed:
                     completed.append((audioURL, metadata))
                 case .failed:
-                    print("   📍 Found failed file: \(metadata.audioFileName)")
                     failed.append((audioURL, metadata))
                 case .transcribing:
                     // Check if it's actually failed (has error message but status is stuck as transcribing)
@@ -426,11 +369,9 @@ class FolderMonitorViewModel: ObservableObject {
                         // Not currently being transcribed
                         if metadata.errorMessage != nil {
                             // Has error - should be treated as failed
-                            print("   📍 Found stuck transcribing file with error (treating as failed): \(metadata.audioFileName)")
                             failed.append((audioURL, metadata))
                         } else {
                             // Stuck in transcribing state without error - needs to be retried
-                            print("   🔄 Found stuck transcribing file without error - adding to queue: \(metadata.audioFileName)")
                             queued.append((audioURL, metadata))
                         }
                     }
@@ -445,7 +386,6 @@ class FolderMonitorViewModel: ObservableObject {
 
             await MainActor.run { [weak self] in
                 guard let self = self else { return }
-                print("📊 Refresh summary: \(queued.count) queued, \(completed.count) completed, \(failed.count) failed")
                 self.iCloudQueuedFiles = queued
                 self.iCloudCompletedFiles = completed
                 self.iCloudFailedFiles = failed
@@ -453,7 +393,6 @@ class FolderMonitorViewModel: ObservableObject {
 
             // Auto-start queued files (if not already in transcription queue/active)
             if !queued.isEmpty {
-                print("🔍 Checking \(queued.count) queued file(s) for auto-start")
                 for (url, _) in queued {
                     // Access transcriptionVM on MainActor
                     let (isInQueue, isActive) = await MainActor.run { [weak self] in
@@ -463,21 +402,9 @@ class FolderMonitorViewModel: ObservableObject {
                         return (inQueue, active)
                     }
 
-                    print("   File: \(url.lastPathComponent) - inQueue: \(isInQueue), isActive: \(isActive)")
-
                     if !isInQueue && !isActive {
-                        let msg = "   🚀 Auto-starting queued file: \(url.lastPathComponent) at \(Date())"
-                        print(msg)
-                        try? msg.appending("\n").write(toFile: "/tmp/skrivdetned_debug.log", atomically: true, encoding: .utf8)
-
                         // Remove from processed files list so it can be retried
                         FolderMonitorService.shared.removeFromProcessed(url)
-                        let removeMsg = "   🗑️ Removed from processed files list: \(url.lastPathComponent)"
-                        print(removeMsg)
-                        if var log = try? String(contentsOfFile: "/tmp/skrivdetned_debug.log", encoding: .utf8) {
-                            log.append(removeMsg + "\n")
-                            try? log.write(toFile: "/tmp/skrivdetned_debug.log", atomically: true, encoding: .utf8)
-                        }
 
                         await MainActor.run { [weak self] in
                             guard let self = self else { return }
@@ -485,14 +412,6 @@ class FolderMonitorViewModel: ObservableObject {
                                 await self.transcriptionVM.addToQueue(url)
                             }
                         }
-                        let afterMsg = "   ✅ addToQueue completed for: \(url.lastPathComponent)"
-                        print(afterMsg)
-                        if var log = try? String(contentsOfFile: "/tmp/skrivdetned_debug.log", encoding: .utf8) {
-                            log.append(afterMsg + "\n")
-                            try? log.write(toFile: "/tmp/skrivdetned_debug.log", atomically: true, encoding: .utf8)
-                        }
-                    } else {
-                        print("   ⏭️ Skipping (already in queue or active)")
                     }
                 }
             }

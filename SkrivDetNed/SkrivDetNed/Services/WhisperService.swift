@@ -76,34 +76,23 @@ class WhisperService: ObservableObject {
 
             let isModelDownloaded = hasAudioEncoder && hasTextDecoder && hasMelSpectrogram
 
-            print("🔍 Checking model at path: \(modelPath.path)")
-            print("   AudioEncoder exists: \(hasAudioEncoder)")
-            print("   TextDecoder exists: \(hasTextDecoder)")
-            print("   MelSpectrogram exists: \(hasMelSpectrogram)")
-            print("   Model fully downloaded: \(isModelDownloaded)")
-
             if isModelDownloaded {
-                print("📦 Model already downloaded at: \(modelPath.path)")
+                print("✅ Model already available: \(modelType.displayName)")
                 // Model exists on disk, we're just loading it
-                print("🔄 Setting isLoadingModel = true for \(modelType.displayName)")
                 isLoadingModel = true
                 loadingModelName = modelType.displayName
                 isDownloadingModel = false
                 downloadingModelName = nil
             } else {
-                print("⬇️ Model not found or incomplete at: \(modelPath.path)")
-                print("   Will be downloaded automatically by WhisperKit...")
+                print("⬇️ Downloading model: \(modelType.displayName)")
 
                 // Model needs to be downloaded
-                print("🚨 DOWNLOAD ALERT: Setting isDownloadingModel = true for \(modelType.displayName)")
                 isDownloadingModel = true
                 isLoadingModel = false
                 downloadingModelName = modelType.displayName
                 downloadProgress = 0.0
             }
 
-            print("🔧 Initializing WhisperKit with model: \(whisperKitModelName)")
-            print("   (WhisperKit will auto-download if needed)")
 
             // Keep download flag active if we're downloading
             let wasDownloading = isDownloadingModel
@@ -131,12 +120,9 @@ class WhisperService: ObservableObject {
                 download: true  // Let WhisperKit handle download
             )
 
-            print("✅ WhisperKit initialized successfully")
-
             currentModel = modelType
 
             // Always reset loading flags immediately after initialization
-            print("🔄 Resetting loading flags")
             isLoadingModel = false
             loadingModelName = nil
 
@@ -233,9 +219,7 @@ class WhisperService: ObservableObject {
             currentTranscribingText = ""
         }
 
-        print("🎙️ Starting transcription with WhisperKit...")
-        print("📁 File: \(audioURL.lastPathComponent)")
-        print("🔧 Model: \(modelType.displayName)")
+        print("🎙️ Transcribing: \(audioURL.lastPathComponent) with \(modelType.displayName)")
 
         do {
             // Get settings
@@ -249,18 +233,12 @@ class WhisperService: ObservableObject {
             let language: String? = settings.whisperAutoDetectLanguage ? nil : settings.selectedLanguage
             let shouldDetectLanguage = settings.whisperAutoDetectLanguage
 
-            print("🌍 Language: \(language ?? "auto-detect")")
-            print("🔍 Detect language: \(shouldDetectLanguage)")
 
             // Get initial prompt from settings (for advanced users)
             let initialPrompt = settings.whisperInitialPrompt
 
             // Determine task (transcribe or translate)
             let task: DecodingTask = settings.whisperTranslateToEnglish ? .translate : .transcribe
-            print("📝 Task: \(task == .translate ? "translate to English" : "transcribe")")
-            if !initialPrompt.isEmpty {
-                print("💬 Initial prompt: '\(initialPrompt)'")
-            }
 
             // Create decode options with all settings (for WhisperKit 0.9.4)
             let decodeOptions = DecodingOptions(

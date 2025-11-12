@@ -204,12 +204,6 @@ class TranscriptionViewModel: ObservableObject {
     /// - iCloud sync uploads
     /// The queue ensures only ONE file is transcribed at a time
     func addToQueue(_ url: URL) async {
-        print("📝 addToQueue called for: \(url.lastPathComponent)")
-        print("   Source: \(url.path.contains("Mobile Documents") ? "iCloud" : "Local/Manual")")
-        print("   Full path: \(url.path)")
-        print("   Current taskQueue size: \(taskQueue.count)")
-        print("   Current activeTasks size: \(activeTasks.count)")
-        print("   isProcessing: \(isProcessing)")
 
         // Check if already in queue
         guard !taskQueue.contains(url) else {
@@ -221,50 +215,37 @@ class TranscriptionViewModel: ObservableObject {
             return
         }
 
-        print("   ✓ Not in queue or active tasks")
-
         // Check if file has already been processed (completed or failed) in iCloud
         // BUT only if this file is actually IN the iCloud folder
         if AppSettings.shared.iCloudSyncEnabled,
            let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL(),
            url.path.contains(recordingsFolder.path) {
-            print("   📁 Checking iCloud metadata (file is in iCloud folder)...")
             do {
                 if let metadata = try RecordingMetadata.load(for: url.lastPathComponent, from: recordingsFolder) {
-                    print("   📋 Found metadata with status: \(metadata.status.rawValue)")
                     // Skip if already completed successfully
                     if metadata.status == .completed {
-                        print("⏭️ File already transcribed (status: completed): \(url.lastPathComponent)")
+                        print("⏭️ File already transcribed: \(url.lastPathComponent)")
                         FolderMonitorService.shared.markAsProcessed(url)
                         return
                     }
                     // Skip if failed (unless user explicitly retries)
                     if metadata.status == .failed {
-                        print("⏭️ File previously failed transcription: \(url.lastPathComponent)")
-                        print("   Use 'Retry' button to transcribe again")
+                        print("⏭️ File previously failed: \(url.lastPathComponent)")
                         FolderMonitorService.shared.markAsProcessed(url)
                         return
                     }
-                    // Allow pending and transcribing status (transcribing will be reset by resetStuckTranscriptions)
-                    print("   ✓ Status is \(metadata.status.rawValue) - will proceed")
 
                     // If status is transcribing, it means it was interrupted - reset to pending
                     if metadata.status == .transcribing {
-                        print("   🔧 Resetting interrupted transcription status (transcribing → pending)")
                         var updatedMetadata = metadata
                         updatedMetadata.status = .pending
                         updatedMetadata.updatedAt = Date()
                         try updatedMetadata.save(to: recordingsFolder)
                     }
-                } else {
-                    print("   ℹ️ No metadata found - will proceed")
                 }
             } catch {
                 // No metadata found, proceed with transcription
-                print("   ℹ️ No existing metadata (error: \(error.localizedDescription)) - will proceed")
             }
-        } else {
-            print("   ℹ️ File not in iCloud folder or iCloud sync disabled - will proceed without metadata check")
         }
 
         taskQueue.append(url)
@@ -283,7 +264,6 @@ class TranscriptionViewModel: ObservableObject {
                         metadata.status = .queued
                         metadata.updatedAt = Date()
                         try metadata.save(to: recordingsFolder)
-                        print("   📝 Updated iCloud metadata to 'queued' status")
                     }
                 }
             } catch {
@@ -291,17 +271,11 @@ class TranscriptionViewModel: ObservableObject {
             }
         }
 
-        print("➕ Added to transcription queue: \(url.lastPathComponent)")
-        print("   Queue length: \(taskQueue.count)")
-        print("   Active tasks (including pending): \(activeTasks.count)")
-        print("   isProcessing: \(isProcessing)")
+        print("➕ Added to queue: \(url.lastPathComponent)")
 
         // Start processing if not already
         if !isProcessing {
-            print("   🚀 Starting queue processing...")
             await processQueue()
-        } else {
-            print("   ⏸️ Already processing - will be picked up when current task completes")
         }
     }
 
@@ -397,87 +371,13 @@ class TranscriptionViewModel: ObservableObject {
             // Insert marks if available
             var finalTranscription = result.text
 
-            print("📝 Transcription result received:")
-            print("   Text length: \(result.text.count) characters")
-            print("   Segments: \(result.segments.count)")
-            if result.text.isEmpty {
-                print("   ⚠️ WARNING: Transcription text is EMPTY!")
-            } else {
-                print("   First 100 chars: \(String(result.text.prefix(100)))")
-            }
-
-            let logMessage = """
-
-            🔍 MARKS DEBUG - Checking for marks to insert...
-               File: \(url.lastPathComponent)
-               File path: \(url.path)
-               Contains 'Mobile Documents': \(url.path.contains("Mobile Documents"))
-            """
-            print(logMessage)
-            try? logMessage.appending("\n").write(toFile: "/tmp/marks_debug.log", atomically: false, encoding: .utf8)
-
+            // Process transcription result - insert marks if available
             if url.path.contains("Mobile Documents"),
                let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL() {
-                let log2 = "   Recordings folder: \(recordingsFolder.path)\n"
-                print(log2)
-                if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
-                    logFile.seekToEndOfFile()
-                    logFile.write(log2.data(using: .utf8)!)
-                    logFile.closeFile()
-                }
-
                 if let metadata = try? RecordingMetadata.load(for: url.lastPathComponent, from: recordingsFolder) {
-                    let log3 = "   Loaded metadata - Marks in metadata: \(metadata.marks?.count ?? 0)\n"
-                    print(log3)
-                    if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
-                        logFile.seekToEndOfFile()
-                        logFile.write(log3.data(using: .utf8)!)
-                        logFile.closeFile()
-                    }
-
                     if let marks = metadata.marks, !marks.isEmpty {
-                        let log4 = "   Marks: \(marks)\n   Segments: \(result.segments.count)\n"
-                        print(log4)
-                        if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
-                            logFile.seekToEndOfFile()
-                            logFile.write(log4.data(using: .utf8)!)
-                            logFile.closeFile()
-                        }
-
                         finalTranscription = insertMarks(in: result.text, marks: marks, segments: result.segments)
-
-                        let log5 = "📍 Inserted \(marks.count) marks into transcription\n   Result length: \(finalTranscription.count) chars\n"
-                        print(log5)
-                        if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
-                            logFile.seekToEndOfFile()
-                            logFile.write(log5.data(using: .utf8)!)
-                            logFile.closeFile()
-                        }
-                    } else {
-                        let log6 = "   ⚠️ No marks found in metadata\n"
-                        print(log6)
-                        if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
-                            logFile.seekToEndOfFile()
-                            logFile.write(log6.data(using: .utf8)!)
-                            logFile.closeFile()
-                        }
                     }
-                } else {
-                    let log7 = "   ⚠️ Could not load metadata\n"
-                    print(log7)
-                    if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
-                        logFile.seekToEndOfFile()
-                        logFile.write(log7.data(using: .utf8)!)
-                        logFile.closeFile()
-                    }
-                }
-            } else {
-                let log8 = "   ⚠️ File not from iCloud or recordings folder not found\n"
-                print(log8)
-                if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
-                    logFile.seekToEndOfFile()
-                    logFile.write(log8.data(using: .utf8)!)
-                    logFile.closeFile()
                 }
             }
 
@@ -966,33 +866,7 @@ class TranscriptionViewModel: ObservableObject {
     /// Insert marks into transcription text based on segment timestamps
     private func insertMarks(in text: String, marks: [Double], segments: [TranscriptionSegment]) -> String {
         guard !marks.isEmpty, !segments.isEmpty else {
-            let log = "      ⚠️ insertMarks: Empty marks or segments\n"
-            print(log)
-            if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
-                logFile.seekToEndOfFile()
-                logFile.write(log.data(using: .utf8)!)
-                logFile.closeFile()
-            }
             return text
-        }
-
-        let log1 = "      📍 insertMarks: Starting with \(marks.count) marks and \(segments.count) segments\n      📍 Original text: '\(text)'\n      📍 Original text length: \(text.count)\n"
-        print(log1)
-        if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
-            logFile.seekToEndOfFile()
-            logFile.write(log1.data(using: .utf8)!)
-            logFile.closeFile()
-        }
-
-        // Log all segments
-        for (i, seg) in segments.enumerated() {
-            let segLog = "      Segment \(i): \(seg.start)s - \(seg.end)s = '\(seg.text)'\n"
-            print(segLog)
-            if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
-                logFile.seekToEndOfFile()
-                logFile.write(segLog.data(using: .utf8)!)
-                logFile.closeFile()
-            }
         }
 
         // Sort marks by timestamp
@@ -1010,7 +884,6 @@ class TranscriptionViewModel: ObservableObject {
                 // Check if mark is within this segment
                 if markTime >= segment.start && markTime <= segment.end {
                     closestSegmentIndex = index
-                    print("      📍 Mark \(markIndex + 1) at \(markTime)s is within segment \(index) (\(segment.start)s - \(segment.end)s)")
                     break
                 }
 
@@ -1022,13 +895,6 @@ class TranscriptionViewModel: ObservableObject {
                 }
             }
 
-            let log2 = "      📍 Mark \(markIndex + 1) at \(markTime)s -> segment \(closestSegmentIndex)\n"
-            print(log2)
-            if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
-                logFile.seekToEndOfFile()
-                logFile.write(log2.data(using: .utf8)!)
-                logFile.closeFile()
-            }
             insertions.append((segmentIndex: closestSegmentIndex, markNumber: markIndex + 1))
         }
 
@@ -1049,43 +915,13 @@ class TranscriptionViewModel: ObservableObject {
             cleanSegmentText = cleanSegmentText.replacingOccurrences(of: #"<\|[^|]+\|>"#, with: "", options: .regularExpression)
             cleanSegmentText = cleanSegmentText.trimmingCharacters(in: .whitespacesAndNewlines)
 
-            let log3 = "      📍 Trying to insert '\(markText)' before segment text: '\(cleanSegmentText)'\n"
-            print(log3)
-            if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
-                logFile.seekToEndOfFile()
-                logFile.write(log3.data(using: .utf8)!)
-                logFile.closeFile()
-            }
-
             // Find the cleaned segment text in the full transcription
             if let range = result.range(of: cleanSegmentText) {
                 // Insert mark before the segment
                 result.insert(contentsOf: markText + " ", at: range.lowerBound)
-                let log4 = "      ✅ Inserted '\(markText)' at position \(result.distance(from: result.startIndex, to: range.lowerBound))\n"
-                print(log4)
-                if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
-                    logFile.seekToEndOfFile()
-                    logFile.write(log4.data(using: .utf8)!)
-                    logFile.closeFile()
-                }
-            } else {
-                let log5 = "      ⚠️ Could not find segment text '\(cleanSegmentText)' in result\n"
-                print(log5)
-                if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
-                    logFile.seekToEndOfFile()
-                    logFile.write(log5.data(using: .utf8)!)
-                    logFile.closeFile()
-                }
             }
         }
 
-        let logFinal = "      📍 Final text: '\(result)'\n      📍 Final text length: \(result.count)\n"
-        print(logFinal)
-        if let logFile = try? FileHandle(forWritingTo: URL(fileURLWithPath: "/tmp/marks_debug.log")) {
-            logFile.seekToEndOfFile()
-            logFile.write(logFinal.data(using: .utf8)!)
-            logFile.closeFile()
-        }
         return result
     }
 }
