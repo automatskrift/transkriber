@@ -102,12 +102,12 @@ class SystemRequirements {
         // Provide warnings for large models on systems with limited RAM
         if modelType == .large {
             if totalMemory <= 8_000_000_000 { // 8GB or less
-                warning = NSLocalizedString("Large model kræver mindst 6GB RAM og kan være langsom på dette system. Overvej at bruge Medium eller Small model.", comment: "")
+                warning = NSLocalizedString("Large model requires at least 6GB RAM and may be slow on this system. Consider using Medium or Small model.", comment: "Large model memory warning for 8GB systems")
             } else if totalMemory <= 16_000_000_000 { // 16GB or less
-                warning = NSLocalizedString("Large model kan påvirke systemets ydeevne. Luk andre programmer for bedre performance.", comment: "")
+                warning = NSLocalizedString("Large model may affect system performance. Close other applications for better performance.", comment: "Large model memory warning for 16GB systems")
             }
         } else if modelType == .medium && totalMemory <= 8_000_000_000 {
-            warning = NSLocalizedString("Medium model kan være langsom på systemer med 8GB RAM eller mindre.", comment: "")
+            warning = NSLocalizedString("Medium model may be slow on systems with 8GB RAM or less.", comment: "Medium model memory warning")
         }
 
         return (sufficient, totalMemory, required, warning)

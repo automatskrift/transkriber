@@ -174,6 +174,16 @@
         }
       }
     },
+    "%@ model kræver %@ RAM, men systemet har kun %@. Prøv en mindre model." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ model kræver %2$@ RAM, men systemet har kun %3$@. Prøv en mindre model."
+          }
+        }
+      }
+    },
     "%d words" : {
 
     },
@@ -1550,6 +1560,9 @@
         }
       }
     },
+    "Fortsæt alligevel" : {
+      "comment" : "Continue anyway"
+    },
     "Funktioner:" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1975,6 +1988,16 @@
         }
       }
     },
+    "Ikke nok diskplads. Kræver %@, har %@ tilgængelig." : {
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Ikke nok diskplads. Kræver %1$@, har %2$@ tilgængelig."
+          }
+        }
+      }
+    },
     "In Queue" : {
       "comment" : "Status: In Queue"
     },
@@ -2117,6 +2140,9 @@
           }
         }
       }
+    },
+    "Ingen internetforbindelse. Tjek din netværksforbindelse og prøv igen." : {
+
     },
     "Ingen JSON-fil fundet" : {
       "extractionState" : "manual",
@@ -2479,6 +2505,15 @@
         }
       }
     },
+    "Large model kan påvirke systemets ydeevne. Luk andre programmer for bedre performance." : {
+
+    },
+    "Large model kræver ca. 6GB RAM for optimal ydeevne.\n\nDit system har %@ total RAM.\n\nDette kan føre til:\n• Langsom transcription hastighed\n• System kan fryse midlertidigt\n• Mulige app crashes\n\nVi anbefaler Medium eller Small model for bedre stabilitet." : {
+
+    },
+    "Large model kræver mindst 6GB RAM og kan være langsom på dette system. Overvej at bruge Medium eller Small model." : {
+
+    },
     "Lav Diskplads" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2716,6 +2751,12 @@
         }
       }
     },
+    "Medium model kan være langsom på systemer med 8GB RAM eller mindre." : {
+
+    },
+    "Memory Advarsel" : {
+      "comment" : "Memory warning title"
+    },
     "Metadata Info" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2770,6 +2811,9 @@
         }
       }
     },
+    "Model download fejlede: %@" : {
+
+    },
     "Model er allerede downloadet" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2803,6 +2847,9 @@
           }
         }
       }
+    },
+    "Model kunne ikke indlæses: %@" : {
+
     },
     "Model Size" : {
       "comment" : "Model size label"
@@ -4590,6 +4637,9 @@
           }
         }
       }
+    },
+    "Vælg mindre model" : {
+      "comment" : "Choose smaller model"
     },
     "Valgt" : {
       "extractionState" : "manual",

@@ -234,32 +234,23 @@ struct SettingsView: View {
                 Text(String(format: NSLocalizedString("Er du sikker på at du vil slette %@? Du kan altid downloade den igen senere.", comment: ""), model.displayName))
             }
         }
-        .alert(NSLocalizedString("Memory Advarsel", comment: "Memory warning title"), isPresented: $showMemoryWarning) {
-            Button(NSLocalizedString("Fortsæt alligevel", comment: "Continue anyway")) {
+        .alert(NSLocalizedString("Memory Warning", comment: "Memory warning title"), isPresented: $showMemoryWarning) {
+            Button(NSLocalizedString("Continue Anyway", comment: "Continue anyway button")) {
                 if let modelName = pendingModelSelection {
                     settings.selectedModel = modelName
                 }
                 pendingModelSelection = nil
             }
-            Button(NSLocalizedString("Vælg mindre model", comment: "Choose smaller model"), role: .cancel) {
+            Button(NSLocalizedString("Choose Smaller Model", comment: "Choose smaller model button"), role: .cancel) {
                 pendingModelSelection = nil
             }
         } message: {
             let totalMemory = SystemRequirements.shared.getTotalMemory()
             let totalMemoryGB = ByteCountFormatter.string(fromByteCount: Int64(totalMemory), countStyle: .memory)
 
-            Text("""
-            Large model kræver ca. 6GB RAM for optimal ydeevne.
+            let messageFormat = NSLocalizedString("Large model requires approximately 6GB RAM for optimal performance.\n\nYour system has %@ total RAM.\n\nThis may lead to:\n• Slow transcription speed\n• Temporary system freezing\n• Possible app crashes\n\nWe recommend Medium or Small model for better stability.", comment: "Memory warning message")
 
-            Dit system har \(totalMemoryGB) total RAM.
-
-            Dette kan føre til:
-            • Langsom transcription hastighed
-            • System kan fryse midlertidigt
-            • Mulige app crashes
-
-            Vi anbefaler Medium eller Small model for bedre stabilitet.
-            """)
+            Text(String(format: messageFormat, totalMemoryGB))
         }
         .onAppear {
             viewModel.refreshModels()

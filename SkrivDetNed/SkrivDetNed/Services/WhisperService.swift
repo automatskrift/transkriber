@@ -204,7 +204,8 @@ class WhisperService: ObservableObject {
                 throw WhisperError.modelLoadingFailed(error.localizedDescription)
             } else {
                 // If we can't identify the specific error, provide a more helpful message
-                throw WhisperError.modelLoadingFailed("Model kunne ikke indlæses: \(error.localizedDescription). Prøv at genstarte appen eller vælg en anden model.")
+                let errorMsg = String(format: NSLocalizedString("Model could not be loaded: %@. Try restarting the app or selecting a different model.", comment: "Generic model loading error"), error.localizedDescription)
+                throw WhisperError.modelLoadingFailed(errorMsg)
             }
         }
     }
@@ -258,7 +259,7 @@ class WhisperService: ObservableObject {
 
         guard let whisperKit = whisperKit else {
             // This shouldn't happen if loadModel succeeded, but handle it gracefully
-            throw WhisperError.modelLoadingFailed("Model blev ikke initialiseret korrekt. Prøv at genstarte appen.")
+            throw WhisperError.modelLoadingFailed(NSLocalizedString("Model was not initialized correctly. Try restarting the app.", comment: "Model initialization error"))
         }
 
         isTranscribing = true
@@ -457,23 +458,23 @@ enum WhisperError: LocalizedError {
         case .recognizerNotAvailable:
             return NSLocalizedString("Talegenkendelse ikke tilgængelig", comment: "")
         case .downloadFailed(let error):
-            return String(format: NSLocalizedString("Model download fejlede: %@", comment: ""), error)
+            return String(format: NSLocalizedString("Model download failed: %@", comment: "Model download error"), error)
         case .insufficientDiskSpace(let required, let available):
             let formatter = ByteCountFormatter()
             formatter.countStyle = .file
             let reqStr = formatter.string(fromByteCount: required)
             let availStr = formatter.string(fromByteCount: available)
-            return String(format: NSLocalizedString("Ikke nok diskplads. Kræver %@, har %@ tilgængelig.", comment: ""), reqStr, availStr)
+            return String(format: NSLocalizedString("Not enough disk space. Requires %@, but only %@ available.", comment: "Disk space error"), reqStr, availStr)
         case .insufficientMemory(let model, let required, let available):
             let formatter = ByteCountFormatter()
             formatter.countStyle = .memory
             let reqStr = formatter.string(fromByteCount: Int64(min(required, UInt64(Int64.max))))
             let availStr = formatter.string(fromByteCount: Int64(min(available, UInt64(Int64.max))))
-            return String(format: NSLocalizedString("%@ model kræver %@ RAM, men systemet har kun %@. Prøv en mindre model.", comment: ""), model, reqStr, availStr)
+            return String(format: NSLocalizedString("%@ model requires %@ RAM, but system only has %@. Try a smaller model.", comment: "Memory error"), model, reqStr, availStr)
         case .modelLoadingFailed(let error):
-            return String(format: NSLocalizedString("Model kunne ikke indlæses: %@", comment: ""), error)
+            return String(format: NSLocalizedString("Model could not be loaded: %@", comment: "Model loading error"), error)
         case .networkUnavailable:
-            return NSLocalizedString("Ingen internetforbindelse. Tjek din netværksforbindelse og prøv igen.", comment: "")
+            return NSLocalizedString("No internet connection. Check your network connection and try again.", comment: "Network unavailable error")
         }
     }
 }
