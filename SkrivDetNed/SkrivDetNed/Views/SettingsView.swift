@@ -15,6 +15,8 @@ struct SettingsView: View {
     @State private var downloadedModels: Set<String> = []
     @State private var showDeleteAlert = false
     @State private var modelToDelete: WhisperModelType?
+    @State private var showMemoryWarning = false
+    @State private var pendingModelSelection: String? = nil
 
     var body: some View {
         ScrollView {
@@ -78,7 +80,7 @@ struct SettingsView: View {
                                 }
 
                                 Button(settings.selectedModel == modelType.rawValue ? NSLocalizedString("Valgt", comment: "") : NSLocalizedString("Vælg", comment: "")) {
-                                    settings.selectedModel = modelType.rawValue
+                                    selectModel(modelType)
                                 }
                                 .buttonStyle(.bordered)
                                 .disabled(settings.selectedModel == modelType.rawValue)
@@ -232,6 +234,33 @@ struct SettingsView: View {
                 Text(String(format: NSLocalizedString("Er du sikker på at du vil slette %@? Du kan altid downloade den igen senere.", comment: ""), model.displayName))
             }
         }
+        .alert(NSLocalizedString("Memory Advarsel", comment: "Memory warning title"), isPresented: $showMemoryWarning) {
+            Button(NSLocalizedString("Fortsæt alligevel", comment: "Continue anyway")) {
+                if let modelName = pendingModelSelection {
+                    settings.selectedModel = modelName
+                }
+                pendingModelSelection = nil
+            }
+            Button(NSLocalizedString("Vælg mindre model", comment: "Choose smaller model"), role: .cancel) {
+                pendingModelSelection = nil
+            }
+        } message: {
+            let totalMemory = SystemRequirements.shared.getTotalMemory()
+            let totalMemoryGB = ByteCountFormatter.string(fromByteCount: Int64(totalMemory), countStyle: .memory)
+
+            Text("""
+            Large model kræver ca. 6GB RAM for optimal ydeevne.
+
+            Dit system har \(totalMemoryGB) total RAM.
+
+            Dette kan føre til:
+            • Langsom transcription hastighed
+            • System kan fryse midlertidigt
+            • Mulige app crashes
+
+            Vi anbefaler Medium eller Small model for bedre stabilitet.
+            """)
+        }
         .onAppear {
             viewModel.refreshModels()
             checkDownloadedModels()
@@ -309,6 +338,22 @@ struct SettingsView: View {
 
     private func isModelDownloaded(_ modelType: WhisperModelType) -> Bool {
         return downloadedModels.contains(modelType.rawValue)
+    }
+
+    private func selectModel(_ modelType: WhisperModelType) {
+        // Check memory for large model
+        if modelType == .large {
+            let memCheck = SystemRequirements.shared.hasSufficientMemory(for: modelType)
+            if let warning = memCheck.warning {
+                // Show warning but allow selection
+                pendingModelSelection = modelType.rawValue
+                showMemoryWarning = true
+                return
+            }
+        }
+
+        // Direct selection for other models
+        settings.selectedModel = modelType.rawValue
     }
 
     private func deleteModel(_ modelType: WhisperModelType) {

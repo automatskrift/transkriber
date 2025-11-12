@@ -46,6 +46,33 @@ class WhisperService: ObservableObject {
     func loadModel(_ modelType: WhisperModelType) async throws {
         print("🔄 Loading WhisperKit model: \(modelType.displayName)")
 
+        // Pre-flight checks before attempting to load model
+        let sysReq = SystemRequirements.shared
+
+        // Check disk space
+        let diskCheck = sysReq.hasSufficientDiskSpace(for: modelType)
+        if !diskCheck.sufficient {
+            print("❌ Insufficient disk space: required \(diskCheck.required), available \(diskCheck.available)")
+            throw WhisperError.insufficientDiskSpace(required: diskCheck.required, available: diskCheck.available)
+        }
+
+        // Check memory
+        let memCheck = sysReq.hasSufficientMemory(for: modelType)
+        if !memCheck.sufficient {
+            print("❌ Insufficient memory for \(modelType.displayName): required \(memCheck.required), available \(memCheck.available)")
+            throw WhisperError.insufficientMemory(
+                model: modelType.displayName,
+                required: memCheck.required,
+                available: memCheck.available
+            )
+        }
+
+        // Show warning if memory is tight
+        if let warning = memCheck.warning {
+            print("⚠️ Memory warning: \(warning)")
+            // Could show this warning to user in UI
+        }
+
         do {
             // Map our model types to WhisperKit model names
             // Use simple names as shown in WhisperKit README
@@ -155,7 +182,30 @@ class WhisperService: ObservableObject {
             downloadingModelName = nil
             loadingModelName = nil
             downloadProgress = 0.0
-            throw WhisperError.modelNotDownloaded
+
+            // Provide more specific error messages based on the error
+            let errorString = error.localizedDescription.lowercased()
+
+            if errorString.contains("network") || errorString.contains("connection") || errorString.contains("offline") {
+                throw WhisperError.networkUnavailable
+            } else if errorString.contains("disk") || errorString.contains("space") || errorString.contains("storage") {
+                let diskCheck = SystemRequirements.shared.hasSufficientDiskSpace(for: modelType)
+                throw WhisperError.insufficientDiskSpace(required: diskCheck.required, available: diskCheck.available)
+            } else if errorString.contains("memory") || errorString.contains("ram") {
+                let memCheck = SystemRequirements.shared.hasSufficientMemory(for: modelType)
+                throw WhisperError.insufficientMemory(
+                    model: modelType.displayName,
+                    required: memCheck.required,
+                    available: memCheck.available
+                )
+            } else if errorString.contains("download") {
+                throw WhisperError.downloadFailed(error.localizedDescription)
+            } else if errorString.contains("model") || errorString.contains("mlmodel") || errorString.contains("coreml") {
+                throw WhisperError.modelLoadingFailed(error.localizedDescription)
+            } else {
+                // If we can't identify the specific error, provide a more helpful message
+                throw WhisperError.modelLoadingFailed("Model kunne ikke indlæses: \(error.localizedDescription). Prøv at genstarte appen eller vælg en anden model.")
+            }
         }
     }
 
@@ -207,7 +257,8 @@ class WhisperService: ObservableObject {
         }
 
         guard let whisperKit = whisperKit else {
-            throw WhisperError.modelNotDownloaded
+            // This shouldn't happen if loadModel succeeded, but handle it gracefully
+            throw WhisperError.modelLoadingFailed("Model blev ikke initialiseret korrekt. Prøv at genstarte appen.")
         }
 
         isTranscribing = true
@@ -387,6 +438,11 @@ enum WhisperError: LocalizedError {
     case transcriptionFailed(String)
     case authorizationDenied
     case recognizerNotAvailable
+    case downloadFailed(String)
+    case insufficientDiskSpace(required: Int64, available: Int64)
+    case insufficientMemory(model: String, required: UInt64, available: UInt64)
+    case modelLoadingFailed(String)
+    case networkUnavailable
 
     var errorDescription: String? {
         switch self {
@@ -400,6 +456,24 @@ enum WhisperError: LocalizedError {
             return NSLocalizedString("Mikrofonadgang nægtet", comment: "")
         case .recognizerNotAvailable:
             return NSLocalizedString("Talegenkendelse ikke tilgængelig", comment: "")
+        case .downloadFailed(let error):
+            return String(format: NSLocalizedString("Model download fejlede: %@", comment: ""), error)
+        case .insufficientDiskSpace(let required, let available):
+            let formatter = ByteCountFormatter()
+            formatter.countStyle = .file
+            let reqStr = formatter.string(fromByteCount: required)
+            let availStr = formatter.string(fromByteCount: available)
+            return String(format: NSLocalizedString("Ikke nok diskplads. Kræver %@, har %@ tilgængelig.", comment: ""), reqStr, availStr)
+        case .insufficientMemory(let model, let required, let available):
+            let formatter = ByteCountFormatter()
+            formatter.countStyle = .memory
+            let reqStr = formatter.string(fromByteCount: Int64(min(required, UInt64(Int64.max))))
+            let availStr = formatter.string(fromByteCount: Int64(min(available, UInt64(Int64.max))))
+            return String(format: NSLocalizedString("%@ model kræver %@ RAM, men systemet har kun %@. Prøv en mindre model.", comment: ""), model, reqStr, availStr)
+        case .modelLoadingFailed(let error):
+            return String(format: NSLocalizedString("Model kunne ikke indlæses: %@", comment: ""), error)
+        case .networkUnavailable:
+            return NSLocalizedString("Ingen internetforbindelse. Tjek din netværksforbindelse og prøv igen.", comment: "")
         }
     }
 }
