@@ -24,7 +24,7 @@ struct TranscriptionsView: View {
 
             // Main content
             if viewModel.isLoading {
-                ProgressView("Loading transcriptions...")
+                ProgressView(NSLocalizedString("Loading transcriptions...", comment: "Loading transcriptions message"))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if viewModel.filteredTranscriptions.isEmpty {
                 emptyState
@@ -163,10 +163,10 @@ struct TranscriptionsView: View {
             // Export button
             Menu {
                 Button(action: exportCSV) {
-                    Label("Export as CSV", systemImage: "tablecells")
+                    Label(NSLocalizedString("Export as CSV", comment: "Export as CSV option"), systemImage: "tablecells")
                 }
                 Button(action: exportJSON) {
-                    Label("Export as JSON", systemImage: "curlybraces")
+                    Label(NSLocalizedString("Export as JSON", comment: "Export as JSON option"), systemImage: "curlybraces")
                 }
             } label: {
                 Label(NSLocalizedString("Export", comment: "Export button"), systemImage: "square.and.arrow.up")

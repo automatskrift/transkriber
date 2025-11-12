@@ -109,15 +109,15 @@ struct ModelDownloadAlert: View {
         // Approximate sizes for Whisper models
         switch model.lowercased() {
         case let m where m.contains("tiny"):
-            return "~39 MB"
+            return String(format: NSLocalizedString("~%d MB", comment: "Model size in megabytes"), 39)
         case let m where m.contains("base"):
-            return "~74 MB"
+            return String(format: NSLocalizedString("~%d MB", comment: "Model size in megabytes"), 74)
         case let m where m.contains("small"):
-            return "~244 MB"
+            return String(format: NSLocalizedString("~%d MB", comment: "Model size in megabytes"), 244)
         case let m where m.contains("medium"):
-            return "~769 MB"
+            return String(format: NSLocalizedString("~%d MB", comment: "Model size in megabytes"), 769)
         case let m where m.contains("large"):
-            return "~1.55 GB"
+            return String(format: NSLocalizedString("~%.2f GB", comment: "Model size in gigabytes"), 1.55)
         default:
             return NSLocalizedString("Size varies", comment: "Unknown model size")
         }

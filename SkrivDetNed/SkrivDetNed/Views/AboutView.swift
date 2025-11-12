@@ -38,7 +38,7 @@ struct AboutView: View {
                     .font(.title2)
                     .fontWeight(.bold)
 
-                Text("Version \(appVersion)")
+                Text(String(format: NSLocalizedString("Version %@", comment: "Version label with number"), appVersion))
                     .font(.caption)
                     .foregroundColor(.secondary)
             }

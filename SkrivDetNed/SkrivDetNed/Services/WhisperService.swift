@@ -287,7 +287,7 @@ class WhisperService: ObservableObject {
 
 
             // Get initial prompt from settings (for advanced users)
-            let initialPrompt = settings.whisperInitialPrompt
+            _ = settings.whisperInitialPrompt
 
             // Determine task (transcribe or translate)
             let task: DecodingTask = settings.whisperTranslateToEnglish ? .translate : .transcribe
@@ -391,9 +391,9 @@ class WhisperService: ObservableObject {
             // Provide more specific error messages for common issues
             let errorMessage = error.localizedDescription
             if errorMessage.contains("ML Program") {
-                throw WhisperError.transcriptionFailed("ML model error. This can happen with corrupted audio files, very long recordings, or if the model needs to be re-downloaded. Try with a different audio file or re-download the model in Settings.")
+                throw WhisperError.transcriptionFailed(NSLocalizedString("ML model error. This can happen with corrupted audio files, very long recordings, or if the model needs to be re-downloaded. Try with a different audio file or re-download the model in Settings.", comment: "ML model error message"))
             } else if errorMessage.contains("memory") || errorMessage.contains("Memory") {
-                throw WhisperError.transcriptionFailed("Out of memory. Try using a smaller model (e.g. Tiny or Base) or split your audio into shorter segments.")
+                throw WhisperError.transcriptionFailed(NSLocalizedString("Out of memory. Try using a smaller model (e.g. Tiny or Base) or split your audio into shorter segments.", comment: "Memory error message"))
             } else {
                 throw WhisperError.transcriptionFailed(errorMessage)
             }

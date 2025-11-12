@@ -52,7 +52,7 @@ struct FolderMonitorView: View {
 
                                             // Show percentage progress if available
                                             if whisperService.downloadProgress > 0 {
-                                                Text("Download: \(Int(whisperService.downloadProgress * 100))%")
+                                                Text(String(format: NSLocalizedString("Download: %d%%", comment: "Download progress percentage"), Int(whisperService.downloadProgress * 100)))
                                                     .font(.caption)
                                                     .foregroundColor(.secondary)
                                             }

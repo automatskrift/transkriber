@@ -55,7 +55,7 @@ class FolderMonitorService: ObservableObject {
         do {
             try BookmarkManager.shared.saveBookmark(for: folder)
         } catch {
-            let errorMsg = "Kunne ikke gemme folder bookmark: \(error.localizedDescription)"
+            let errorMsg = String(format: NSLocalizedString("Kunne ikke gemme folder bookmark: %@", comment: "Folder bookmark save error"), error.localizedDescription)
             print("❌ \(errorMsg)")
             lastError = errorMsg
             return
@@ -67,7 +67,7 @@ class FolderMonitorService: ObservableObject {
         // Start FSEvents monitoring
         let streamCreated = setupFSEvents(for: folder)
         if !streamCreated {
-            let errorMsg = "Kunne ikke oprette fil-overvågning for folderen"
+            let errorMsg = NSLocalizedString("Kunne ikke oprette fil-overvågning for folderen", comment: "File monitoring creation error")
             print("❌ \(errorMsg)")
             lastError = errorMsg
             isMonitoring = false
