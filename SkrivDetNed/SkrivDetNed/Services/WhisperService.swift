@@ -30,6 +30,7 @@ class WhisperService: ObservableObject {
     @Published var isLoadingModel = false  // Loading model after download
     @Published var downloadProgress: Double = 0.0
     @Published var downloadingModelName: String?
+    // Removed needsModelDownload - we'll handle this differently
     @Published var downloadCompletedUnits: Int64 = 0  // Download progress: completed units
     @Published var downloadTotalUnits: Int64 = 0      // Download progress: total units
     @Published var currentTranscribingText: String = ""  // Real-time transcription preview
@@ -63,17 +64,36 @@ class WhisperService: ObservableObject {
 
             // Check if model is already downloaded
             let modelPath = getModelPath(for: whisperKitModelName)
-            let isModelDownloaded = FileManager.default.fileExists(atPath: modelPath)
+            let audioEncoderPath = modelPath.appendingPathComponent("AudioEncoder.mlmodelc")
+            let textDecoderPath = modelPath.appendingPathComponent("TextDecoder.mlmodelc")
+            let melSpectrogramPath = modelPath.appendingPathComponent("MelSpectrogram.mlmodelc")
+
+            // Check for all essential model files
+            let hasAudioEncoder = FileManager.default.fileExists(atPath: audioEncoderPath.path)
+            let hasTextDecoder = FileManager.default.fileExists(atPath: textDecoderPath.path)
+            let hasMelSpectrogram = FileManager.default.fileExists(atPath: melSpectrogramPath.path)
+
+            let isModelDownloaded = hasAudioEncoder && hasTextDecoder && hasMelSpectrogram
+
+            print("🔍 Checking model at path: \(modelPath.path)")
+            print("   AudioEncoder exists: \(hasAudioEncoder)")
+            print("   TextDecoder exists: \(hasTextDecoder)")
+            print("   MelSpectrogram exists: \(hasMelSpectrogram)")
+            print("   Model fully downloaded: \(isModelDownloaded)")
 
             if isModelDownloaded {
-                // Model exists, just loading
-                print("📦 Model already downloaded, loading into memory...")
+                print("📦 Model already downloaded at: \(modelPath.path)")
+                // Model exists on disk, we're just loading it
                 isLoadingModel = true
-                downloadingModelName = modelType.displayName
+                isDownloadingModel = false
+                downloadingModelName = nil
             } else {
-                // Model needs download
-                print("⬇️ Model not found, downloading...")
+                print("⬇️ Model not found or incomplete at: \(modelPath.path)")
+                print("   Will be downloaded automatically by WhisperKit...")
+
+                // Model needs to be downloaded
                 isDownloadingModel = true
+                isLoadingModel = false
                 downloadingModelName = modelType.displayName
                 downloadProgress = 0.0
             }
@@ -95,9 +115,11 @@ class WhisperService: ObservableObject {
             print("✅ WhisperKit initialized successfully")
 
             currentModel = modelType
+            // Always reset flags after initialization completes
             isDownloadingModel = false
             isLoadingModel = false
-            downloadProgress = 1.0
+            downloadingModelName = nil
+            downloadProgress = 0.0
             print("✅ WhisperKit model loaded successfully: \(whisperKitModelName)")
         } catch {
             isDownloadingModel = false
@@ -312,11 +334,31 @@ class WhisperService: ObservableObject {
         currentProgress = 0.0
     }
 
-    private func getModelPath(for modelName: String) -> String {
-        // WhisperKit stores models in ~/Library/Caches/huggingface/models/
-        let cacheDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
-        let modelsPath = cacheDir.appendingPathComponent("huggingface/models/argmaxinc/whisperkit-coreml/openai_whisper-\(modelName)")
-        return modelsPath.path
+    private func getModelPath(for modelName: String) -> URL {
+        // WhisperKit stores models in the app container's Documents directory
+        // When running in the app, FileManager will automatically use the container path
+        // Path: ~/Library/Containers/dk.omdethele.SkrivDetNed/Data/Documents/huggingface/models/argmaxinc/whisperkit-coreml/
+
+        // First try the container's Documents directory (when sandboxed)
+        if let containerURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+            let huggingfacePath = containerURL.appendingPathComponent("huggingface/models/argmaxinc/whisperkit-coreml/openai_whisper-\(modelName)")
+
+            // Check if this path exists - if we're sandboxed, it should be the container path
+            if FileManager.default.fileExists(atPath: huggingfacePath.path) ||
+               huggingfacePath.path.contains("Containers/dk.omdethele.SkrivDetNed") {
+                print("📂 Using container Documents path: \(huggingfacePath.path)")
+                return huggingfacePath
+            }
+        }
+
+        // Fallback to explicit container path if needed
+        let homeDir = FileManager.default.homeDirectoryForCurrentUser
+        let explicitContainerPath = homeDir
+            .appendingPathComponent("Library/Containers/dk.omdethele.SkrivDetNed/Data/Documents")
+            .appendingPathComponent("huggingface/models/argmaxinc/whisperkit-coreml/openai_whisper-\(modelName)")
+
+        print("📂 Using explicit container path: \(explicitContainerPath.path)")
+        return explicitContainerPath
     }
 }
 

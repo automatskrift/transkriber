@@ -22,6 +22,8 @@ class TranscriptionViewModel: ObservableObject {
     @Published var completedTasks: [TranscriptionTask] = []
     @Published var currentTask: TranscriptionTask?
     @Published var pendingQueue: [URL] = [] // Exposed for UI to show pending files
+    @Published var showModelDownloadAlert = false
+    @Published var downloadingModelName = ""
 
     // Queue system ensures only ONE transcription runs at a time
     // This handles ALL transcription sources:
@@ -245,6 +247,15 @@ class TranscriptionViewModel: ObservableObject {
                     }
                     // Allow pending and transcribing status (transcribing will be reset by resetStuckTranscriptions)
                     print("   ✓ Status is \(metadata.status.rawValue) - will proceed")
+
+                    // If status is transcribing, it means it was interrupted - reset to pending
+                    if metadata.status == .transcribing {
+                        print("   🔧 Resetting interrupted transcription status (transcribing → pending)")
+                        var updatedMetadata = metadata
+                        updatedMetadata.status = .pending
+                        updatedMetadata.updatedAt = Date()
+                        try updatedMetadata.save(to: recordingsFolder)
+                    }
                 } else {
                     print("   ℹ️ No metadata found - will proceed")
                 }
@@ -912,6 +923,7 @@ class TranscriptionViewModel: ObservableObject {
     /// Update the entire queue order (used by drag and drop)
     func updateQueueOrder(_ newOrder: [URL]) {
         taskQueue = newOrder
+        pendingQueue = newOrder
         print("📝 Queue reordered via drag and drop: \(taskQueue.map { $0.lastPathComponent })")
     }
 

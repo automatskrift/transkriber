@@ -136,44 +136,9 @@ struct FolderMonitorView: View {
 
                             Divider()
 
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 12) {
-                                    ForEach(Array(transcriptionVM.pendingQueue.enumerated()), id: \.element) { index, fileURL in
-                                        PendingFileCard(fileURL: fileURL)
-                                            .environmentObject(transcriptionVM)
-                                            .onDrop(of: [.url], isTargeted: nil) { providers in
-                                                // Handle drop
-                                                guard let provider = providers.first else { return false }
-
-                                                provider.loadItem(forTypeIdentifier: UTType.url.identifier, options: nil) { item, error in
-                                                    guard let data = item as? Data,
-                                                          let droppedURL = URL(dataRepresentation: data, relativeTo: nil) else { return }
-
-                                                    DispatchQueue.main.async {
-                                                        // Find source index
-                                                        if let sourceIndex = transcriptionVM.pendingQueue.firstIndex(of: droppedURL) {
-                                                            // Don't move if dropping on same position
-                                                            if sourceIndex != index {
-                                                                // Remove from old position
-                                                                var newQueue = transcriptionVM.pendingQueue
-                                                                newQueue.remove(at: sourceIndex)
-
-                                                                // Insert at new position
-                                                                let destinationIndex = sourceIndex < index ? index - 1 : index
-                                                                newQueue.insert(droppedURL, at: destinationIndex)
-
-                                                                // Update the queue through proper channel
-                                                                transcriptionVM.updateQueueOrder(newQueue)
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                                return true
-                                            }
-                                    }
-                                }
-                            }
-                            .frame(height: 100)
+                            // Use the simpler reorderable queue view
+                            SimpleReorderableQueueView()
+                                .environmentObject(transcriptionVM)
                         }
                         .padding(.vertical, 8)
                     }
@@ -598,27 +563,7 @@ struct PendingFileCard: View {
         )
         .scaleEffect(isDragging ? 1.05 : 1.0)
         .animation(.easeInOut(duration: 0.2), value: isDragging)
-        .onDrag {
-            isDragging = true
-            // Reset dragging state after a delay
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                isDragging = false
-            }
-            return NSItemProvider(object: fileURL as NSURL)
-        } preview: {
-            // Preview during drag
-            VStack {
-                Image(systemName: "doc.fill")
-                    .font(.largeTitle)
-                    .foregroundColor(.orange)
-                Text(fileURL.lastPathComponent)
-                    .font(.caption)
-                    .lineLimit(1)
-            }
-            .padding()
-            .background(Color(.controlBackgroundColor))
-            .cornerRadius(8)
-        }
+        // Removed onDrag here - it's now handled by SimpleReorderableQueueView
     }
 
     private func getFileSource() -> String? {

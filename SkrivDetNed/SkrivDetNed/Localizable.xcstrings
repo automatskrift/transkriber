@@ -841,6 +841,9 @@
     "Close" : {
       "comment" : "Close button"
     },
+    "Completed" : {
+      "comment" : "Status: Completed"
+    },
     "Configure automatic monitoring of a local folder for new audio files." : {
       "comment" : "Monitor Folder page description",
       "extractionState" : "manual",
@@ -1072,6 +1075,9 @@
         }
       }
     },
+    "Download time depends on your internet connection speed." : {
+      "comment" : "Download time info"
+    },
     "Download: %lld%%" : {
 
     },
@@ -1108,6 +1114,15 @@
           }
         }
       }
+    },
+    "Downloading Whisper Model" : {
+      "comment" : "Download alert title"
+    },
+    "Downloading: %d%%" : {
+      "comment" : "Download percentage"
+    },
+    "Downloading..." : {
+      "comment" : "Status: Downloading"
     },
     "Duration" : {
       "comment" : "Duration"
@@ -1246,6 +1261,9 @@
           }
         }
       }
+    },
+    "Failed" : {
+      "comment" : "Status: Failed"
     },
     "Fastest, least accurate" : {
       "comment" : "Tiny model desc"
@@ -1956,6 +1974,9 @@
           }
         }
       }
+    },
+    "In Queue" : {
+      "comment" : "Status: In Queue"
     },
     "In Queue (%lld)" : {
       "comment" : "Queue count",
@@ -2780,6 +2801,9 @@
         }
       }
     },
+    "Model Size" : {
+      "comment" : "Model size label"
+    },
     "Modellen downloades automatisk ved første brug" : {
       "comment" : "Info about WhisperKit auto-download",
       "extractionState" : "manual",
@@ -3251,6 +3275,9 @@
         }
       }
     },
+    "Pending" : {
+      "comment" : "Status: Pending"
+    },
     "Pending Files" : {
       "comment" : "Pending files section",
       "extractionState" : "manual",
@@ -3499,6 +3526,9 @@
     },
     "Show preview" : {
       "comment" : "Expand"
+    },
+    "Size varies" : {
+      "comment" : "Unknown model size"
     },
     "SkrivDetNed" : {
       "extractionState" : "manual",
@@ -3792,6 +3822,9 @@
         }
       }
     },
+    "Starting download..." : {
+      "comment" : "Starting download"
+    },
     "Status:" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3970,6 +4003,9 @@
         }
       }
     },
+    "The AI model needs to be downloaded to your computer." : {
+      "comment" : "Download explanation"
+    },
     "The easiest way to use SkrivDetNed is together with the companion iPhone app:" : {
       "comment" : "iCloud description intro"
     },
@@ -4011,6 +4047,9 @@
           }
         }
       }
+    },
+    "This is a one-time download." : {
+      "comment" : "One-time download"
     },
     "This will remove the transcription from the database. The original files will not be deleted." : {
       "comment" : "Delete message"
@@ -4054,6 +4093,9 @@
     },
     "Transcribed" : {
       "comment" : "Transcribed"
+    },
+    "Transcribing..." : {
+      "comment" : "Status: Transcribing"
     },
     "Transcription" : {
       "comment" : "Transcription header"
@@ -4372,6 +4414,9 @@
           }
         }
       }
+    },
+    "Uploading" : {
+      "comment" : "Status: Uploading"
     },
     "Use the menu bar icon for quick status updates" : {
       "comment" : "Tip 1"
@@ -4828,6 +4873,9 @@
     },
     "When you transcribe files, they will appear here" : {
       "comment" : "Empty state description"
+    },
+    "Whisper Model" : {
+      "comment" : "Default model name"
     },
     "Whisper model er ikke downloadet. Download en model i indstillinger." : {
       "extractionState" : "manual",

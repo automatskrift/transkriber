@@ -12,6 +12,7 @@ struct MainView: View {
     @StateObject private var folderMonitorVM = FolderMonitorViewModel.shared
     @StateObject private var transcriptionVM = TranscriptionViewModel.shared
     @StateObject private var whisperService = WhisperService.shared
+    @State private var showModelDownloadAlert = false
 
     enum Tab {
         case monitor
@@ -101,6 +102,9 @@ struct MainView: View {
         } message: {
             Text(String(format: NSLocalizedString("Der blev fundet %lld eksisterende lydfil(er) i iCloud. Vil du transskribere dem nu?", comment: ""), folderMonitorVM.existingFilesCount))
         }
+        // Download alert removed - it was showing incorrectly
+        // The download happens automatically in the background
+        // Users can see progress in the console if needed
     }
 }
 
