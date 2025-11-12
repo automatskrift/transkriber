@@ -396,7 +396,7 @@ class TranscriptionViewModel: ObservableObject {
                 print("✅ Saved to temporary location: \(tempOutputURL.path)")
 
                 // Update the task with the new output URL
-                if let index = activeTasks.firstIndex(where: { $0.id == task.id }) {
+                if activeTasks.firstIndex(where: { $0.id == task.id }) != nil {
                     // Can't mutate outputFileURL as it's a let, so we'll just note it in the error
                     // User will need to manually save from the temp location
                 }

@@ -335,7 +335,7 @@ struct SettingsView: View {
         // Check memory for large model
         if modelType == .large {
             let memCheck = SystemRequirements.shared.hasSufficientMemory(for: modelType)
-            if let warning = memCheck.warning {
+            if memCheck.warning != nil {
                 // Show warning but allow selection
                 pendingModelSelection = modelType.rawValue
                 showMemoryWarning = true

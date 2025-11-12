@@ -64,7 +64,7 @@ class iCloudSyncService: ObservableObject {
                 options: [.skipsHiddenFiles]
             )
 
-            let duplicateFolders = contents.filter { url in
+            _ = contents.filter { url in
                 let name = url.lastPathComponent
                 return name.hasPrefix("Recordings") && name != "Recordings"
             }
