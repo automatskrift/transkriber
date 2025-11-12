@@ -23,6 +23,8 @@ class FolderMonitorViewModel: ObservableObject {
     @Published var recentlyCompleted: [TranscriptionTask] = []
     @Published var showExistingFilesPrompt = false
     @Published var existingFilesCount = 0
+    @Published var errorMessage: String?
+    @Published var showError = false
 
     // iCloud file categories
     @Published var iCloudQueuedFiles: [(url: URL, metadata: RecordingMetadata)] = []
@@ -34,6 +36,7 @@ class FolderMonitorViewModel: ObservableObject {
     private let iCloudService = iCloudSyncService.shared
     private let settings = AppSettings.shared
     private var iCloudRefreshTimer: Timer?
+    private var cancellables = Set<AnyCancellable>()
 
     private init() {
         let initMsg = "🏁 FolderMonitorViewModel INIT at \(Date()) - iCloudSyncEnabled: \(settings.iCloudSyncEnabled)"
@@ -144,6 +147,17 @@ class FolderMonitorViewModel: ObservableObject {
         monitorService.$pendingFiles
             .assign(to: &$pendingFiles)
 
+        // Observe errors from folder monitor service
+        monitorService.$lastError
+            .compactMap { $0 }
+            .sink { [weak self] error in
+                Task { @MainActor [weak self] in
+                    self?.errorMessage = error
+                    self?.showError = true
+                }
+            }
+            .store(in: &cancellables)
+
         // Observe transcription completed tasks
         transcriptionVM.$completedTasks
             .map { Array($0.prefix(10)) }
@@ -224,15 +238,6 @@ class FolderMonitorViewModel: ObservableObject {
                 selectedFolderURL = URL(fileURLWithPath: path)
                 print("   📁 Set selectedFolderURL (monitoring disabled): \(path)")
             }
-        } else if let folderURL = settings.monitoredFolderURL {
-            print("   🔄 Fallback: Using old settings.monitoredFolderURL")
-            // Fallback to old method (for migration)
-            selectedFolderURL = folderURL
-
-            if settings.isMonitoringEnabled {
-                print("   ▶️ Starting monitoring via old method...")
-                startMonitoring()
-            }
         } else {
             print("   ℹ️ No saved folder found")
         }
@@ -252,7 +257,6 @@ class FolderMonitorViewModel: ObservableObject {
             if response == .OK, let url = panel.url {
                 Task { @MainActor in
                     self.selectedFolderURL = url
-                    self.settings.monitoredFolderURL = url
 
                     // Start monitoring automatically
                     self.startMonitoring()
@@ -263,13 +267,23 @@ class FolderMonitorViewModel: ObservableObject {
 
     func startMonitoring() {
         guard let folderURL = selectedFolderURL else {
+            errorMessage = NSLocalizedString("Ingen folder valgt. Vælg venligst en folder først.", comment: "")
+            showError = true
             print("No folder selected")
             return
         }
 
         // FolderMonitorService now handles security-scoped access and bookmark saving
         monitorService.startMonitoring(folder: folderURL)
-        settings.isMonitoringEnabled = true
+
+        // Verify that monitoring actually started
+        if !monitorService.isMonitoring {
+            errorMessage = NSLocalizedString("Kunne ikke starte overvågning. Tjek at appen har adgang til folderen.", comment: "")
+            showError = true
+            settings.isMonitoringEnabled = false
+        } else {
+            settings.isMonitoringEnabled = true
+        }
     }
 
     func stopMonitoring() {

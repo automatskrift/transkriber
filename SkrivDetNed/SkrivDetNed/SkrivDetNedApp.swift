@@ -14,6 +14,9 @@ struct SkrivDetNedApp: App {
     @State private var showingAbout = false
     @State private var showingHelp = false
 
+    // Initialize Core Data
+    let persistenceController = PersistenceController.shared
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -74,12 +77,42 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         Task { @MainActor in
             iCloudSyncService.shared.startHeartbeat()
         }
+
+        // Restore folder monitoring if it was enabled
+        Task { @MainActor in
+            if AppSettings.shared.isMonitoringEnabled {
+                print("📂 Restoring folder monitoring on app launch...")
+                let restored = FolderMonitorService.shared.restoreMonitoringFromBookmark()
+                if restored {
+                    print("✅ Folder monitoring restored successfully")
+                } else {
+                    print("⚠️ Failed to restore folder monitoring")
+                    // Reset the flag if restoration failed
+                    AppSettings.shared.isMonitoringEnabled = false
+                }
+            }
+        }
+
+        // Migrate existing transcriptions to Core Data (first launch after update)
+        Task { @MainActor in
+            print("🗄️ Checking for existing transcriptions to import...")
+            await TranscriptionDatabase.shared.importExistingTranscriptions()
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
         // Stop heartbeat when app quits
         Task { @MainActor in
             iCloudSyncService.shared.stopHeartbeat()
+        }
+
+        // Clean up folder monitoring resources
+        Task { @MainActor in
+            if FolderMonitorService.shared.isMonitoring {
+                // Note: Don't call stopMonitoring() as it would disable the feature
+                // Just clean up the security-scoped resource access
+                BookmarkManager.shared.stopAccessing()
+            }
         }
     }
 

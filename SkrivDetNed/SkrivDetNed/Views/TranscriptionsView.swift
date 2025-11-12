@@ -6,297 +6,448 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct TranscriptionsView: View {
-    @EnvironmentObject private var transcriptionVM: TranscriptionViewModel
-    @State private var searchText = ""
-    @State private var filteredTasks: [TranscriptionTask] = []
-    @State private var isActive = false
+    @StateObject private var viewModel = TranscriptionsViewModel.shared
+    @State private var showingSortMenu = false
+    @State private var showingFilterMenu = false
+    @State private var showingExportMenu = false
+    @State private var selectedRecord: TranscriptionRecord?
 
     var body: some View {
         VStack(spacing: 0) {
+            // Header with search and controls
+            headerView
+
+            Divider()
+
+            // Main content
+            if viewModel.isLoading {
+                ProgressView("Loading transcriptions...")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if viewModel.filteredTranscriptions.isEmpty {
+                emptyState
+            } else {
+                transcriptionsList
+            }
+        }
+        .frame(minWidth: 700, minHeight: 500)
+        .sheet(item: $selectedRecord) { record in
+            TranscriptionDetailView(record: record)
+        }
+        .task {
+            await viewModel.loadTranscriptions()
+        }
+    }
+
+    // MARK: - Header View
+
+    private var headerView: some View {
+        HStack(spacing: 12) {
             // Search bar
             HStack {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.secondary)
 
-                TextField(NSLocalizedString("Søg i transskriptioner...", comment: ""), text: $searchText)
+                TextField(NSLocalizedString("Search transcriptions...", comment: "Search placeholder"), text: $viewModel.searchText)
                     .textFieldStyle(.plain)
+                    .onSubmit {
+                        Task {
+                            await viewModel.search()
+                        }
+                    }
 
-                if !searchText.isEmpty {
-                    Button(action: { searchText = "" }) {
+                if !viewModel.searchText.isEmpty {
+                    Button(action: {
+                        viewModel.searchText = ""
+                        Task {
+                            await viewModel.loadTranscriptions()
+                        }
+                    }) {
                         Image(systemName: "xmark.circle.fill")
                             .foregroundColor(.secondary)
                     }
                     .buttonStyle(.plain)
                 }
             }
-            .padding(12)
+            .padding(8)
             .background(Color(NSColor.controlBackgroundColor))
-            .cornerRadius(8)
-            .padding()
+            .cornerRadius(6)
 
-            Divider()
-
-            // Content - only show if view is active
-            if isActive {
-                if filteredTasks.isEmpty {
-                    emptyState
-                } else {
-                    transcriptionsList
+            // Sort button
+            Menu {
+                ForEach(TranscriptionDatabase.SortOption.allCases, id: \.self) { option in
+                    Button(action: {
+                        Task {
+                            await viewModel.setSortOption(option)
+                        }
+                    }) {
+                        HStack {
+                            Text(option.displayName)
+                            if viewModel.sortOption == option {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
                 }
-            } else {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } label: {
+                Label(NSLocalizedString("Sort", comment: "Sort button"), systemImage: "arrow.up.arrow.down")
+                    .frame(minWidth: 80)
             }
-        }
-        .frame(minWidth: 600, minHeight: 500)
-        .onChange(of: searchText) {
-            if isActive {
-                updateFilteredTasks()
+            .menuStyle(.borderlessButton)
+
+            // Filter button
+            Menu {
+                // Source filter
+                Menu(NSLocalizedString("Source", comment: "Source filter")) {
+                    Button(NSLocalizedString("All", comment: "All sources")) {
+                        viewModel.filterSource = nil
+                        viewModel.applyFilters()
+                    }
+                    Divider()
+                    ForEach(viewModel.getSources(), id: \.self) { source in
+                        Button(sourceDisplayName(source)) {
+                            viewModel.filterSource = source
+                            viewModel.applyFilters()
+                        }
+                    }
+                }
+
+                // Language filter
+                if !viewModel.getUniqueLanguages().isEmpty {
+                    Menu(NSLocalizedString("Language", comment: "Language filter")) {
+                        Button(NSLocalizedString("All", comment: "All languages")) {
+                            viewModel.filterLanguage = nil
+                            viewModel.applyFilters()
+                        }
+                        Divider()
+                        ForEach(viewModel.getUniqueLanguages(), id: \.self) { language in
+                            Button(language) {
+                                viewModel.filterLanguage = language
+                                viewModel.applyFilters()
+                            }
+                        }
+                    }
+                }
+
+                // Model filter
+                if !viewModel.getUniqueModels().isEmpty {
+                    Menu(NSLocalizedString("Model", comment: "Model filter")) {
+                        Button(NSLocalizedString("All", comment: "All models")) {
+                            viewModel.filterModel = nil
+                            viewModel.applyFilters()
+                        }
+                        Divider()
+                        ForEach(viewModel.getUniqueModels(), id: \.self) { model in
+                            Button(model.capitalized) {
+                                viewModel.filterModel = model
+                                viewModel.applyFilters()
+                            }
+                        }
+                    }
+                }
+
+                Divider()
+
+                Button(NSLocalizedString("Clear Filters", comment: "Clear filters")) {
+                    viewModel.clearFilters()
+                }
+                .disabled(viewModel.filterSource == nil && viewModel.filterLanguage == nil && viewModel.filterModel == nil)
+            } label: {
+                Label(NSLocalizedString("Filter", comment: "Filter button"), systemImage: "line.3.horizontal.decrease.circle")
+                    .frame(minWidth: 80)
             }
-        }
-        .onChange(of: transcriptionVM.completedTasks.count) {
-            if isActive {
-                updateFilteredTasks()
+            .menuStyle(.borderlessButton)
+
+            // Export button
+            Menu {
+                Button(action: exportCSV) {
+                    Label("Export as CSV", systemImage: "tablecells")
+                }
+                Button(action: exportJSON) {
+                    Label("Export as JSON", systemImage: "curlybraces")
+                }
+            } label: {
+                Label(NSLocalizedString("Export", comment: "Export button"), systemImage: "square.and.arrow.up")
+                    .frame(minWidth: 80)
             }
+            .menuStyle(.borderlessButton)
+            .disabled(viewModel.filteredTranscriptions.isEmpty)
         }
-        .onAppear {
-            // Delay to ensure smooth transition
-            Task { @MainActor in
-                try? await Task.sleep(nanoseconds: 50_000_000) // 0.05 seconds
-                isActive = true
-                updateFilteredTasks()
-            }
-        }
-        .onDisappear {
-            isActive = false
-        }
+        .padding()
     }
 
-    private func updateFilteredTasks() {
-        // Perform filtering asynchronously to avoid blocking UI
-        Task { @MainActor in
-            let completed = transcriptionVM.completedTasks.filter { $0.status == .completed }
-
-            if searchText.isEmpty {
-                filteredTasks = completed
-            } else {
-                // Only filter by filename to avoid loading all transcription files
-                // Users can open individual transcriptions to search content
-                filteredTasks = completed.filter { task in
-                    task.fileName.localizedCaseInsensitiveContains(searchText)
-                }
-            }
-        }
-    }
+    // MARK: - Transcriptions List
 
     private var transcriptionsList: some View {
         ScrollView {
             LazyVStack(spacing: 12) {
-                ForEach(filteredTasks) { task in
-                    TranscriptionRow(task: task)
-                        .id(task.id) // Ensure stable identity
+                ForEach(viewModel.filteredTranscriptions) { record in
+                    DatabaseTranscriptionRow(
+                        record: record,
+                        isSelected: viewModel.selectedTranscriptions.contains(record.id),
+                        onSelect: {
+                            if viewModel.selectedTranscriptions.contains(record.id) {
+                                viewModel.selectedTranscriptions.remove(record.id)
+                            } else {
+                                viewModel.selectedTranscriptions.insert(record.id)
+                            }
+                        },
+                        onView: {
+                            selectedRecord = record
+                        },
+                        onDelete: {
+                            Task {
+                                await viewModel.deleteTranscription(record)
+                            }
+                        }
+                    )
                 }
             }
             .padding()
         }
     }
 
+    // MARK: - Empty State
+
     private var emptyState: some View {
         VStack(spacing: 20) {
-            Image(systemName: searchText.isEmpty ? "doc.text.magnifyingglass" : "magnifyingglass")
+            Image(systemName: viewModel.searchText.isEmpty ? "doc.text.magnifyingglass" : "magnifyingglass")
                 .font(.system(size: 60))
                 .foregroundColor(.secondary)
 
-            Text(searchText.isEmpty ? NSLocalizedString("Ingen transskriptioner endnu", comment: "") : NSLocalizedString("Ingen resultater", comment: ""))
+            Text(viewModel.searchText.isEmpty ?
+                NSLocalizedString("No transcriptions yet", comment: "Empty state") :
+                NSLocalizedString("No results found", comment: "No search results"))
                 .font(.title2)
                 .fontWeight(.semibold)
 
-            Text(searchText.isEmpty ?
-                 NSLocalizedString("Når du transskriberer filer, vil de dukke op her", comment: "") :
-                 NSLocalizedString("Prøv at søge efter noget andet", comment: ""))
+            Text(viewModel.searchText.isEmpty ?
+                NSLocalizedString("When you transcribe files, they will appear here", comment: "Empty state description") :
+                NSLocalizedString("Try searching for something else", comment: "No results description"))
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
+
+            if viewModel.filterSource != nil || viewModel.filterLanguage != nil || viewModel.filterModel != nil {
+                Button(NSLocalizedString("Clear Filters", comment: "Clear filters")) {
+                    viewModel.clearFilters()
+                }
+                .buttonStyle(.bordered)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()
     }
+
+    // MARK: - Helper Functions
+
+    private func sourceDisplayName(_ source: String) -> String {
+        switch source {
+        case "manual": return NSLocalizedString("Manual", comment: "Manual source")
+        case "folder": return NSLocalizedString("Folder", comment: "Folder source")
+        case "icloud": return "iCloud"
+        default: return source
+        }
+    }
+
+    private func exportCSV() {
+        let csv = viewModel.exportToCSV()
+        let savePanel = NSSavePanel()
+        savePanel.nameFieldStringValue = "transcriptions_\(Date().timeIntervalSince1970).csv"
+        savePanel.allowedContentTypes = [.commaSeparatedText]
+
+        if savePanel.runModal() == .OK, let url = savePanel.url {
+            do {
+                try csv.write(to: url, atomically: true, encoding: .utf8)
+                print("✅ Exported CSV to: \(url.path)")
+            } catch {
+                print("❌ Failed to export CSV: \(error)")
+            }
+        }
+    }
+
+    private func exportJSON() {
+        do {
+            let jsonData = try viewModel.exportToJSON()
+            let savePanel = NSSavePanel()
+            savePanel.nameFieldStringValue = "transcriptions_\(Date().timeIntervalSince1970).json"
+            savePanel.allowedContentTypes = [.json]
+
+            if savePanel.runModal() == .OK, let url = savePanel.url {
+                try jsonData.write(to: url)
+                print("✅ Exported JSON to: \(url.path)")
+            }
+        } catch {
+            print("❌ Failed to export JSON: \(error)")
+        }
+    }
 }
 
-struct TranscriptionRow: View {
-    let task: TranscriptionTask
-    @State private var transcriptionText: String?
+// MARK: - Database Transcription Row
+
+struct DatabaseTranscriptionRow: View {
+    let record: TranscriptionRecord
+    let isSelected: Bool
+    let onSelect: () -> Void
+    let onView: () -> Void
+    let onDelete: () -> Void
+
     @State private var isExpanded = false
-    @State private var showingTextWindow = false
-    @State private var fileExists = false
-    @State private var hasLoaded = false
+    @State private var showingDeleteConfirmation = false
 
     var body: some View {
         GroupBox {
             VStack(alignment: .leading, spacing: 12) {
                 // Header
                 HStack {
-                    Image(systemName: "doc.text.fill")
+                    // Selection checkbox
+                    Button(action: onSelect) {
+                        Image(systemName: isSelected ? "checkmark.square.fill" : "square")
+                            .foregroundColor(isSelected ? .accentColor : .secondary)
+                    }
+                    .buttonStyle(.plain)
+
+                    // Icon based on source
+                    Image(systemName: record.sourceIcon)
                         .foregroundColor(.accentColor)
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(task.fileName)
+                        Text(record.audioFileName)
                             .font(.headline)
 
-                        if let completedAt = task.completedAt {
-                            Text(completedAt.timeAgoString())
+                        HStack(spacing: 8) {
+                            Text(record.transcribedAt.timeAgoString())
                                 .font(.caption)
                                 .foregroundColor(.secondary)
+
+                            if record.iCloudSynced {
+                                Image(systemName: "icloud.fill")
+                                    .font(.caption)
+                                    .foregroundColor(.blue)
+                            }
+
+                            if !record.tagArray.isEmpty {
+                                ForEach(record.tagArray.prefix(3), id: \.self) { tag in
+                                    Text(tag)
+                                        .font(.caption2)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(Color.accentColor.opacity(0.2))
+                                        .cornerRadius(4)
+                                }
+                            }
                         }
                     }
 
                     Spacer()
 
+                    // Metadata
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Label(record.formattedDuration, systemImage: "clock")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        Label("\(record.wordCount) words", systemImage: "textformat")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
                     // Actions
                     HStack(spacing: 8) {
-                        // Show text in window button
-                        if transcriptionText != nil {
-                            Button(action: {
-                                showingTextWindow = true
-                            }) {
-                                Label(NSLocalizedString("Vis tekst", comment: ""), systemImage: "doc.text.magnifyingglass")
-                                    .font(.caption)
-                            }
-                            .buttonStyle(.borderless)
+                        Button(action: onView) {
+                            Label(NSLocalizedString("View", comment: "View button"), systemImage: "eye")
+                                .font(.caption)
                         }
+                        .buttonStyle(.borderless)
 
-                        // Copy text button
-                        if let transcription = transcriptionText {
-                            Button(action: {
-                                NSPasteboard.general.clearContents()
-                                NSPasteboard.general.setString(transcription, forType: .string)
-                            }) {
-                                Label(NSLocalizedString("Kopier", comment: ""), systemImage: "doc.on.doc")
-                                    .font(.caption)
-                            }
-                            .buttonStyle(.borderless)
+                        Button(action: {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(record.transcriptionText, forType: .string)
+                        }) {
+                            Label(NSLocalizedString("Copy", comment: "Copy button"), systemImage: "doc.on.doc")
+                                .font(.caption)
                         }
+                        .buttonStyle(.borderless)
 
-                        // Open transcription file button
-                        if fileExists {
-                            Button(action: {
-                                NSWorkspace.shared.activateFileViewerSelecting([task.outputFileURL])
-                            }) {
-                                Label(NSLocalizedString("Vis fil", comment: ""), systemImage: "folder")
-                                    .font(.caption)
-                            }
-                            .buttonStyle(.borderless)
+                        Button(action: {
+                            showingDeleteConfirmation = true
+                        }) {
+                            Label(NSLocalizedString("Delete", comment: "Delete button"), systemImage: "trash")
+                                .font(.caption)
                         }
+                        .buttonStyle(.borderless)
+                        .foregroundColor(.red)
                     }
                 }
 
-                // Transcription preview
-                if let transcription = transcriptionText {
+                // Expandable transcription preview
+                if isExpanded {
                     Divider()
 
-                    VStack(alignment: .leading, spacing: 8) {
-                        if isExpanded {
-                            ScrollView {
-                                Text(transcription)
-                                    .font(.body)
-                                    .foregroundColor(.primary)
-                                    .textSelection(.enabled)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                            .frame(maxHeight: 300)
-                            .background(Color(NSColor.controlBackgroundColor))
-                            .cornerRadius(6)
-                        } else {
-                            Text(transcription)
-                                .font(.body)
-                                .foregroundColor(.primary)
-                                .lineLimit(5)
-                                .textSelection(.enabled)
-                        }
-
-                        // Show expand/collapse button if text is long
-                        if transcription.count > 200 {
-                            Button(action: { isExpanded.toggle() }) {
-                                Label(isExpanded ? NSLocalizedString("Vis mindre", comment: "") : NSLocalizedString("Vis mere", comment: ""), systemImage: isExpanded ? "chevron.up" : "chevron.down")
-                                    .font(.caption)
-                            }
-                            .buttonStyle(.borderless)
-                        }
+                    ScrollView {
+                        Text(record.transcriptionText)
+                            .font(.body)
+                            .textSelection(.enabled)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
+                    .frame(maxHeight: 200)
+                    .background(Color(NSColor.controlBackgroundColor))
+                    .cornerRadius(6)
                 }
 
-                // Metadata
-                if let duration = task.duration {
-                    Divider()
-
-                    HStack {
-                        Label(String(format: NSLocalizedString("Varighed: %llds", comment: ""), Int(duration)), systemImage: "clock")
-
-                        Spacer()
-
-                        if let transcription = transcriptionText {
-                            Label(String(format: NSLocalizedString("%lld ord", comment: ""), transcription.split(separator: " ").count), systemImage: "textformat")
-                        }
-                    }
+                // Expand/collapse button
+                Button(action: { isExpanded.toggle() }) {
+                    Label(
+                        isExpanded ? NSLocalizedString("Show less", comment: "Collapse") : NSLocalizedString("Show preview", comment: "Expand"),
+                        systemImage: isExpanded ? "chevron.up" : "chevron.down"
+                    )
                     .font(.caption)
-                    .foregroundColor(.secondary)
                 }
+                .buttonStyle(.borderless)
             }
             .padding(8)
         }
-        .task(id: task.id) {
-            // Only load once per task
-            guard !hasLoaded else { return }
-
-            // Don't block - run everything in background
-            await Task.detached(priority: .background) {
-                // Mark as loaded immediately to prevent duplicate loads
-                await MainActor.run { hasLoaded = true }
-
-                // Check if file exists
-                let exists = FileManager.default.fileExists(atPath: task.outputFileURL.path)
-
-                await MainActor.run {
-                    fileExists = exists
-                }
-
-                guard exists, !Task.isCancelled else { return }
-
-                // Load file content
-                guard let text = try? String(contentsOf: task.outputFileURL, encoding: .utf8),
-                      !Task.isCancelled else { return }
-
-                await MainActor.run {
-                    transcriptionText = text
-                }
-            }.value
-        }
-        .sheet(isPresented: $showingTextWindow) {
-            if let text = transcriptionText {
-                TranscriptionTextWindow(text: text, fileName: task.fileName)
+        .confirmationDialog(
+            NSLocalizedString("Delete Transcription?", comment: "Delete confirmation"),
+            isPresented: $showingDeleteConfirmation
+        ) {
+            Button(NSLocalizedString("Delete", comment: "Delete"), role: .destructive) {
+                onDelete()
             }
+            Button(NSLocalizedString("Cancel", comment: "Cancel"), role: .cancel) {}
+        } message: {
+            Text(NSLocalizedString("This will remove the transcription from the database. The original files will not be deleted.", comment: "Delete message"))
         }
     }
 }
 
-struct TranscriptionTextWindow: View {
-    let text: String
-    let fileName: String
+// MARK: - Transcription Detail View
+
+struct TranscriptionDetailView: View {
+    let record: TranscriptionRecord
     @Environment(\.dismiss) var dismiss
+    @State private var notes: String = ""
+    @State private var tagText: String = ""
 
     var body: some View {
         VStack(spacing: 0) {
             // Header
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(fileName)
+                    Text(record.audioFileName)
                         .font(.headline)
-                    Text(String(format: NSLocalizedString("%lld ord", comment: ""), text.split(separator: " ").count))
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+
+                    HStack {
+                        Text(String(format: NSLocalizedString("%d words • %@ • %@", comment: "Details"),
+                                  record.wordCount,
+                                  record.formattedDuration,
+                                  record.modelUsed.capitalized))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 }
 
                 Spacer()
@@ -304,15 +455,13 @@ struct TranscriptionTextWindow: View {
                 // Copy button
                 Button(action: {
                     NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(text, forType: .string)
+                    NSPasteboard.general.setString(record.transcriptionText, forType: .string)
                 }) {
-                    Label(NSLocalizedString("Kopier", comment: ""), systemImage: "doc.on.doc")
+                    Label(NSLocalizedString("Copy", comment: "Copy"), systemImage: "doc.on.doc")
                 }
 
                 // Close button
-                Button(action: {
-                    dismiss()
-                }) {
+                Button(action: { dismiss() }) {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundColor(.secondary)
                 }
@@ -323,21 +472,104 @@ struct TranscriptionTextWindow: View {
 
             Divider()
 
-            // Scrollable text content
+            // Scrollable content
             ScrollView {
-                Text(text)
-                    .font(.body)
-                    .textSelection(.enabled)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
+                VStack(alignment: .leading, spacing: 20) {
+                    // Transcription text
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(NSLocalizedString("Transcription", comment: "Transcription header"))
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+
+                        Text(record.transcriptionText)
+                            .font(.body)
+                            .textSelection(.enabled)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+
+                    Divider()
+
+                    // Metadata
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(NSLocalizedString("Details", comment: "Details header"))
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                            DetailRow(label: NSLocalizedString("Source", comment: "Source"), value: record.sourceDisplayName)
+                            DetailRow(label: NSLocalizedString("Model", comment: "Model"), value: record.modelUsed.capitalized)
+                            DetailRow(label: NSLocalizedString("Language", comment: "Language"), value: record.language ?? "Auto")
+                            DetailRow(label: NSLocalizedString("Duration", comment: "Duration"), value: record.formattedDuration)
+                            DetailRow(label: NSLocalizedString("Created", comment: "Created"), value: record.createdAt.formatted())
+                            DetailRow(label: NSLocalizedString("Transcribed", comment: "Transcribed"), value: record.transcribedAt.formatted())
+                        }
+                    }
+
+                    // Tags
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(NSLocalizedString("Tags", comment: "Tags"))
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+
+                        TextField(NSLocalizedString("Add tags (comma separated)", comment: "Tags placeholder"), text: $tagText)
+                            .textFieldStyle(.roundedBorder)
+                            .onAppear {
+                                tagText = record.tags ?? ""
+                            }
+                    }
+
+                    // Notes
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(NSLocalizedString("Notes", comment: "Notes"))
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+
+                        TextEditor(text: $notes)
+                            .frame(minHeight: 100)
+                            .onAppear {
+                                notes = record.notes ?? ""
+                            }
+                    }
+                }
+                .padding()
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            // Save button
+            HStack {
+                Spacer()
+                Button(NSLocalizedString("Save Changes", comment: "Save button")) {
+                    Task {
+                        let tags = tagText.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+                        await TranscriptionsViewModel.shared.updateTags(for: record, tags: tags)
+                        await TranscriptionsViewModel.shared.updateNotes(for: record, notes: notes.isEmpty ? nil : notes)
+                        dismiss()
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+            }
+            .padding()
         }
-        .frame(width: 700, height: 500)
+        .frame(width: 800, height: 600)
+    }
+}
+
+struct DetailRow: View {
+    let label: String
+    let value: String
+
+    var body: some View {
+        HStack {
+            Text(label + ":")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            Text(value)
+                .font(.caption)
+                .fontWeight(.medium)
+            Spacer()
+        }
     }
 }
 
 #Preview {
     TranscriptionsView()
-        .environmentObject(TranscriptionViewModel.shared)
 }

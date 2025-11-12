@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct FolderMonitorView: View {
     @EnvironmentObject private var viewModel: FolderMonitorViewModel
@@ -25,94 +26,6 @@ struct FolderMonitorView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                // MARK: - Overvåget Folder Section
-                GroupBox(label: Label(NSLocalizedString("Overvåget Folder", comment: ""), systemImage: "folder")) {
-                    VStack(spacing: 12) {
-                        HStack {
-                            if let folderURL = viewModel.selectedFolderURL {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(folderURL.lastPathComponent)
-                                        .font(.headline)
-                                    Text(folderURL.path)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                        .lineLimit(1)
-                                        .truncationMode(.middle)
-                                }
-                            } else {
-                                Text(NSLocalizedString("Ingen folder valgt", comment: ""))
-                                    .foregroundColor(.secondary)
-                            }
-
-                            Spacer()
-
-                            Button(action: viewModel.selectFolder) {
-                                Label(NSLocalizedString("Vælg Folder", comment: ""), systemImage: "folder.badge.plus")
-                            }
-                            .buttonStyle(.bordered)
-                        }
-
-                        // Status
-                        HStack {
-                            Label {
-                                Text(NSLocalizedString("Status:", comment: ""))
-                                    .foregroundColor(.secondary)
-                            } icon: {
-                                Circle()
-                                    .fill(viewModel.statusColor)
-                                    .frame(width: 8, height: 8)
-                            }
-
-                            Text(viewModel.statusText)
-                                .fontWeight(.medium)
-
-                            Spacer()
-
-                            // Toggle monitoring button
-                            if viewModel.selectedFolderURL != nil {
-                                Button(action: viewModel.toggleMonitoring) {
-                                    Text(viewModel.isMonitoring ? NSLocalizedString("Stop Overvågning", comment: "") : NSLocalizedString("Start Overvågning", comment: ""))
-                                        .frame(minWidth: 140)
-                                }
-                                .buttonStyle(.borderedProminent)
-                                .tint(viewModel.isMonitoring ? .red : .green)
-                            }
-                        }
-
-                        // Pending Files from local folder
-                        if !viewModel.pendingFiles.isEmpty {
-                            Divider()
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack {
-                                    Text(String(format: NSLocalizedString("I Kø (%lld)", comment: ""), viewModel.pendingFiles.count))
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                    Spacer()
-                                    Button(action: viewModel.clearPendingQueue) {
-                                        Label(NSLocalizedString("Ryd kø", comment: ""), systemImage: "trash")
-                                            .font(.caption)
-                                    }
-                                    .buttonStyle(.borderless)
-                                    .foregroundColor(.red)
-                                }
-
-                                ScrollView(.horizontal, showsIndicators: false) {
-                                    HStack(spacing: 8) {
-                                        ForEach(viewModel.pendingFiles, id: \.self) { fileURL in
-                                            LocalPendingFileCard(fileURL: fileURL, viewModel: viewModel)
-                                        }
-                                    }
-                                }
-                                .frame(height: 80)
-                            }
-                        }
-                    }
-                    .padding(.vertical, 8)
-                }
-
-                // MARK: - Divider
-                Divider()
-                    .padding(.vertical, 8)
 
                 // MARK: - Active Transcription Section
                 // Only show tasks that are actively processing, not pending ones
@@ -196,6 +109,48 @@ struct FolderMonitorView: View {
                                     TranscriptionTaskRow(task: task)
                                 }
                             }
+                        }
+                        .padding(.vertical, 8)
+                    }
+
+                    Divider()
+                        .padding(.vertical, 8)
+                }
+
+                // MARK: - Pending Queue Section
+                // Show ALL pending files from all sources (Manual, Folder Monitor, iCloud)
+                if !transcriptionVM.pendingQueue.isEmpty {
+                    GroupBox(label: Label(NSLocalizedString("Pending Files", comment: "Pending files section"), systemImage: "clock")) {
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Text(String(format: NSLocalizedString("In Queue (%lld)", comment: "Queue count"), transcriptionVM.pendingQueue.count))
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+
+                                Spacer()
+
+                                Text(NSLocalizedString("These files are waiting for transcription", comment: "Pending queue description"))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            Divider()
+
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 12) {
+                                    ForEach(Array(transcriptionVM.pendingQueue.enumerated()), id: \.element) { index, fileURL in
+                                        PendingFileCard(fileURL: fileURL)
+                                            .environmentObject(transcriptionVM)
+                                            .onDrop(of: [.fileURL], delegate: QueueDropDelegate(
+                                                item: fileURL,
+                                                items: transcriptionVM.pendingQueue,
+                                                transcriptionVM: transcriptionVM,
+                                                currentIndex: index
+                                            ))
+                                    }
+                                }
+                            }
+                            .frame(height: 100)
                         }
                         .padding(.vertical, 8)
                     }
@@ -562,6 +517,136 @@ struct FolderMonitorView: View {
     }
 }
 
+// MARK: - Queue Drop Delegate for drag and drop reordering
+struct QueueDropDelegate: DropDelegate {
+    let item: URL
+    let items: [URL]
+    let transcriptionVM: TranscriptionViewModel
+    let currentIndex: Int
+
+    func dropEntered(info: DropInfo) {
+        // Visual feedback could be added here if needed
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        return DropProposal(operation: .move)
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        // Find the source item
+        guard let provider = info.itemProviders(for: [.fileURL]).first else { return false }
+
+        provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { (item, error) in
+            guard let data = item as? Data,
+                  let sourceURL = URL(dataRepresentation: data, relativeTo: nil),
+                  let sourceIndex = items.firstIndex(of: sourceURL) else { return }
+
+            DispatchQueue.main.async {
+                // Calculate the destination index
+                let destinationIndex = currentIndex > sourceIndex ? currentIndex + 1 : currentIndex
+
+                // Move the item in the queue
+                transcriptionVM.moveFileInQueue(fileURL: sourceURL, to: destinationIndex)
+            }
+        }
+        return true
+    }
+}
+
+// MARK: - Pending File Card (Simple version for unified queue)
+struct PendingFileCard: View {
+    let fileURL: URL
+    @EnvironmentObject private var transcriptionVM: TranscriptionViewModel
+    @State private var isDragging = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "doc.fill")
+                    .foregroundColor(.orange)
+                    .imageScale(.small)
+
+                Spacer()
+
+                // Source indicator
+                if let source = getFileSource() {
+                    Text(source)
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.accentColor.opacity(0.1))
+                        .cornerRadius(4)
+                }
+
+                // Remove button
+                Button(action: {
+                    transcriptionVM.removeFileFromProcessing(fileURL)
+                }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.caption)
+                        .foregroundColor(.red)
+                }
+                .buttonStyle(.borderless)
+                .help(NSLocalizedString("Remove from queue", comment: "Remove from queue tooltip"))
+            }
+
+            Text(fileURL.lastPathComponent)
+                .font(.caption)
+                .fontWeight(.medium)
+                .lineLimit(2)
+
+            Text(NSLocalizedString("Waiting...", comment: "Pending file status"))
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+        .padding(10)
+        .frame(width: 140)
+        .background(Color(.controlBackgroundColor))
+        .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(isDragging ? Color.accentColor : Color.orange.opacity(0.3), lineWidth: isDragging ? 2 : 1)
+        )
+        .scaleEffect(isDragging ? 1.05 : 1.0)
+        .animation(.easeInOut(duration: 0.2), value: isDragging)
+        .onDrag {
+            isDragging = true
+            // Reset dragging state after a delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                isDragging = false
+            }
+            return NSItemProvider(object: fileURL as NSURL)
+        } preview: {
+            // Preview during drag
+            VStack {
+                Image(systemName: "doc.fill")
+                    .font(.largeTitle)
+                    .foregroundColor(.orange)
+                Text(fileURL.lastPathComponent)
+                    .font(.caption)
+                    .lineLimit(1)
+            }
+            .padding()
+            .background(Color(.controlBackgroundColor))
+            .cornerRadius(8)
+        }
+    }
+
+    private func getFileSource() -> String? {
+        // Determine source based on file path
+        if let iCloudFolder = iCloudSyncService.shared.getRecordingsFolderURL(),
+           fileURL.path.hasPrefix(iCloudFolder.path) {
+            return "iCloud"
+        } else if let monitoredFolder = FolderMonitorService.shared.monitoredFolder,
+                  fileURL.path.hasPrefix(monitoredFolder.path) {
+            return NSLocalizedString("Folder", comment: "Folder source badge")
+        } else {
+            return NSLocalizedString("Manual", comment: "Manual source badge")
+        }
+    }
+}
+
 // MARK: - Local Pending File Card
 struct LocalPendingFileCard: View {
     let fileURL: URL
@@ -582,10 +667,12 @@ struct LocalPendingFileCard: View {
                 Button(action: {
                     viewModel.ignorePendingFile(fileURL)
                 }) {
-                    Image(systemName: "xmark.circle")
+                    Image(systemName: "xmark.circle.fill")
                         .font(.caption)
+                        .foregroundColor(.red)
                 }
                 .buttonStyle(.borderless)
+                .help(NSLocalizedString("Remove from queue", comment: "Remove file from queue tooltip"))
             }
 
             Text(fileURL.lastPathComponent)

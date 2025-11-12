@@ -16,6 +16,7 @@ class FolderMonitorService: ObservableObject {
     @Published var monitoredFolder: URL?
     @Published var pendingFiles: [URL] = []
     @Published var processedFiles: Set<String> = []
+    @Published var lastError: String?
 
     private var eventStream: FSEventStreamRef?
     private var monitorTask: Task<Void, Never>?
@@ -33,19 +34,30 @@ class FolderMonitorService: ObservableObject {
     }
 
     func startMonitoring(folder: URL) {
-        guard !isMonitoring else { return }
+        // If already monitoring a different folder, stop it first
+        if isMonitoring, let currentFolder = monitoredFolder, currentFolder != folder {
+            print("⚠️ Switching from \(currentFolder.lastPathComponent) to \(folder.lastPathComponent)")
+            stopMonitoring()
+        }
 
-        // Save security-scoped bookmark for this folder
-        do {
-            try BookmarkManager.shared.saveBookmark(for: folder)
-        } catch {
-            print("❌ Failed to save bookmark: \(error)")
+        // If already monitoring this exact folder, do nothing
+        guard !isMonitoring || monitoredFolder != folder else {
+            print("ℹ️ Already monitoring this folder")
             return
         }
 
-        // Start accessing the security-scoped resource
-        guard folder.startAccessingSecurityScopedResource() else {
-            print("❌ Failed to start accessing security-scoped resource")
+        // Clear any previous errors
+        lastError = nil
+
+        // Save security-scoped bookmark for this folder
+        // Note: We don't call startAccessingSecurityScopedResource() here
+        // because we only need it when restoring from bookmark
+        do {
+            try BookmarkManager.shared.saveBookmark(for: folder)
+        } catch {
+            let errorMsg = "Kunne ikke gemme folder bookmark: \(error.localizedDescription)"
+            print("❌ \(errorMsg)")
+            lastError = errorMsg
             return
         }
 
@@ -53,7 +65,17 @@ class FolderMonitorService: ObservableObject {
         self.isMonitoring = true
 
         // Start FSEvents monitoring
-        setupFSEvents(for: folder)
+        let streamCreated = setupFSEvents(for: folder)
+        if !streamCreated {
+            let errorMsg = "Kunne ikke oprette fil-overvågning for folderen"
+            print("❌ \(errorMsg)")
+            lastError = errorMsg
+            isMonitoring = false
+            monitoredFolder = nil
+            return
+        }
+
+        print("✅ Started monitoring folder: \(folder.lastPathComponent)")
 
         // Initial scan of folder
         Task {
@@ -86,10 +108,8 @@ class FolderMonitorService: ObservableObject {
     func stopMonitoring() {
         guard isMonitoring else { return }
 
-        // Stop accessing security-scoped resource
-        if let folder = monitoredFolder {
-            folder.stopAccessingSecurityScopedResource()
-        }
+        // Stop accessing security-scoped resource (managed by BookmarkManager)
+        BookmarkManager.shared.stopAccessing()
 
         isMonitoring = false
         monitoredFolder = nil
@@ -134,7 +154,8 @@ class FolderMonitorService: ObservableObject {
         print("🗑️ Removed pending file: \(url.lastPathComponent)")
     }
 
-    private func setupFSEvents(for folder: URL) {
+    @discardableResult
+    private func setupFSEvents(for folder: URL) -> Bool {
         let pathsToWatch = [folder.path] as CFArray
         let callback: FSEventStreamCallback = { streamRef, contextInfo, numEvents, eventPaths, eventFlags, eventIds in
             guard let contextInfo = contextInfo else { return }
@@ -159,7 +180,7 @@ class FolderMonitorService: ObservableObject {
             copyDescription: nil
         )
 
-        let stream = FSEventStreamCreate(
+        guard let stream = FSEventStreamCreate(
             kCFAllocatorDefault,
             callback,
             &context,
@@ -167,17 +188,26 @@ class FolderMonitorService: ObservableObject {
             FSEventStreamEventId(kFSEventStreamEventIdSinceNow),
             1.0, // latency
             UInt32(kFSEventStreamCreateFlagFileEvents | kFSEventStreamCreateFlagUseCFTypes)
-        )
-
-        if let stream = stream {
-            if #available(macOS 15.0, *) {
-                FSEventStreamSetDispatchQueue(stream, DispatchQueue.main)
-            } else {
-                FSEventStreamScheduleWithRunLoop(stream, CFRunLoopGetMain(), CFRunLoopMode.defaultMode.rawValue)
-            }
-            FSEventStreamStart(stream)
-            self.eventStream = stream
+        ) else {
+            print("❌ Failed to create FSEventStream")
+            return false
         }
+
+        if #available(macOS 15.0, *) {
+            FSEventStreamSetDispatchQueue(stream, DispatchQueue.main)
+        } else {
+            FSEventStreamScheduleWithRunLoop(stream, CFRunLoopGetMain(), CFRunLoopMode.defaultMode.rawValue)
+        }
+
+        guard FSEventStreamStart(stream) else {
+            print("❌ Failed to start FSEventStream")
+            FSEventStreamInvalidate(stream)
+            FSEventStreamRelease(stream)
+            return false
+        }
+
+        self.eventStream = stream
+        return true
     }
 
     private func handleFileSystemEvent(at url: URL) async {

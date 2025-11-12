@@ -61,9 +61,22 @@ class WhisperService: ObservableObject {
                 whisperKitModelName = "large-v3"
             }
 
-            isDownloadingModel = true
-            downloadingModelName = modelType.displayName
-            downloadProgress = 0.0
+            // Check if model is already downloaded
+            let modelPath = getModelPath(for: whisperKitModelName)
+            let isModelDownloaded = FileManager.default.fileExists(atPath: modelPath)
+
+            if isModelDownloaded {
+                // Model exists, just loading
+                print("📦 Model already downloaded, loading into memory...")
+                isLoadingModel = true
+                downloadingModelName = modelType.displayName
+            } else {
+                // Model needs download
+                print("⬇️ Model not found, downloading...")
+                isDownloadingModel = true
+                downloadingModelName = modelType.displayName
+                downloadProgress = 0.0
+            }
 
             print("🔧 Initializing WhisperKit with model: \(whisperKitModelName)")
             print("   (WhisperKit will auto-download if needed)")
@@ -83,6 +96,7 @@ class WhisperService: ObservableObject {
 
             currentModel = modelType
             isDownloadingModel = false
+            isLoadingModel = false
             downloadProgress = 1.0
             print("✅ WhisperKit model loaded successfully: \(whisperKitModelName)")
         } catch {
@@ -296,6 +310,13 @@ class WhisperService: ObservableObject {
     func cancelTranscription() {
         isTranscribing = false
         currentProgress = 0.0
+    }
+
+    private func getModelPath(for modelName: String) -> String {
+        // WhisperKit stores models in ~/Library/Caches/huggingface/models/
+        let cacheDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        let modelsPath = cacheDir.appendingPathComponent("huggingface/models/argmaxinc/whisperkit-coreml/openai_whisper-\(modelName)")
+        return modelsPath.path
     }
 }
 

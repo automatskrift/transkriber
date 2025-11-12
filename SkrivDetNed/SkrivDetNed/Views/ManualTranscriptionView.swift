@@ -10,42 +10,16 @@ import UniformTypeIdentifiers
 
 struct ManualTranscriptionView: View {
     @State private var selectedFileURL: URL?
-    @State private var isTranscribing = false
-    @State private var transcriptionProgress: Double = 0.0
     @State private var transcriptionResult: String?
     @State private var errorMessage: String?
     @State private var showingFilePicker = false
     @State private var showTranscriptionExistsAlert = false
     @State private var showIgnoredFileAlert = false
+    @State private var fileAddedToQueue = false  // Track if file was added to queue
 
     @ObservedObject private var settings = AppSettings.shared
     @EnvironmentObject private var transcriptionVM: TranscriptionViewModel
     @EnvironmentObject private var whisperService: WhisperService
-
-    // Computed properties to avoid AttributeGraph cycles
-    private var isFileInQueue: Bool {
-        guard let fileURL = selectedFileURL else { return false }
-        return transcriptionVM.isInQueue(fileURL)
-    }
-
-    private var isFileActive: Bool {
-        guard let fileURL = selectedFileURL else { return false }
-        return transcriptionVM.activeTasks.contains(where: { $0.audioFileURL == fileURL })
-    }
-
-    // Get the actual progress from transcriptionVM for the selected file
-    private var actualTranscriptionProgress: Double {
-        guard let fileURL = selectedFileURL else { return 0.0 }
-
-        // Find the active task for this file
-        if let task = transcriptionVM.activeTasks.first(where: { $0.audioFileURL == fileURL }) {
-            if case .processing(let progress) = task.status {
-                return progress
-            }
-        }
-
-        return transcriptionProgress
-    }
 
     var body: some View {
         ScrollView {
@@ -120,7 +94,7 @@ struct ManualTranscriptionView: View {
                             }
                             .buttonStyle(.bordered)
 
-                            if selectedFileURL != nil && !isTranscribing {
+                            if selectedFileURL != nil && !fileAddedToQueue {
                                 Button(action: clearSelection) {
                                     Label(NSLocalizedString("Ryd", comment: ""), systemImage: "xmark")
                                 }
@@ -135,7 +109,7 @@ struct ManualTranscriptionView: View {
                                         .frame(minWidth: 120)
                                 }
                                 .buttonStyle(.borderedProminent)
-                                .disabled(isTranscribing)
+                                .disabled(fileAddedToQueue)
                             }
                         }
 
@@ -198,75 +172,32 @@ struct ManualTranscriptionView: View {
                     }
                 }
 
-                // Progress
-                if isTranscribing {
-                    if isFileInQueue && !isFileActive {
-                        // File is waiting in queue
-                        GroupBox(label: Label(NSLocalizedString("Venter i kø...", comment: "Waiting in transcription queue"), systemImage: "clock")) {
-                            VStack(spacing: 12) {
-                                HStack {
-                                    ProgressView()
-                                        .progressViewStyle(.linear)
-                                        .scaleEffect(x: 1, y: 0.5, anchor: .center)
+                // File added to queue message
+                if fileAddedToQueue {
+                    GroupBox(label: Label(NSLocalizedString("Added to Queue", comment: "File added to queue"), systemImage: "clock")) {
+                        VStack(spacing: 12) {
+                            Text(NSLocalizedString("File has been added to the transcription queue", comment: "Queue confirmation message"))
+                                .font(.body)
+                                .foregroundColor(.secondary)
 
-                                    Spacer()
-                                }
+                            Text(NSLocalizedString("Go to the Monitoring tab to see progress", comment: "Monitoring tab hint"))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
 
-                                Text(NSLocalizedString("Venter på at andre transskriptioner bliver færdige", comment: "Waiting for other transcriptions"))
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-
-                                // Cancel button for queued tasks
-                                Button(action: cancelTranscription) {
-                                    Label(NSLocalizedString("Annuller", comment: "Cancel transcription"), systemImage: "xmark.circle.fill")
-                                }
-                                .buttonStyle(.bordered)
-                                .tint(.red)
-                            }
-                            .padding(.vertical, 8)
-                        }
-                    } else {
-                        // File is being transcribed
-                        GroupBox(label: Label(NSLocalizedString("Transkriberer...", comment: ""), systemImage: "waveform.circle")) {
-                            VStack(spacing: 12) {
-                                // Real-time transcription preview
-                                if !whisperService.currentTranscribingText.isEmpty {
-                                    HStack {
-                                        Text(whisperService.currentTranscribingText)
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                            .lineLimit(2)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                            .padding(8)
-                                            .background(Color.accentColor.opacity(0.1))
-                                            .cornerRadius(6)
-                                    }
-                                }
-
-                                ProgressView(value: actualTranscriptionProgress)
-                                    .progressViewStyle(.linear)
-
-                                HStack {
-                                    Text("\(Int(actualTranscriptionProgress * 100))%")
-                                        .font(.headline)
-                                        .foregroundColor(.accentColor)
-
-                                    Spacer()
-
-                                    if let fileURL = selectedFileURL {
-                                        EstimatedTimeView(fileURL: fileURL)
-                                    }
-                                }
-
-                                // Cancel button for active transcription
-                                Button(action: cancelTranscription) {
-                                    Label(NSLocalizedString("Stop Transskription", comment: "Stop transcription"), systemImage: "stop.circle.fill")
+                            HStack(spacing: 12) {
+                                Button(action: {
+                                    // Reset to select new file
+                                    selectedFileURL = nil
+                                    fileAddedToQueue = false
+                                    transcriptionResult = nil
+                                    errorMessage = nil
+                                }) {
+                                    Label(NSLocalizedString("Transcribe Another File", comment: "Transcribe another file button"), systemImage: "doc.badge.plus")
                                 }
                                 .buttonStyle(.bordered)
-                                .tint(.red)
                             }
-                            .padding(.vertical, 8)
                         }
+                        .padding(.vertical, 8)
                     }
                 }
 
@@ -326,7 +257,7 @@ struct ManualTranscriptionView: View {
                 }
 
                 // Drag and drop area
-                if selectedFileURL == nil && !isTranscribing {
+                if selectedFileURL == nil && !fileAddedToQueue {
                     VStack(spacing: 12) {
                         Image(systemName: "arrow.down.doc")
                             .font(.system(size: 36))
@@ -439,7 +370,7 @@ struct ManualTranscriptionView: View {
         selectedFileURL = nil
         transcriptionResult = nil
         errorMessage = nil
-        transcriptionProgress = 0.0
+        fileAddedToQueue = false
     }
 
     private func startTranscription() {
@@ -472,177 +403,80 @@ struct ManualTranscriptionView: View {
             return
         }
 
-        print("🚀 proceedWithTranscription called for: \(fileURL.lastPathComponent)")
+        print("🚀 Manuel transkription: Adding \(fileURL.lastPathComponent) to queue")
 
-        isTranscribing = true
-        transcriptionProgress = 0.0
+        // Reset state
         transcriptionResult = nil
         errorMessage = nil
 
-        print("   isTranscribing = true, progress = 0.0")
-
+        // Add to queue and show confirmation
         Task {
-            print("   📝 Calling addToQueue...")
-            // Add to the shared transcription queue to ensure serialized processing
             await transcriptionVM.addToQueue(fileURL)
-            print("   ✅ addToQueue returned")
+            print("✅ File added to queue")
 
-            // Monitor the task progress
-            while isTranscribing {
-                // Check if this file is being processed
-                if let activeTask = transcriptionVM.activeTasks.first(where: { $0.audioFileURL == fileURL }) {
-                    switch activeTask.status {
-                    case .processing(let progress):
-                        await MainActor.run {
-                            transcriptionProgress = progress
-                        }
+            // Show "Added to Queue" message
+            await MainActor.run {
+                fileAddedToQueue = true
+            }
+
+            // Monitor for completion to show save dialog
+            while true {
+                try? await Task.sleep(nanoseconds: 500_000_000) // Check every 0.5 seconds
+
+                // Check if transcription is complete
+                if let completedTask = transcriptionVM.completedTasks.first(where: { $0.audioFileURL == fileURL }) {
+                    switch completedTask.status {
                     case .completed:
-                        // Transcription completed successfully
-                        print("[SAVEPROBLEM] 🎉 ManualTranscriptionView: Task completed in activeTasks!")
+                        print("🎉 Transcription completed")
 
-                        // First check temp location (where it's saved due to sandboxing)
+                        // Check temp location for transcription
                         let tempDir = FileManager.default.temporaryDirectory
                         let tempOutputURL = tempDir.appendingPathComponent(fileURL.deletingPathExtension().lastPathComponent + ".txt")
 
-                        print("[SAVEPROBLEM] 📂 Checking temp location: \(tempOutputURL.path)")
-                        print("[SAVEPROBLEM] 📂 File exists at temp location: \(FileManager.default.fileExists(atPath: tempOutputURL.path))")
-
                         if let text = try? String(contentsOf: tempOutputURL, encoding: .utf8) {
-                            print("[SAVEPROBLEM] ✅ Successfully read text from temp location (\(text.count) chars)")
-
-                            // Show save dialog BEFORE setting isTranscribing = false
-                            // This prevents the while loop from exiting before the dialog is shown
-                            print("[SAVEPROBLEM] 💾 Showing save dialog...")
+                            print("✅ Read text from temp location")
                             await MainActor.run {
                                 self.showSaveDialog(text: text, originalFileName: fileURL.lastPathComponent)
-                            }
-                            print("[SAVEPROBLEM] 💾 Save dialog shown")
-
-                            // Now update UI state
-                            await MainActor.run {
                                 transcriptionResult = text
-                                isTranscribing = false  // This will exit the while loop
+                                fileAddedToQueue = false
                             }
                         } else {
-                            print("[SAVEPROBLEM] ⚠️ Could not read from temp location, trying original location")
                             // Fallback: try original location
                             let outputURL = fileURL.deletingPathExtension().appendingPathExtension("txt")
-                            print("[SAVEPROBLEM] 📂 Checking original location: \(outputURL.path)")
-
                             if let text = try? String(contentsOf: outputURL, encoding: .utf8) {
-                                print("[SAVEPROBLEM] ✅ Successfully read text from original location (\(text.count) chars)")
-
-                                // Show save dialog BEFORE setting isTranscribing = false
-                                print("[SAVEPROBLEM] 💾 Showing save dialog for original location...")
+                                print("✅ Read text from original location")
                                 await MainActor.run {
                                     self.showSaveDialog(text: text, originalFileName: fileURL.lastPathComponent)
-                                }
-                                print("[SAVEPROBLEM] 💾 Save dialog shown")
-
-                                // Now update UI state
-                                await MainActor.run {
                                     transcriptionResult = text
-                                    isTranscribing = false  // This will exit the while loop
-                                }
-                            } else {
-                                print("[SAVEPROBLEM] ❌ Could not read text from either location!")
-                                await MainActor.run {
-                                    isTranscribing = false
+                                    fileAddedToQueue = false
                                 }
                             }
                         }
+                        return // Exit monitoring
+
                     case .failed(let error):
-                        // Transcription failed
                         await MainActor.run {
                             errorMessage = error
-                            isTranscribing = false
-                            transcriptionProgress = 0.0
+                            fileAddedToQueue = false
                         }
+                        return // Exit monitoring
+
                     default:
                         break
                     }
-                } else {
-                    // Check if it's in the completed tasks (finished before we started monitoring)
-                    if let completedTask = transcriptionVM.completedTasks.first(where: { $0.audioFileURL == fileURL }) {
-                        print("[SAVEPROBLEM] 📋 Found in completedTasks with status: \(completedTask.status)")
-                        switch completedTask.status {
-                        case .completed:
-                            print("[SAVEPROBLEM] 🎉 ManualTranscriptionView: Task found in completedTasks!")
-
-                            // First check temp location
-                            let tempDir = FileManager.default.temporaryDirectory
-                            let tempOutputURL = tempDir.appendingPathComponent(fileURL.deletingPathExtension().lastPathComponent + ".txt")
-
-                            print("[SAVEPROBLEM] 📂 Checking temp location: \(tempOutputURL.path)")
-
-                            if let text = try? String(contentsOf: tempOutputURL, encoding: .utf8) {
-                                print("[SAVEPROBLEM] ✅ Successfully read text from temp location (\(text.count) chars)")
-
-                                // Show save dialog BEFORE setting isTranscribing = false
-                                print("[SAVEPROBLEM] 💾 Showing save dialog (from completedTasks)...")
-                                await MainActor.run {
-                                    self.showSaveDialog(text: text, originalFileName: fileURL.lastPathComponent)
-                                }
-                                print("[SAVEPROBLEM] 💾 Save dialog shown")
-
-                                // Now update UI state
-                                await MainActor.run {
-                                    transcriptionResult = text
-                                    isTranscribing = false
-                                }
-                            } else {
-                                // Fallback: try original location
-                                let outputURL = fileURL.deletingPathExtension().appendingPathExtension("txt")
-                                print("[SAVEPROBLEM] 📂 Checking original location: \(outputURL.path)")
-
-                                if let text = try? String(contentsOf: outputURL, encoding: .utf8) {
-                                    print("[SAVEPROBLEM] ✅ Successfully read text from original location (\(text.count) chars)")
-
-                                    // Show save dialog
-                                    print("[SAVEPROBLEM] 💾 Showing save dialog for original location (from completedTasks)...")
-                                    await MainActor.run {
-                                        self.showSaveDialog(text: text, originalFileName: fileURL.lastPathComponent)
-                                    }
-                                    print("[SAVEPROBLEM] 💾 Save dialog shown")
-
-                                    await MainActor.run {
-                                        transcriptionResult = text
-                                        isTranscribing = false
-                                    }
-                                } else {
-                                    print("[SAVEPROBLEM] ❌ Could not read text from either location (completedTasks)!")
-                                    await MainActor.run {
-                                        isTranscribing = false
-                                    }
-                                }
-                            }
-                        case .failed(let error):
-                            await MainActor.run {
-                                errorMessage = error
-                                isTranscribing = false
-                                transcriptionProgress = 0.0
-                            }
-                        default:
-                            break
-                        }
-                    }
                 }
-
-                // Small delay before checking again
-                try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
             }
         }
     }
 
     private func cancelTranscription() {
-        guard selectedFileURL != nil else { return }
+        guard let fileURL = selectedFileURL else { return }
 
-        // Cancel the transcription through the view model
-        transcriptionVM.cancelCurrentTranscription()
+        // Remove file from queue/processing through the view model
+        transcriptionVM.removeFileFromProcessing(fileURL)
 
         // Reset local state
-        isTranscribing = false
-        transcriptionProgress = 0.0
+        fileAddedToQueue = false
         errorMessage = NSLocalizedString("Transskription afbrudt", comment: "Transcription cancelled")
     }
 

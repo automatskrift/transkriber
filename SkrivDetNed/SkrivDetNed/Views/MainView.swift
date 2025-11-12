@@ -17,6 +17,7 @@ struct MainView: View {
         case monitor
         case transcriptions
         case manual
+        case monitorFolder
         case settings
     }
 
@@ -33,7 +34,7 @@ struct MainView: View {
                 }
             }
             .tabItem {
-                Label(NSLocalizedString("Overvågning", comment: ""), systemImage: "folder.badge.gearshape")
+                Label(NSLocalizedString("Overvågning", comment: ""), systemImage: "clock.arrow.circlepath")
             }
             .tag(Tab.monitor)
 
@@ -63,6 +64,19 @@ struct MainView: View {
                 Label(NSLocalizedString("Manuel", comment: ""), systemImage: "doc.text")
             }
             .tag(Tab.manual)
+
+            Group {
+                if selectedTab == .monitorFolder {
+                    MonitorFolderView()
+                        .environmentObject(folderMonitorVM)
+                } else {
+                    Color.clear
+                }
+            }
+            .tabItem {
+                Label(NSLocalizedString("Monitor Folder", comment: "Monitor Folder tab"), systemImage: "folder.badge.gearshape")
+            }
+            .tag(Tab.monitorFolder)
 
             Group {
                 if selectedTab == .settings {

@@ -21,6 +21,7 @@ class TranscriptionViewModel: ObservableObject {
     }
     @Published var completedTasks: [TranscriptionTask] = []
     @Published var currentTask: TranscriptionTask?
+    @Published var pendingQueue: [URL] = [] // Exposed for UI to show pending files
 
     // Queue system ensures only ONE transcription runs at a time
     // This handles ALL transcription sources:
@@ -28,7 +29,11 @@ class TranscriptionViewModel: ObservableObject {
     // 2. Automatic folder monitoring (from FolderMonitorService)
     // 3. iCloud sync (from iCloudSyncService)
     private var isProcessing = false
-    private var taskQueue: [URL] = []
+    private var taskQueue: [URL] = [] {
+        didSet {
+            pendingQueue = taskQueue // Keep UI in sync
+        }
+    }
     private var currentTranscriptionTask: Task<Void, Never>?  // Track current async task for cancellation
 
     private init() {
@@ -101,8 +106,9 @@ class TranscriptionViewModel: ObservableObject {
     private func loadExistingTranscriptions() async {
         var foundTasks: [TranscriptionTask] = []
 
-        // Check local monitored folder
-        if let folderURL = AppSettings.shared.monitoredFolderURL {
+        // Check local monitored folder (if monitoring is enabled)
+        if AppSettings.shared.isMonitoringEnabled,
+           let folderURL = FolderMonitorService.shared.monitoredFolder {
             await scanFolderForTranscriptions(folderURL, into: &foundTasks)
         }
 
@@ -316,35 +322,35 @@ class TranscriptionViewModel: ObservableObject {
             throw TranscriptionError.transcriptionFailed
         }
 
-        // If file is from iCloud, update metadata to "transcribing"
-        if url.path.contains("Mobile Documents") {
-            do {
-                if let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL() {
-                    var metadata = try RecordingMetadata.load(for: url.lastPathComponent, from: recordingsFolder)
-                        ?? RecordingMetadata(audioFileName: url.lastPathComponent, createdOnDevice: "Unknown")
-
-                    // Clear previous error if retrying a failed transcription
-                    if metadata.status == .failed {
-                        print("🔄 Retrying previously failed file - clearing error message")
-                        metadata.errorMessage = nil
-                        metadata.lastAttemptedAt = nil
-                    }
-
-                    metadata.status = .transcribing
-                    metadata.transcribedOnDevice = "macOS"
-                    metadata.updatedAt = Date()
-
-                    try metadata.save(to: recordingsFolder)
-                    print("🔄 Updated metadata to 'transcribing' status")
-                }
-            } catch {
-                print("⚠️ Failed to update metadata to transcribing: \(error)")
-            }
-        }
-
         do {
             // Get selected model
             let modelType = AppSettings.shared.selectedModelType
+
+            // NOW update iCloud metadata to "transcribing" right before actual transcription starts
+            if url.path.contains("Mobile Documents") {
+                do {
+                    if let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL() {
+                        var metadata = try RecordingMetadata.load(for: url.lastPathComponent, from: recordingsFolder)
+                            ?? RecordingMetadata(audioFileName: url.lastPathComponent, createdOnDevice: "Unknown")
+
+                        // Clear previous error if retrying a failed transcription
+                        if metadata.status == .failed {
+                            print("🔄 Retrying previously failed file - clearing error message")
+                            metadata.errorMessage = nil
+                            metadata.lastAttemptedAt = nil
+                        }
+
+                        metadata.status = .transcribing
+                        metadata.transcribedOnDevice = "macOS"
+                        metadata.updatedAt = Date()
+
+                        try metadata.save(to: recordingsFolder)
+                        print("🔄 Updated metadata to 'transcribing' status")
+                    }
+                } catch {
+                    print("⚠️ Failed to update metadata to transcribing: \(error)")
+                }
+            }
 
             // Transcribe directly without any security-scoped access
             print("📁 [ViewModel] Transcribing file directly (no security scope): \(url.lastPathComponent)")
@@ -478,6 +484,50 @@ class TranscriptionViewModel: ObservableObject {
                 } catch {
                     print("❌ Failed to save to iCloud: \(error)")
                 }
+            }
+
+            // Save to Core Data database
+            do {
+                // Detect source
+                let source: String
+                if url.path.contains("Mobile Documents") {
+                    source = "icloud"
+                } else if let monitoredFolder = FolderMonitorService.shared.monitoredFolder,
+                          url.path.hasPrefix(monitoredFolder.path) {
+                    source = "folder"
+                } else {
+                    source = "manual"
+                }
+
+                // Get duration
+                let duration = await AudioFileService.shared.getAudioDuration(url) ?? 0
+
+                // Get marks if this is from iCloud
+                var marks: [Double]? = nil
+                if url.path.contains("Mobile Documents"),
+                   let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL(),
+                   let metadata = try? RecordingMetadata.load(for: url.lastPathComponent, from: recordingsFolder) {
+                    marks = metadata.marks
+                }
+
+                try await TranscriptionDatabase.shared.saveTranscription(
+                    audioFileName: url.lastPathComponent,
+                    audioFilePath: url.path,
+                    transcriptionText: finalTranscription,
+                    transcriptionFilePath: task.outputFileURL.path,
+                    source: source,
+                    createdAt: task.createdAt,
+                    transcribedAt: Date(),
+                    duration: duration,
+                    modelUsed: AppSettings.shared.selectedModel,
+                    language: AppSettings.shared.selectedLanguage,
+                    iCloudSynced: url.path.contains("Mobile Documents"),
+                    marks: marks
+                )
+                print("💾 Saved transcription to Core Data database")
+            } catch {
+                print("❌ Failed to save to Core Data: \(error)")
+                // Non-fatal - continue even if database save fails
             }
 
             // Update task status
@@ -797,6 +847,30 @@ class TranscriptionViewModel: ObservableObject {
     /// Check if a file is already in the transcription queue
     func isInQueue(_ url: URL) -> Bool {
         return taskQueue.contains { $0.path == url.path }
+    }
+
+    /// Move a file in the queue to a new position (for drag and drop reordering)
+    func moveInQueue(from source: IndexSet, to destination: Int) {
+        // Note: This only moves items in the queue, not the currently processing item
+        var newQueue = Array(taskQueue)
+        newQueue.move(fromOffsets: source, toOffset: destination)
+        taskQueue = newQueue
+        print("📝 Reordered queue: \(taskQueue.map { $0.lastPathComponent })")
+    }
+
+    /// Move a specific file to a new position in the queue
+    func moveFileInQueue(fileURL: URL, to newIndex: Int) {
+        guard let currentIndex = taskQueue.firstIndex(of: fileURL) else { return }
+
+        var newQueue = Array(taskQueue)
+        let item = newQueue.remove(at: currentIndex)
+
+        // Adjust destination index if needed
+        let destinationIndex = currentIndex < newIndex ? newIndex - 1 : newIndex
+        newQueue.insert(item, at: min(destinationIndex, newQueue.count))
+
+        taskQueue = newQueue
+        print("📝 Moved \(fileURL.lastPathComponent) to position \(destinationIndex)")
     }
 
     /// Cancel the current transcription

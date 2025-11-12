@@ -174,6 +174,20 @@
         }
       }
     },
+    "%d words" : {
+
+    },
+    "%d words • %@ • %@" : {
+      "comment" : "Details",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$d words • %2$@ • %3$@"
+          }
+        }
+      }
+    },
     "%lld" : {
 
     },
@@ -393,6 +407,12 @@
         }
       }
     },
+    "Add tags (comma separated)" : {
+      "comment" : "Tags placeholder"
+    },
+    "Added to Queue" : {
+      "comment" : "File added to queue"
+    },
     "Adgang Nægtet" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -490,6 +510,9 @@
     "Aktuel Opgave" : {
       "comment" : "Current task"
     },
+    "All" : {
+      "comment" : "All languages\nAll models\nAll sources"
+    },
     "All transcriptions are processed in a queue - one at a time" : {
       "comment" : "Tip 3"
     },
@@ -577,6 +600,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Auto-detect language"
+          }
+        }
+      }
+    },
+    "Automatic transcription" : {
+      "comment" : "Step 3 title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatisk transkription"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatic transcription"
           }
         }
       }
@@ -720,6 +761,24 @@
         }
       }
     },
+    "Best accuracy, recommended for non-English languages" : {
+      "comment" : "Large model desc",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bedste nøjagtighed, anbefales til andre sprog end engelsk"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Best accuracy, recommended for non-English languages"
+          }
+        }
+      }
+    },
     "Better accuracy, slower" : {
       "comment" : "Small model desc"
     },
@@ -734,11 +793,74 @@
         }
       }
     },
+    "Cancel" : {
+      "comment" : "Cancel"
+    },
+    "Choose folder" : {
+      "comment" : "Step 1 title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vælg mappe"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose folder"
+          }
+        }
+      }
+    },
+    "Clear Filters" : {
+      "comment" : "Clear filters"
+    },
+    "Click 'Start Monitoring' to begin monitoring the folder." : {
+      "comment" : "Step 2 description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klik 'Start Overvågning' for at begynde at overvåge mappen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click 'Start Monitoring' to begin monitoring the folder."
+          }
+        }
+      }
+    },
     "Click Transcribe" : {
       "comment" : "Manual bullet 3"
     },
     "Close" : {
       "comment" : "Close button"
+    },
+    "Configure automatic monitoring of a local folder for new audio files." : {
+      "comment" : "Monitor Folder page description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konfigurer automatisk overvågning af en lokal mappe for nye lydfiler."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configure automatic monitoring of a local folder for new audio files."
+          }
+        }
+      }
+    },
+    "Copy" : {
+      "comment" : "Copy\nCopy button"
     },
     "Copyright © 2025 Tomas Thøfner" : {
       "extractionState" : "manual",
@@ -757,6 +879,9 @@
         }
       }
     },
+    "Created" : {
+      "comment" : "Created"
+    },
     "Dansk" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -773,6 +898,12 @@
           }
         }
       }
+    },
+    "Delete" : {
+      "comment" : "Delete\nDelete button"
+    },
+    "Delete Transcription?" : {
+      "comment" : "Delete confirmation"
     },
     "Der blev fundet %lld eksisterende lydfil(er) i iCloud. Vil du transskribere dem nu?" : {
       "extractionState" : "manual",
@@ -807,6 +938,9 @@
           }
         }
       }
+    },
+    "Details" : {
+      "comment" : "Details header"
     },
     "Dette kan tage flere minutter første gang" : {
       "extractionState" : "manual",
@@ -975,6 +1109,9 @@
         }
       }
     },
+    "Duration" : {
+      "comment" : "Duration"
+    },
     "Eksisterende filer fundet" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1032,6 +1169,24 @@
     "Er du sikker på at du vil slette %@? Du kan altid downloade den igen senere." : {
 
     },
+    "Error" : {
+      "comment" : "Error alert title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fejl"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error"
+          }
+        }
+      }
+    },
     "Estimeret tid: ~%llds" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1048,6 +1203,15 @@
           }
         }
       }
+    },
+    "Export" : {
+      "comment" : "Export button"
+    },
+    "Export as CSV" : {
+
+    },
+    "Export as JSON" : {
+
     },
     "Færdig" : {
       "extractionState" : "manual",
@@ -1137,6 +1301,9 @@
         }
       }
     },
+    "Fewest Words" : {
+      "comment" : "Sort option"
+    },
     "Fil allerede transkriberet" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1168,6 +1335,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "File is ignored"
+          }
+        }
+      }
+    },
+    "File has been added to the transcription queue" : {
+      "comment" : "Queue confirmation message",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filen er blevet tilføjet til transskriptionskøen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File has been added to the transcription queue"
           }
         }
       }
@@ -1223,8 +1408,29 @@
         }
       }
     },
+    "Files found will be added to the transcription queue." : {
+      "comment" : "Queue info text",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fundne filer vil blive tilføjet til transskriptionskøen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Files found will be added to the transcription queue."
+          }
+        }
+      }
+    },
     "Files sync automatically via iCloud" : {
       "comment" : "iCloud bullet 2"
+    },
+    "Filter" : {
+      "comment" : "Filter button"
     },
     "Find transskriptioner ved siden af dine lydfiler (.txt)" : {
       "extractionState" : "stale",
@@ -1284,6 +1490,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "More workers can increase speed on powerful Macs, but use more memory."
+          }
+        }
+      }
+    },
+    "Folder" : {
+      "comment" : "Folder source badge",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mappe"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folder"
           }
         }
       }
@@ -1367,6 +1591,24 @@
     },
     "Go to the Manual tab" : {
       "comment" : "Manual bullet 1"
+    },
+    "Go to the Monitoring tab to see progress" : {
+      "comment" : "Monitoring tab hint",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gå til Overvågning-fanen for at se fremskridt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to the Monitoring tab to see progress"
+          }
+        }
+      }
     },
     "God balance mellem hastighed og nøjagtighed" : {
       "extractionState" : "manual",
@@ -1455,6 +1697,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Higher values can help with poor audio quality."
+          }
+        }
+      }
+    },
+    "How it works" : {
+      "comment" : "How it works section title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sådan virker det"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How it works"
           }
         }
       }
@@ -1697,6 +1957,24 @@
         }
       }
     },
+    "In Queue (%lld)" : {
+      "comment" : "Queue count",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I Kø (%lld)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In Queue (%lld)"
+          }
+        }
+      }
+    },
     "Indlæser model i hukommelsen..." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1798,6 +2076,9 @@
           }
         }
       }
+    },
+    "Ingen folder valgt. Vælg venligst en folder først." : {
+
     },
     "Ingen ignorerede filer" : {
       "extractionState" : "manual",
@@ -2137,6 +2418,9 @@
         }
       }
     },
+    "Kunne ikke starte overvågning. Tjek at appen har adgang til folderen." : {
+
+    },
     "Kunne ikke transkribere '%@':\n%@" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2153,6 +2437,9 @@
           }
         }
       }
+    },
+    "Language" : {
+      "comment" : "Language\nLanguage filter"
     },
     "Large" : {
       "extractionState" : "manual",
@@ -2222,6 +2509,9 @@
         }
       }
     },
+    "Loading transcriptions..." : {
+
+    },
     "Lokal behandling - ingen cloud" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2238,6 +2528,9 @@
           }
         }
       }
+    },
+    "Longest First" : {
+      "comment" : "Sort option"
     },
     "Luk" : {
       "extractionState" : "manual",
@@ -2347,6 +2640,24 @@
     "Mac companion app for automatic transcription" : {
       "comment" : "About description"
     },
+    "Manual" : {
+      "comment" : "Manual source badge",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manuel"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manual"
+          }
+        }
+      }
+    },
     "Manuel" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2414,6 +2725,9 @@
           }
         }
       }
+    },
+    "Model" : {
+      "comment" : "Model\nModel filter"
     },
     "Model bliver allerede downloadet" : {
       "extractionState" : "manual",
@@ -2501,6 +2815,69 @@
         }
       }
     },
+    "Monitor Folder" : {
+      "comment" : "Monitor Folder page title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Overvåg Mappe"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monitor Folder"
+          }
+        }
+      }
+    },
+    "Monitored Folder" : {
+      "comment" : "Monitored Folder section title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Overvåget Mappe"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monitored Folder"
+          }
+        }
+      }
+    },
+    "Monitoring continues even after you restart the app." : {
+      "comment" : "Monitoring persistence info",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Overvågningen fortsætter selv efter du genstarter appen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monitoring continues even after you restart the app."
+          }
+        }
+      }
+    },
+    "Most Words" : {
+      "comment" : "Sort option"
+    },
+    "Name (A-Z)" : {
+      "comment" : "Sort option"
+    },
+    "Name (Z-A)" : {
+      "comment" : "Sort option"
+    },
     "Når aktiveret, vil Whisper automatisk detektere sproget i lydoptagelsen." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2569,6 +2946,33 @@
         }
       }
     },
+    "Newest First" : {
+      "comment" : "Sort option"
+    },
+    "No folder selected" : {
+      "comment" : "No folder selected text",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingen mappe valgt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No folder selected"
+          }
+        }
+      }
+    },
+    "No results found" : {
+      "comment" : "No search results"
+    },
+    "No transcriptions yet" : {
+      "comment" : "Empty state"
+    },
     "Norsk" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2585,6 +2989,9 @@
           }
         }
       }
+    },
+    "Notes" : {
+      "comment" : "Notes"
     },
     "Notifikationer" : {
       "extractionState" : "manual",
@@ -2636,6 +3043,9 @@
           }
         }
       }
+    },
+    "Oldest First" : {
+      "comment" : "Sort option"
     },
     "Om %@" : {
       "extractionState" : "manual",
@@ -2841,6 +3251,24 @@
         }
       }
     },
+    "Pending Files" : {
+      "comment" : "Pending files section",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afventende Filer"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pending Files"
+          }
+        }
+      }
+    },
     "Placer eller optag lydfiler i den valgte mappe" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2911,6 +3339,24 @@
     },
     "Record audio on your iPhone using the companion app. Your recordings sync via iCloud and are automatically transcribed on your Mac." : {
       "comment" : "About iPhone integration"
+    },
+    "Remove from queue" : {
+      "comment" : "Remove file from queue tooltip",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fjern fra kø"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove from queue"
+          }
+        }
+      }
     },
     "Retry" : {
       "extractionState" : "manual",
@@ -2997,11 +3443,62 @@
         }
       }
     },
+    "Save Changes" : {
+      "comment" : "Save button"
+    },
+    "Search transcriptions..." : {
+      "comment" : "Search placeholder"
+    },
     "Select a folder to monitor" : {
       "comment" : "Folder monitoring step 2"
     },
+    "Select a local folder on your Mac to monitor." : {
+      "comment" : "Step 1 description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vælg en lokal mappe på din Mac som skal overvåges."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select a local folder on your Mac to monitor."
+          }
+        }
+      }
+    },
     "Select an audio file" : {
       "comment" : "Manual bullet 2"
+    },
+    "Select Folder" : {
+      "comment" : "Select Folder button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vælg Mappe"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select Folder"
+          }
+        }
+      }
+    },
+    "Shortest First" : {
+      "comment" : "Sort option"
+    },
+    "Show less" : {
+      "comment" : "Collapse"
+    },
+    "Show preview" : {
+      "comment" : "Expand"
     },
     "SkrivDetNed" : {
       "extractionState" : "manual",
@@ -3183,6 +3680,12 @@
         }
       }
     },
+    "Sort" : {
+      "comment" : "Sort button"
+    },
+    "Source" : {
+      "comment" : "Source\nSource filter"
+    },
     "Spring over" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3218,7 +3721,25 @@
       }
     },
     "Start monitoring" : {
-      "comment" : "Folder monitoring step 3"
+      "comment" : "Folder monitoring step 3\nStep 2 title"
+    },
+    "Start Monitoring" : {
+      "comment" : "Start Monitoring button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Overvågning"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Monitoring"
+          }
+        }
+      }
     },
     "Start nu" : {
       "extractionState" : "manual",
@@ -3322,6 +3843,24 @@
         }
       }
     },
+    "Stop Monitoring" : {
+      "comment" : "Stop Monitoring button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop Overvågning"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop Monitoring"
+          }
+        }
+      }
+    },
     "Stop Overvågning" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3342,8 +3881,23 @@
     "Stop transskription" : {
       "comment" : "Stop transcription"
     },
-    "Stop Transskription" : {
-      "comment" : "Stop transcription"
+    "Supported formats" : {
+      "comment" : "Supported formats section title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Understøttede formater"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supported formats"
+          }
+        }
+      }
     },
     "Svensk" : {
       "extractionState" : "manual",
@@ -3378,6 +3932,9 @@
           }
         }
       }
+    },
+    "Tags" : {
+      "comment" : "Tags"
     },
     "Talegenkendelse ikke tilgængelig" : {
       "extractionState" : "manual",
@@ -3416,8 +3973,47 @@
     "The easiest way to use SkrivDetNed is together with the companion iPhone app:" : {
       "comment" : "iCloud description intro"
     },
+    "The following audio formats are supported:" : {
+      "comment" : "Supported formats description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Følgende lydformater understøttes:"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The following audio formats are supported:"
+          }
+        }
+      }
+    },
     "The transcription will be saved as a .txt file next to your audio file." : {
       "comment" : "Manual note"
+    },
+    "These files are waiting for transcription" : {
+      "comment" : "Pending queue description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disse filer afventer transkription"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These files are waiting for transcription"
+          }
+        }
+      }
+    },
+    "This will remove the transcription from the database. The original files will not be deleted." : {
+      "comment" : "Delete message"
     },
     "Tidsstempler" : {
       "extractionState" : "manual",
@@ -3452,6 +4048,15 @@
           }
         }
       }
+    },
+    "Transcribe Another File" : {
+      "comment" : "Transcribe another file button"
+    },
+    "Transcribed" : {
+      "comment" : "Transcribed"
+    },
+    "Transcription" : {
+      "comment" : "Transcription header"
     },
     "Transcription starts automatically on your Mac" : {
       "comment" : "Quick start step 3"
@@ -3679,6 +4284,9 @@
           }
         }
       }
+    },
+    "Try searching for something else" : {
+      "comment" : "No results description"
     },
     "Tryk 'Start Overvågning' for at begynde at overvåge folderen" : {
       "extractionState" : "manual",
@@ -4017,12 +4625,6 @@
         }
       }
     },
-    "Venter i kø..." : {
-      "comment" : "Waiting in transcription queue"
-    },
-    "Venter på at andre transskriptioner bliver færdige" : {
-      "comment" : "Waiting for other transcriptions"
-    },
     "Venter..." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4059,6 +4661,9 @@
           }
         }
       }
+    },
+    "View" : {
+      "comment" : "View button"
     },
     "View transcriptions on both devices" : {
       "comment" : "iCloud bullet 4"
@@ -4182,8 +4787,47 @@
         }
       }
     },
+    "Waiting..." : {
+      "comment" : "Pending file status",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Venter..."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting..."
+          }
+        }
+      }
+    },
     "Website" : {
       "comment" : "Website link"
+    },
+    "When new audio files are added to the folder, they are automatically transcribed." : {
+      "comment" : "Step 3 description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Når nye lydfiler tilføjes til mappen, transkriberes de automatisk."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When new audio files are added to the folder, they are automatically transcribed."
+          }
+        }
+      }
+    },
+    "When you transcribe files, they will appear here" : {
+      "comment" : "Empty state description"
     },
     "Whisper model er ikke downloadet. Download en model i indstillinger." : {
       "extractionState" : "manual",

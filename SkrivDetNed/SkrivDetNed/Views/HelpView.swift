@@ -191,6 +191,7 @@ struct HelpView: View {
                             ModelDescriptionView(name: "Base", description: NSLocalizedString("Good balance (recommended)", comment: "Base model desc"))
                             ModelDescriptionView(name: "Small", description: NSLocalizedString("Better accuracy, slower", comment: "Small model desc"))
                             ModelDescriptionView(name: "Medium", description: NSLocalizedString("High accuracy, requires more resources", comment: "Medium model desc"))
+                            ModelDescriptionView(name: "Large", description: NSLocalizedString("Best accuracy, recommended for non-English languages", comment: "Large model desc"))
                         }
                         .font(.caption)
                         .foregroundColor(.secondary)
