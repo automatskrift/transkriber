@@ -104,17 +104,32 @@ struct AdvancedSettingsView: View {
                     // Initial Prompt
                     GroupBox(label: Label(NSLocalizedString("Kontekst", comment: ""), systemImage: "text.bubble")) {
                         VStack(alignment: .leading, spacing: 12) {
-                            Text(NSLocalizedString("Initial prompt (valgfri):", comment: ""))
-                                .font(.subheadline)
+                            HStack {
+                                Text(NSLocalizedString("Initial prompt (valgfri):", comment: ""))
+                                    .font(.subheadline)
+                                Spacer()
+                                Text("\(settings.whisperInitialPrompt.count)/1000")
+                                    .font(.caption)
+                                    .foregroundColor(settings.whisperInitialPrompt.count > 1000 ? .red : .secondary)
+                            }
 
-                            TextEditor(text: $settings.whisperInitialPrompt)
+                            TextEditor(text: Binding(
+                                get: { settings.whisperInitialPrompt },
+                                set: { newValue in
+                                    if newValue.count <= 1000 {
+                                        settings.whisperInitialPrompt = newValue
+                                    } else {
+                                        settings.whisperInitialPrompt = String(newValue.prefix(1000))
+                                    }
+                                }
+                            ))
                                 .frame(height: 80)
                                 .font(.body)
                                 .padding(4)
                                 .background(Color(nsColor: .textBackgroundColor))
                                 .cornerRadius(6)
 
-                            Text(NSLocalizedString("Hjælper Whisper med kontekst, f.eks. navne, fagtermer eller emnet for optagelsen. Eksempel: \"Dette er et møde om softwareudvikling med Tomas og Anders.\"", comment: ""))
+                            Text(NSLocalizedString("Hjælper Whisper med kontekst, f.eks. navne, fagtermer eller emnet for optagelsen. Eksempel: \"Dette er et møde om softwareudvikling med Tomas og Anders.\" (Maks 1000 tegn)", comment: ""))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }

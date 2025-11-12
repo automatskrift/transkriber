@@ -5184,6 +5184,91 @@
         }
       },
       "extractionState": "manual"
+    },
+    "Hukommelsesadvarsel": {
+      "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hukommelsesadvarsel"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Memory Warning"
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "Fortsæt alligevel": {
+      "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fortsæt alligevel"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue Anyway"
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "Vælg mindre model": {
+      "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vælg mindre model"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Smaller Model"
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "Large modellen kræver cirka 6GB RAM for optimal ydeevne.\n\nDit system har %@ total RAM.\n\nDette kan medføre:\n• Langsom transskriptionshastighed\n• Midlertidig systemfrysning\n• Mulige app-nedbrud\n\nVi anbefaler Medium eller Small model for bedre stabilitet.": {
+      "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Large modellen kræver cirka 6GB RAM for optimal ydeevne.\n\nDit system har %@ total RAM.\n\nDette kan medføre:\n• Langsom transskriptionshastighed\n• Midlertidig systemfrysning\n• Mulige app-nedbrud\n\nVi anbefaler Medium eller Small model for bedre stabilitet."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Large model requires approximately 6GB RAM for optimal performance.\n\nYour system has %@ total RAM.\n\nThis may lead to:\n• Slow transcription speed\n• Temporary system freezing\n• Possible app crashes\n\nWe recommend Medium or Small model for better stability."
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "Hjælper Whisper med kontekst, f.eks. navne, fagtermer eller emnet for optagelsen. Eksempel: \"Dette er et møde om softwareudvikling med Tomas og Anders.\" (Maks 1000 tegn)": {
+      "localizations": {
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hjælper Whisper med kontekst, f.eks. navne, fagtermer eller emnet for optagelsen. Eksempel: \"Dette er et møde om softwareudvikling med Tomas og Anders.\" (Maks 1000 tegn)"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Helps Whisper with context, e.g. names, technical terms, or the topic of the recording. Example: \"This is a software development meeting with Tomas and Anders.\" (Max 1000 characters)"
+          }
+        }
+      },
+      "extractionState": "manual"
     }
   },
   "version": "1.0"

@@ -234,21 +234,21 @@ struct SettingsView: View {
                 Text(String(format: NSLocalizedString("Er du sikker på at du vil slette %@? Du kan altid downloade den igen senere.", comment: ""), model.displayName))
             }
         }
-        .alert(NSLocalizedString("Memory Warning", comment: "Memory warning title"), isPresented: $showMemoryWarning) {
-            Button(NSLocalizedString("Continue Anyway", comment: "Continue anyway button")) {
+        .alert(NSLocalizedString("Hukommelsesadvarsel", comment: "Memory warning title"), isPresented: $showMemoryWarning) {
+            Button(NSLocalizedString("Fortsæt alligevel", comment: "Continue anyway button")) {
                 if let modelName = pendingModelSelection {
                     settings.selectedModel = modelName
                 }
                 pendingModelSelection = nil
             }
-            Button(NSLocalizedString("Choose Smaller Model", comment: "Choose smaller model button"), role: .cancel) {
+            Button(NSLocalizedString("Vælg mindre model", comment: "Choose smaller model button"), role: .cancel) {
                 pendingModelSelection = nil
             }
         } message: {
             let totalMemory = SystemRequirements.shared.getTotalMemory()
             let totalMemoryGB = ByteCountFormatter.string(fromByteCount: Int64(totalMemory), countStyle: .memory)
 
-            let messageFormat = NSLocalizedString("Large model requires approximately 6GB RAM for optimal performance.\n\nYour system has %@ total RAM.\n\nThis may lead to:\n• Slow transcription speed\n• Temporary system freezing\n• Possible app crashes\n\nWe recommend Medium or Small model for better stability.", comment: "Memory warning message")
+            let messageFormat = NSLocalizedString("Large modellen kræver cirka 6GB RAM for optimal ydeevne.\n\nDit system har %@ total RAM.\n\nDette kan medføre:\n• Langsom transskriptionshastighed\n• Midlertidig systemfrysning\n• Mulige app-nedbrud\n\nVi anbefaler Medium eller Small model for bedre stabilitet.", comment: "Memory warning message")
 
             Text(String(format: messageFormat, totalMemoryGB))
         }
@@ -379,10 +379,10 @@ struct SettingsView: View {
                 // Update downloaded models set
                 downloadedModels.remove(modelType.rawValue)
 
-                // If this was the selected model, reset to tiny
+                // If this was the selected model, reset to base
                 if settings.selectedModel == modelType.rawValue {
-                    settings.selectedModel = WhisperModelType.tiny.rawValue
-                    print("⚠️ Deleted selected model, reset to Tiny")
+                    settings.selectedModel = WhisperModelType.base.rawValue
+                    print("⚠️ Deleted selected model, reset to Base")
                 }
             }
         } catch {
