@@ -172,14 +172,14 @@ struct FolderMonitorView: View {
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
 
-                                ScrollView(.horizontal, showsIndicators: false) {
-                                    HStack(spacing: 8) {
+                                ScrollView(.vertical, showsIndicators: true) {
+                                    VStack(spacing: 8) {
                                         ForEach(viewModel.iCloudQueuedFiles, id: \.url) { item in
                                             iCloudFileCard(url: item.url, metadata: item.metadata, status: .queued)
                                         }
                                     }
                                 }
-                                .frame(height: 100)
+                                .frame(maxHeight: 300)
                             }
                             Divider()
                         }
@@ -191,14 +191,14 @@ struct FolderMonitorView: View {
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
 
-                                ScrollView(.horizontal, showsIndicators: false) {
-                                    HStack(spacing: 8) {
+                                ScrollView(.vertical, showsIndicators: true) {
+                                    VStack(spacing: 8) {
                                         ForEach(viewModel.iCloudCompletedFiles, id: \.url) { item in
                                             iCloudFileCard(url: item.url, metadata: item.metadata, status: .completed)
                                         }
                                     }
                                 }
-                                .frame(height: 100)
+                                .frame(maxHeight: 300)
                             }
                             Divider()
                         }
@@ -210,14 +210,14 @@ struct FolderMonitorView: View {
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
 
-                                ScrollView(.horizontal, showsIndicators: false) {
-                                    HStack(spacing: 8) {
+                                ScrollView(.vertical, showsIndicators: true) {
+                                    VStack(spacing: 8) {
                                         ForEach(viewModel.iCloudFailedFiles, id: \.url) { item in
                                             iCloudFileCard(url: item.url, metadata: item.metadata, status: .failed)
                                         }
                                     }
                                 }
-                                .frame(height: 120)
+                                .frame(maxHeight: 300)
                             }
                         }
 
@@ -423,7 +423,7 @@ struct FolderMonitorView: View {
                 .foregroundColor(.secondary)
         }
         .padding(12)
-        .frame(width: 160)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.controlBackgroundColor))
         .cornerRadius(8)
         .overlay(
@@ -508,7 +508,7 @@ struct PendingFileCard: View {
                 .foregroundColor(.secondary)
         }
         .padding(10)
-        .frame(width: 140)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.controlBackgroundColor))
         .cornerRadius(8)
         .overlay(

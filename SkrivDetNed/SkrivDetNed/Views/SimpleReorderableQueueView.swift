@@ -13,8 +13,8 @@ struct SimpleReorderableQueueView: View {
     @State private var draggedItem: URL?
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 12) {
+        ScrollView(.vertical, showsIndicators: true) {
+            VStack(spacing: 8) {
                 ForEach(transcriptionVM.pendingQueue, id: \.self) { fileURL in
                     PendingFileCard(fileURL: fileURL)
                         .environmentObject(transcriptionVM)
@@ -33,9 +33,9 @@ struct SimpleReorderableQueueView: View {
                         ))
                 }
             }
-            .padding(.horizontal, 8)
+            .padding(.vertical, 8)
         }
-        .frame(height: 100)
+        .frame(maxHeight: 300)
         .onDrop(of: [.url], delegate: QueueDropDelegate(
             draggedItem: $draggedItem,
             transcriptionVM: transcriptionVM

@@ -23,7 +23,8 @@ struct MainView: View {
     }
 
     var body: some View {
-        TabView(selection: $selectedTab) {
+        VStack(spacing: 0) {
+            TabView(selection: $selectedTab) {
             Group {
                 if selectedTab == .monitor {
                     FolderMonitorView()
@@ -90,6 +91,13 @@ struct MainView: View {
                 Label(NSLocalizedString("Indstillinger", comment: ""), systemImage: "gear")
             }
             .tag(Tab.settings)
+            }
+            .frame(minWidth: 700, minHeight: 600)
+
+            // Status bar at the bottom
+            StatusBar()
+                .environmentObject(whisperService)
+                .environmentObject(transcriptionVM)
         }
         .frame(minWidth: 700, minHeight: 600)
         .overlay {
@@ -159,6 +167,124 @@ struct MainView: View {
         } message: {
             Text(String(format: NSLocalizedString("Der blev fundet %lld eksisterende lydfil(er) i iCloud. Vil du transskribere dem nu?", comment: ""), folderMonitorVM.existingFilesCount))
         }
+    }
+}
+
+// MARK: - Status Bar
+struct StatusBar: View {
+    @EnvironmentObject private var whisperService: WhisperService
+    @EnvironmentObject private var transcriptionVM: TranscriptionViewModel
+
+    var body: some View {
+        HStack(spacing: 12) {
+            // Status icon and text
+            if whisperService.isDownloadingModel {
+                Image(systemName: "arrow.down.circle.fill")
+                    .foregroundColor(.blue)
+                    .imageScale(.small)
+
+                if let modelName = whisperService.downloadingModelName {
+                    Text(String(format: NSLocalizedString("Downloading model: %@", comment: "Status bar downloading model"), modelName))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                } else {
+                    Text(NSLocalizedString("Downloading model...", comment: "Status bar downloading"))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                // Progress indicator
+                ProgressView(value: whisperService.downloadProgress)
+                    .progressViewStyle(.linear)
+                    .frame(width: 100)
+
+                Text(String(format: "%d%%", Int(whisperService.downloadProgress * 100)))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .monospacedDigit()
+
+            } else if whisperService.isLoadingModel {
+                Image(systemName: "cpu")
+                    .foregroundColor(.orange)
+                    .imageScale(.small)
+
+                if let modelName = whisperService.loadingModelName {
+                    Text(String(format: NSLocalizedString("Loading model into memory: %@", comment: "Status bar loading model"), modelName))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                } else {
+                    Text(NSLocalizedString("Loading model into memory...", comment: "Status bar loading"))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                ProgressView()
+                    .scaleEffect(0.6)
+                    .frame(width: 16, height: 16)
+
+            } else if let currentTask = transcriptionVM.currentTask {
+                Image(systemName: "waveform")
+                    .foregroundColor(.purple)
+                    .imageScale(.small)
+
+                if case .processing(let progress) = currentTask.status {
+                    Text(String(format: NSLocalizedString("Transcribing: %@", comment: "Status bar transcribing"), currentTask.fileName))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    ProgressView(value: progress)
+                        .progressViewStyle(.linear)
+                        .frame(width: 100)
+
+                    Text(String(format: "%d%%", Int(progress * 100)))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .monospacedDigit()
+                } else {
+                    Text(String(format: NSLocalizedString("Preparing: %@", comment: "Status bar preparing"), currentTask.fileName))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    ProgressView()
+                        .scaleEffect(0.6)
+                        .frame(width: 16, height: 16)
+                }
+
+            } else if !transcriptionVM.pendingQueue.isEmpty {
+                Image(systemName: "clock")
+                    .foregroundColor(.secondary)
+                    .imageScale(.small)
+
+                Text(String(format: NSLocalizedString("%lld file(s) in queue", comment: "Status bar queue count"), transcriptionVM.pendingQueue.count))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+            } else {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(.green)
+                    .imageScale(.small)
+
+                Text(NSLocalizedString("Idle - Ready to transcribe", comment: "Status bar idle"))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+
+            // Optional: Add app version or other info
+            Text("v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?")")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 6)
+        .background(Color(NSColor.controlBackgroundColor))
+        .overlay(
+            Rectangle()
+                .frame(height: 1)
+                .foregroundColor(Color(NSColor.separatorColor)),
+            alignment: .top
+        )
     }
 }
 
