@@ -202,6 +202,9 @@
     "%lld" : {
 
     },
+    "%lld file(s) in queue" : {
+      "comment" : "Status bar queue count"
+    },
     "%lld ord" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1194,6 +1197,12 @@
         }
       }
     },
+    "Downloading model: %@" : {
+      "comment" : "Status bar downloading model"
+    },
+    "Downloading model..." : {
+      "comment" : "Status bar downloading"
+    },
     "Downloading Whisper Model" : {
       "comment" : "Download alert title"
     },
@@ -2082,6 +2091,9 @@
         }
       }
     },
+    "Idle - Ready to transcribe" : {
+      "comment" : "Status bar idle"
+    },
     "Ignorer" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2761,6 +2773,12 @@
           }
         }
       }
+    },
+    "Loading model into memory: %@" : {
+      "comment" : "Status bar loading model"
+    },
+    "Loading model into memory..." : {
+      "comment" : "Status bar loading"
     },
     "Loading model..." : {
       "comment" : "Loading model message"
@@ -3622,6 +3640,9 @@
         }
       }
     },
+    "Preparing: %@" : {
+      "comment" : "Status bar preparing"
+    },
     "Proces alle (%lld)" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4412,6 +4433,9 @@
     "Transcribed" : {
       "comment" : "Transcribed"
     },
+    "Transcribing: %@" : {
+      "comment" : "Status bar transcribing"
+    },
     "Transcribing..." : {
       "comment" : "Status: Transcribing"
     },
@@ -4738,6 +4762,9 @@
     },
     "Use the menu bar icon for quick status updates" : {
       "comment" : "Tip 1"
+    },
+    "v%@" : {
+
     },
     "Vælg" : {
       "extractionState" : "manual",
