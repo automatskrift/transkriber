@@ -240,52 +240,6 @@ struct FolderMonitorView: View {
                     }
                     .padding(.vertical, 8)
                 }
-
-                // MARK: - Empty State
-                if viewModel.selectedFolderURL == nil {
-                    VStack(spacing: 16) {
-                        Image(systemName: "folder.badge.questionmark")
-                            .font(.system(size: 48))
-                            .foregroundColor(.secondary)
-
-                        Text(NSLocalizedString("Vælg en folder for at komme i gang", comment: ""))
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-
-                        Text(NSLocalizedString("Appen vil automatisk overvåge folderen og transkribere nye lydfiler", comment: ""))
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .frame(maxWidth: 300)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 40)
-                }
-
-                if viewModel.selectedFolderURL != nil && !viewModel.isMonitoring &&
-                   transcriptionVM.activeTasks.isEmpty &&
-                   viewModel.pendingFiles.isEmpty &&
-                   viewModel.iCloudQueuedFiles.isEmpty &&
-                   viewModel.iCloudCompletedFiles.isEmpty &&
-                   viewModel.iCloudFailedFiles.isEmpty {
-                    VStack(spacing: 16) {
-                        Image(systemName: "play.circle")
-                            .font(.system(size: 48))
-                            .foregroundColor(.secondary)
-
-                        Text(NSLocalizedString("Klar til at starte", comment: ""))
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-
-                        Text(NSLocalizedString("Tryk 'Start Overvågning' for at begynde at overvåge folderen", comment: ""))
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .frame(maxWidth: 300)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 40)
-                }
             }
             .padding()
         }
