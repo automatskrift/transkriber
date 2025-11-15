@@ -490,25 +490,57 @@ struct RecordingDetailView: View {
 
         Task {
             // Check iCloud for metadata updates
-            if iCloudSyncService.shared.getRecordingsFolderURL() != nil {
-                do {
-                    // Trigger a metadata query update
-                    try await Task.sleep(nanoseconds: 500_000_000) // 0.5 second delay for animation
-
-                    // The iCloud sync service will automatically detect changes
-                    // and update the recordings list via NSMetadataQuery
-                    print("🔄 Refreshing status for recording: \(recording.id)")
-
-                    await MainActor.run {
-                        isRefreshing = false
-                    }
-                } catch {
-                    print("⚠️ Error refreshing status: \(error)")
-                    await MainActor.run {
-                        isRefreshing = false
-                    }
+            guard let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL() else {
+                await MainActor.run {
+                    isRefreshing = false
                 }
-            } else {
+                return
+            }
+
+            do {
+                print("🔄 Refreshing status for recording: \(recording.id)")
+
+                // Load metadata from iCloud
+                if let metadata = try RecordingMetadata.load(for: recording.fileName, from: recordingsFolder) {
+                    print("   📋 Loaded metadata - status: \(metadata.status.rawValue)")
+
+                    // Update local recording status
+                    await iCloudSyncService.shared.updateLocalRecordingStatus(
+                        audioFileName: recording.fileName,
+                        metadata: metadata
+                    )
+
+                    // If completed and has transcription, reload the transcription file
+                    if metadata.status == .completed,
+                       let transcriptionFileName = metadata.transcriptionFileName {
+                        let transcriptionURL = recordingsFolder.appendingPathComponent(transcriptionFileName)
+
+                        if FileManager.default.fileExists(atPath: transcriptionURL.path),
+                           let transcription = try? String(contentsOf: transcriptionURL, encoding: .utf8) {
+                            print("   📥 Reloading transcription file: \(transcriptionFileName)")
+
+                            // Update local recording with transcription
+                            await iCloudSyncService.shared.updateLocalRecording(
+                                audioFileName: recording.fileName,
+                                transcription: transcription
+                            )
+
+                            print("   ✅ Transcription reloaded successfully")
+                        } else {
+                            print("   ⚠️ Transcription file not found: \(transcriptionFileName)")
+                        }
+                    }
+                } else {
+                    print("   ⚠️ No metadata found for: \(recording.fileName)")
+                }
+
+                try await Task.sleep(nanoseconds: 500_000_000) // 0.5 second delay for animation
+
+                await MainActor.run {
+                    isRefreshing = false
+                }
+            } catch {
+                print("⚠️ Error refreshing status: \(error)")
                 await MainActor.run {
                     isRefreshing = false
                 }

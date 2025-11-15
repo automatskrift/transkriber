@@ -679,7 +679,7 @@ class iCloudSyncService: ObservableObject {
         }
     }
 
-    private func updateLocalRecording(audioFileName: String, transcription: String) async {
+    func updateLocalRecording(audioFileName: String, transcription: String) async {
         let recordingsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("Recordings")
 
@@ -726,7 +726,7 @@ class iCloudSyncService: ObservableObject {
         }
     }
 
-    private func updateLocalRecordingStatus(audioFileName: String, metadata: RecordingMetadata) async {
+    func updateLocalRecordingStatus(audioFileName: String, metadata: RecordingMetadata) async {
         let recordingsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("Recordings")
 
