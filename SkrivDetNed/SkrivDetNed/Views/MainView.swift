@@ -259,14 +259,52 @@ struct StatusBar: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
 
-            } else {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(.green)
-                    .imageScale(.small)
+                // Show model status when in queue
+                if whisperService.isModelLoaded, let modelName = whisperService.loadedModelName {
+                    Text("•")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
 
-                Text(NSLocalizedString("Idle - Ready to transcribe", comment: "Status bar idle"))
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    Text(String(format: NSLocalizedString("Model loaded: %@", comment: "Status bar model loaded"), modelName))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                } else {
+                    Text("•")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    Text(NSLocalizedString("Model not loaded", comment: "Status bar model not loaded"))
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                }
+
+            } else {
+                // Idle state
+                if whisperService.isModelLoaded, let modelName = whisperService.loadedModelName {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                        .imageScale(.small)
+
+                    Text(NSLocalizedString("Idle - Ready to transcribe", comment: "Status bar idle"))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    Text("•")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    Text(String(format: NSLocalizedString("Model: %@", comment: "Status bar model name"), modelName))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                } else {
+                    Image(systemName: "exclamationmark.circle")
+                        .foregroundColor(.orange)
+                        .imageScale(.small)
+
+                    Text(NSLocalizedString("Idle - Model not loaded", comment: "Status bar idle no model"))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
             }
 
             Spacer()

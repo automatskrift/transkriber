@@ -35,6 +35,8 @@ class WhisperService: ObservableObject {
     @Published var downloadCompletedUnits: Int64 = 0  // Download progress: completed units
     @Published var downloadTotalUnits: Int64 = 0      // Download progress: total units
     @Published var currentTranscribingText: String = ""  // Real-time transcription preview
+    @Published var isModelLoaded: Bool = false
+    @Published var loadedModelName: String? = nil
 
     private var whisperKit: WhisperKit?
     private var currentModel: WhisperModelType?
@@ -62,6 +64,8 @@ class WhisperService: ObservableObject {
             // Release the WhisperKit instance
             whisperKit = nil
             currentModel = nil
+            isModelLoaded = false
+            loadedModelName = nil
 
             // Give the system a moment to reclaim memory
             try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
@@ -203,6 +207,8 @@ class WhisperService: ObservableObject {
             )
 
             currentModel = modelType
+            isModelLoaded = true
+            loadedModelName = modelType.displayName
 
             // Always reset loading flags immediately after initialization
             isLoadingModel = false
