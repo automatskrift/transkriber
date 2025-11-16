@@ -249,11 +249,17 @@ struct FolderMonitorView: View {
     // MARK: - iCloud File Card
     @ViewBuilder
     private func iCloudFileCard(url: URL, metadata: RecordingMetadata, status: FileCardStatus) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
+        VStack(alignment: .leading, spacing: 6) {
+            // First line: Icon + filename + buttons
+            HStack(spacing: 8) {
                 Image(systemName: status.icon)
                     .foregroundColor(status.color)
-                    .imageScale(.medium)
+                    .imageScale(.small)
+
+                Text(metadata.title ?? url.deletingPathExtension().lastPathComponent)
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .lineLimit(1)
 
                 Spacer()
 
@@ -400,27 +406,30 @@ struct FolderMonitorView: View {
                 }
             }
 
-            Text(metadata.title ?? url.deletingPathExtension().lastPathComponent)
-                .font(.caption)
-                .fontWeight(.medium)
-                .lineLimit(1)
+            // Second line: Duration and time ago on same line
+            HStack(spacing: 4) {
+                if let duration = metadata.duration {
+                    Text(formatDuration(duration))
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
 
-            if let duration = metadata.duration {
-                Text(formatDuration(duration))
+                    Text("•")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+
+                Text(metadata.createdAt.timeAgoString())
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
 
+            // Third line: Error message (if failed)
             if status == .failed, let error = metadata.errorMessage {
                 Text(error)
                     .font(.caption2)
                     .foregroundColor(.red)
                     .lineLimit(2)
             }
-
-            Text(metadata.createdAt.timeAgoString())
-                .font(.caption2)
-                .foregroundColor(.secondary)
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -467,11 +476,17 @@ struct PendingFileCard: View {
     @State private var isDragging = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
+        VStack(alignment: .leading, spacing: 6) {
+            // First line: Icon + filename + source + remove button
+            HStack(spacing: 8) {
                 Image(systemName: "doc.fill")
                     .foregroundColor(.orange)
                     .imageScale(.small)
+
+                Text(fileURL.lastPathComponent)
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .lineLimit(1)
 
                 Spacer()
 
@@ -498,11 +513,7 @@ struct PendingFileCard: View {
                 .help(NSLocalizedString("Remove from queue", comment: "Remove from queue tooltip"))
             }
 
-            Text(fileURL.lastPathComponent)
-                .font(.caption)
-                .fontWeight(.medium)
-                .lineLimit(2)
-
+            // Second line: Status
             Text(NSLocalizedString("Waiting...", comment: "Pending file status"))
                 .font(.caption2)
                 .foregroundColor(.secondary)

@@ -203,7 +203,22 @@
 
     },
     "%lld file(s) in queue" : {
-      "comment" : "Status bar queue count"
+      "comment" : "Status bar queue count",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld fil(er) i kø"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld file(s) in queue"
+          }
+        }
+      }
     },
     "%lld ord" : {
       "extractionState" : "manual",
@@ -1198,10 +1213,40 @@
       }
     },
     "Downloading model: %@" : {
-      "comment" : "Status bar downloading model"
+      "comment" : "Status bar downloading model",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloader model: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloading model: %@"
+          }
+        }
+      }
     },
     "Downloading model..." : {
-      "comment" : "Status bar downloading"
+      "comment" : "Status bar downloading",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloader model..."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloading model..."
+          }
+        }
+      }
     },
     "Downloading Whisper Model" : {
       "comment" : "Download alert title"
@@ -2092,10 +2137,40 @@
       }
     },
     "Idle - Model not loaded" : {
-      "comment" : "Status bar idle no model"
+      "comment" : "Status bar idle no model",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inaktiv - Model ikke indlæst"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Idle - Model not loaded"
+          }
+        }
+      }
     },
     "Idle - Ready to transcribe" : {
-      "comment" : "Status bar idle"
+      "comment" : "Status bar idle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inaktiv - Klar til at transkribere"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Idle - Ready to transcribe"
+          }
+        }
+      }
     },
     "Ignorer" : {
       "extractionState" : "manual",
@@ -2778,10 +2853,40 @@
       }
     },
     "Loading model into memory: %@" : {
-      "comment" : "Status bar loading model"
+      "comment" : "Status bar loading model",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indlæser model i hukommelse: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading model into memory: %@"
+          }
+        }
+      }
     },
     "Loading model into memory..." : {
-      "comment" : "Status bar loading"
+      "comment" : "Status bar loading",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indlæser model i hukommelse..."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading model into memory..."
+          }
+        }
+      }
     },
     "Loading model..." : {
       "comment" : "Loading model message"
@@ -3101,10 +3206,40 @@
       }
     },
     "Model loaded: %@" : {
-      "comment" : "Status bar model loaded"
+      "comment" : "Status bar model loaded",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model indlæst: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model loaded: %@"
+          }
+        }
+      }
     },
     "Model not loaded" : {
-      "comment" : "Status bar model not loaded"
+      "comment" : "Status bar model not loaded",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model ikke indlæst"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model not loaded"
+          }
+        }
+      }
     },
     "Model Size" : {
       "comment" : "Model size label"
@@ -3113,7 +3248,22 @@
       "comment" : "Model initialization error"
     },
     "Model: %@" : {
-      "comment" : "Status bar model name"
+      "comment" : "Status bar model name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model: %@"
+          }
+        }
+      }
     },
     "Modellen downloades automatisk ved første brug" : {
       "comment" : "Info about WhisperKit auto-download",
@@ -3653,7 +3803,22 @@
       }
     },
     "Preparing: %@" : {
-      "comment" : "Status bar preparing"
+      "comment" : "Status bar preparing",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forbereder: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparing: %@"
+          }
+        }
+      }
     },
     "Proces alle (%lld)" : {
       "extractionState" : "manual",
@@ -4446,7 +4611,22 @@
       "comment" : "Transcribed"
     },
     "Transcribing: %@" : {
-      "comment" : "Status bar transcribing"
+      "comment" : "Status bar transcribing",
+      "extractionState" : "manual",
+      "localizations" : {
+        "da" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transkriberer: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transcribing: %@"
+          }
+        }
+      }
     },
     "Transcribing..." : {
       "comment" : "Status: Transcribing"
