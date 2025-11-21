@@ -309,7 +309,20 @@ struct ManualTranscriptionView: View {
                 // Delete existing transcription file and clear processed status before proceeding
                 if let fileURL = selectedFileURL {
                     let outputURL = fileURL.deletingPathExtension().appendingPathExtension("txt")
-                    try? FileManager.default.removeItem(at: outputURL)
+
+                    // Use NSFileCoordinator for iCloud files to prevent sync conflicts
+                    if fileURL.path.contains("Mobile Documents") {
+                        let coordinator = NSFileCoordinator(filePresenter: nil)
+                        var error: NSError?
+                        coordinator.coordinate(writingItemAt: outputURL, options: .forDeleting, error: &error) { url in
+                            try? FileManager.default.removeItem(at: url)
+                        }
+                        if error != nil {
+                            try? FileManager.default.removeItem(at: outputURL)
+                        }
+                    } else {
+                        try? FileManager.default.removeItem(at: outputURL)
+                    }
                     print("🗑️ Deleted existing transcription to allow re-transcription: \(outputURL.lastPathComponent)")
 
                     // Remove from processed files list so it can be transcribed again

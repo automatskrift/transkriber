@@ -13,6 +13,9 @@ struct FolderMonitorView: View {
     @EnvironmentObject private var transcriptionVM: TranscriptionViewModel
     @EnvironmentObject private var whisperService: WhisperService
 
+    // Track Option key state for split mode
+    @State private var optionKeyPressed = false
+
     // Computed property to avoid AttributeGraph cycle
     private var processingTasks: [TranscriptionTask] {
         transcriptionVM.activeTasks.filter { task in
@@ -244,6 +247,13 @@ struct FolderMonitorView: View {
             .padding()
         }
         .frame(minWidth: 600, minHeight: 500)
+        .onAppear {
+            // Monitor for Option key press/release
+            NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { event in
+                optionKeyPressed = event.modifierFlags.contains(.option)
+                return event
+            }
+        }
     }
 
     // MARK: - iCloud File Card
@@ -280,47 +290,26 @@ struct FolderMonitorView: View {
 
                     Menu {
                         Button(action: {
+                            // Check if Option key is held down for split mode
+                            let optionKeyHeld = NSEvent.modifierFlags.contains(.option)
+
                             Task {
-                                // Redo transcription - update metadata to pending
-                                if let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL() {
-                                    do {
-                                        var updatedMetadata = try RecordingMetadata.load(for: url.lastPathComponent, from: recordingsFolder)
-                                            ?? RecordingMetadata(audioFileName: url.lastPathComponent, createdOnDevice: "macOS")
-
-                                        // Clear error and reset to pending
-                                        updatedMetadata.status = .pending
-                                        updatedMetadata.errorMessage = nil
-                                        updatedMetadata.lastAttemptedAt = nil
-                                        updatedMetadata.transcriptionFileName = nil
-                                        updatedMetadata.updatedAt = Date()
-
-                                        try updatedMetadata.save(to: recordingsFolder)
-                                        print("🔄 Reset completed file to pending for redo: \(url.lastPathComponent)")
-
-                                        // Remove from processed files list so it can be retried
-                                        FolderMonitorService.shared.removeFromProcessed(url)
-                                        print("🔄 Removed from processed files list")
-
-                                        // Delete old transcription file if exists
-                                        let txtURL = url.deletingPathExtension().appendingPathExtension("txt")
-                                        if FileManager.default.fileExists(atPath: txtURL.path) {
-                                            try? FileManager.default.removeItem(at: txtURL)
-                                            print("🗑️ Deleted old transcription file")
-                                        }
-
-                                        // Now add to queue
-                                        await transcriptionVM.addToQueue(url)
-
-                                        // Trigger immediate refresh to update UI
-                                        await viewModel.refreshiCloudFileLists()
-                                    } catch {
-                                        print("❌ Failed to reset metadata for redo: \(error)")
-                                    }
+                                if optionKeyHeld {
+                                    // EXPERIMENTAL: Split file in half and transcribe both parts
+                                    await handleSplitAndTranscribe(url: url)
+                                } else {
+                                    // Normal redo transcription
+                                    await handleRedoTranscription(url: url)
                                 }
                             }
                         }) {
-                            Label(NSLocalizedString("Transkribér igen", comment: ""), systemImage: "arrow.clockwise")
+                            if optionKeyPressed {
+                                Label(NSLocalizedString("Split & transkribér igen", comment: "Split and transcribe again"), systemImage: "scissors")
+                            } else {
+                                Label(NSLocalizedString("Transkribér igen", comment: ""), systemImage: "arrow.clockwise")
+                            }
                         }
+                        .help(NSLocalizedString("Hold Option (⌥) nede for at splitte lydfilen i to dele", comment: "Split audio hint"))
                     } label: {
                         Image(systemName: "ellipsis.circle")
                             .font(.caption)
@@ -445,6 +434,131 @@ struct FolderMonitorView: View {
         let mins = Int(seconds) / 60
         let secs = Int(seconds) % 60
         return String(format: "%d:%02d", mins, secs)
+    }
+
+    // MARK: - Redo Transcription Helpers
+
+    /// Normal redo transcription - reset metadata and add to queue
+    private func handleRedoTranscription(url: URL) async {
+        guard let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL() else { return }
+
+        do {
+            // FIRST: Delete old transcription file using NSFileCoordinator
+            // This ensures iCloud won't sync back the old version
+            let txtURL = url.deletingPathExtension().appendingPathExtension("txt")
+            if FileManager.default.fileExists(atPath: txtURL.path) {
+                let coordinator = NSFileCoordinator(filePresenter: nil)
+                var coordinatorError: NSError?
+
+                coordinator.coordinate(writingItemAt: txtURL, options: .forDeleting, error: &coordinatorError) { coordinatedURL in
+                    do {
+                        try FileManager.default.removeItem(at: coordinatedURL)
+                        print("🗑️ Deleted old transcription file (coordinated): \(txtURL.lastPathComponent)")
+                    } catch {
+                        print("⚠️ Failed to delete transcription file: \(error)")
+                    }
+                }
+
+                if let error = coordinatorError {
+                    print("⚠️ NSFileCoordinator error deleting: \(error), trying direct delete")
+                    try? FileManager.default.removeItem(at: txtURL)
+                }
+            }
+
+            // Wait for iCloud to process the deletion
+            try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
+
+            // Double-check deletion
+            if FileManager.default.fileExists(atPath: txtURL.path) {
+                print("⚠️ Transcription file still exists after coordinated delete, force removing...")
+                try? FileManager.default.removeItem(at: txtURL)
+                try? await Task.sleep(nanoseconds: 500_000_000)
+            }
+
+            var updatedMetadata = try RecordingMetadata.load(for: url.lastPathComponent, from: recordingsFolder)
+                ?? RecordingMetadata(audioFileName: url.lastPathComponent, createdOnDevice: "macOS")
+
+            // Clear error and reset to pending
+            updatedMetadata.status = .pending
+            updatedMetadata.errorMessage = nil
+            updatedMetadata.lastAttemptedAt = nil
+            updatedMetadata.transcriptionFileName = nil
+            updatedMetadata.updatedAt = Date()
+
+            try updatedMetadata.save(to: recordingsFolder)
+            print("🔄 Reset completed file to pending for redo: \(url.lastPathComponent)")
+
+            // Remove from processed files list
+            FolderMonitorService.shared.removeFromProcessed(url)
+
+            // Add to queue
+            await transcriptionVM.addToQueue(url)
+
+            // Refresh UI
+            await viewModel.refreshiCloudFileLists()
+        } catch {
+            print("❌ Failed to reset metadata for redo: \(error)")
+        }
+    }
+
+    /// EXPERIMENTAL: Split audio file in half and transcribe both parts
+    private func handleSplitAndTranscribe(url: URL) async {
+        guard let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL() else { return }
+
+        print("✂️ [EXPERIMENTAL] Split and transcribe: \(url.lastPathComponent)")
+
+        do {
+            // Delete old transcription file first using NSFileCoordinator
+            let txtURL = url.deletingPathExtension().appendingPathExtension("txt")
+            if FileManager.default.fileExists(atPath: txtURL.path) {
+                let coordinator = NSFileCoordinator(filePresenter: nil)
+                var coordinatorError: NSError?
+
+                coordinator.coordinate(writingItemAt: txtURL, options: .forDeleting, error: &coordinatorError) { coordinatedURL in
+                    try? FileManager.default.removeItem(at: coordinatedURL)
+                }
+
+                if coordinatorError != nil {
+                    try? FileManager.default.removeItem(at: txtURL)
+                }
+                print("🗑️ Deleted old transcription file")
+            }
+
+            // Split the audio file
+            let (part1URL, part2URL) = try await AudioSplitService.shared.splitInHalf(url, outputFolder: recordingsFolder)
+
+            // Create metadata for part 1
+            var metadata1 = RecordingMetadata(audioFileName: part1URL.lastPathComponent, createdOnDevice: "macOS")
+            metadata1.status = .pending
+            metadata1.title = "\(url.deletingPathExtension().lastPathComponent) (del 1)"
+            try metadata1.save(to: recordingsFolder)
+
+            // Create metadata for part 2
+            var metadata2 = RecordingMetadata(audioFileName: part2URL.lastPathComponent, createdOnDevice: "macOS")
+            metadata2.status = .pending
+            metadata2.title = "\(url.deletingPathExtension().lastPathComponent) (del 2)"
+            try metadata2.save(to: recordingsFolder)
+
+            // Mark original as processed (so it doesn't get picked up again)
+            if var originalMetadata = try? RecordingMetadata.load(for: url.lastPathComponent, from: recordingsFolder) {
+                originalMetadata.status = .completed
+                originalMetadata.errorMessage = "Splittet i to dele"
+                originalMetadata.updatedAt = Date()
+                try? originalMetadata.save(to: recordingsFolder)
+            }
+            FolderMonitorService.shared.markAsProcessed(url)
+
+            // Add both parts to queue
+            await transcriptionVM.addToQueue(part1URL)
+            await transcriptionVM.addToQueue(part2URL)
+
+            print("✅ Split complete - added 2 parts to queue")
+
+            // Refresh UI
+            await viewModel.refreshiCloudFileLists()
+        } catch {
+            print("❌ Failed to split audio: \(error)")
+        }
     }
 
     enum FileCardStatus {

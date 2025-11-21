@@ -83,11 +83,27 @@ class TranscriptionViewModel: ObservableObject {
 
                 if FileManager.default.fileExists(atPath: originalFile.path) {
                     // Original exists, so we can safely delete the duplicate
-                    try? FileManager.default.removeItem(at: duplicateFile)
+                    // Use NSFileCoordinator for iCloud files
+                    let coordinator = NSFileCoordinator(filePresenter: nil)
+                    var error: NSError?
+                    coordinator.coordinate(writingItemAt: duplicateFile, options: .forDeleting, error: &error) { url in
+                        try? FileManager.default.removeItem(at: url)
+                    }
+                    if error != nil {
+                        try? FileManager.default.removeItem(at: duplicateFile)
+                    }
                     print("   ✅ Deleted duplicate (original exists)")
                 } else {
                     // Original doesn't exist, rename duplicate to be the original
-                    try? FileManager.default.moveItem(at: duplicateFile, to: originalFile)
+                    // Use NSFileCoordinator for iCloud files
+                    let coordinator = NSFileCoordinator(filePresenter: nil)
+                    var error: NSError?
+                    coordinator.coordinate(writingItemAt: duplicateFile, options: .forMoving, writingItemAt: originalFile, options: .forReplacing, error: &error) { srcURL, dstURL in
+                        try? FileManager.default.moveItem(at: srcURL, to: dstURL)
+                    }
+                    if error != nil {
+                        try? FileManager.default.moveItem(at: duplicateFile, to: originalFile)
+                    }
                     print("   ✅ Renamed duplicate to original filename")
                 }
             }
@@ -388,27 +404,36 @@ class TranscriptionViewModel: ObservableObject {
             }
 
             // Save transcription to file
-            do {
-                try finalTranscription.write(to: task.outputFileURL, atomically: true, encoding: .utf8)
-            } catch {
-                // If we can't write to the original location (permission denied), save to temp folder
-                print("⚠️ Could not write to original location: \(error)")
-                print("   Saving to temporary location instead...")
+            // For iCloud files, we skip direct write here and use saveTranscriptionToiCloud below
+            // which properly uses NSFileCoordinator to avoid sync conflicts
+            let isICloudFile = url.path.contains("Mobile Documents")
 
-                let tempDir = FileManager.default.temporaryDirectory
-                let tempOutputURL = tempDir.appendingPathComponent(task.outputFileURL.lastPathComponent)
+            if !isICloudFile {
+                do {
+                    try finalTranscription.write(to: task.outputFileURL, atomically: true, encoding: .utf8)
+                } catch {
+                    // If we can't write to the original location (permission denied), save to temp folder
+                    print("⚠️ Could not write to original location: \(error)")
+                    print("   Saving to temporary location instead...")
 
-                try finalTranscription.write(to: tempOutputURL, atomically: true, encoding: .utf8)
-                print("✅ Saved to temporary location: \(tempOutputURL.path)")
+                    let tempDir = FileManager.default.temporaryDirectory
+                    let tempOutputURL = tempDir.appendingPathComponent(task.outputFileURL.lastPathComponent)
 
-                // Update the task with the new output URL
-                if activeTasks.firstIndex(where: { $0.id == task.id }) != nil {
-                    // Can't mutate outputFileURL as it's a let, so we'll just note it in the error
-                    // User will need to manually save from the temp location
+                    try finalTranscription.write(to: tempOutputURL, atomically: true, encoding: .utf8)
+                    print("✅ Saved to temporary location: \(tempOutputURL.path)")
+
+                    // Update the task with the new output URL
+                    if activeTasks.firstIndex(where: { $0.id == task.id }) != nil {
+                        // Can't mutate outputFileURL as it's a let, so we'll just note it in the error
+                        // User will need to manually save from the temp location
+                    }
                 }
             }
 
-            // If file is from iCloud, save transcription back to iCloud
+            // If file is from iCloud, save transcription back to iCloud (uses NSFileCoordinator)
+            var iCloudSaveSucceeded = true
+            var iCloudSaveError: Error? = nil
+
             if url.path.contains("Mobile Documents") {
                 do {
                     try await iCloudSyncService.shared.saveTranscriptionToiCloud(
@@ -418,6 +443,19 @@ class TranscriptionViewModel: ObservableObject {
                     print("✅ Successfully saved transcription and metadata to iCloud")
                 } catch {
                     print("❌ Failed to save to iCloud: \(error)")
+                    iCloudSaveSucceeded = false
+                    iCloudSaveError = error
+
+                    // Update metadata to failed status so user knows something went wrong
+                    if let recordingsFolder = iCloudSyncService.shared.getRecordingsFolderURL() {
+                        if var metadata = try? RecordingMetadata.load(for: url.lastPathComponent, from: recordingsFolder) {
+                            metadata.status = .failed
+                            metadata.errorMessage = "Kunne ikke gemme transskription: \(error.localizedDescription)"
+                            metadata.updatedAt = Date()
+                            try? metadata.save(to: recordingsFolder)
+                            print("⚠️ Updated metadata to failed status due to save error")
+                        }
+                    }
                 }
             }
 
@@ -465,12 +503,20 @@ class TranscriptionViewModel: ObservableObject {
                 // Non-fatal - continue even if database save fails
             }
 
-            // Update task status
+            // Update task status based on whether save succeeded
             if let index = activeTasks.firstIndex(where: { $0.id == task.id }) {
-                activeTasks[index].status = .completed
-                activeTasks[index].completedAt = Date()
+                if iCloudSaveSucceeded {
+                    activeTasks[index].status = .completed
+                    activeTasks[index].completedAt = Date()
+                } else {
+                    // iCloud save failed - mark task as failed
+                    let errorMsg = iCloudSaveError?.localizedDescription ?? "Ukendt fejl ved gemning til iCloud"
+                    activeTasks[index].status = .failed(error: errorMsg)
+                    activeTasks[index].completedAt = Date()
+                    print("⚠️ Task marked as failed due to iCloud save error")
+                }
 
-                // Move to completed
+                // Move to completed (includes failed tasks for visibility)
                 let completedTask = activeTasks.remove(at: index)
                 completedTasks.insert(completedTask, at: 0)
 
@@ -480,8 +526,10 @@ class TranscriptionViewModel: ObservableObject {
                 }
             }
 
-            // Mark as processed in folder monitor
-            FolderMonitorService.shared.markAsProcessed(url)
+            // Mark as processed in folder monitor (only if save succeeded)
+            if iCloudSaveSucceeded {
+                FolderMonitorService.shared.markAsProcessed(url)
+            }
 
             // Send notification
             if AppSettings.shared.showNotifications {
@@ -490,7 +538,19 @@ class TranscriptionViewModel: ObservableObject {
 
             // Delete audio file if setting is enabled
             if AppSettings.shared.deleteAudioAfterTranscription {
-                try? FileManager.default.removeItem(at: url)
+                // Use NSFileCoordinator for iCloud files
+                if url.path.contains("Mobile Documents") {
+                    let coordinator = NSFileCoordinator(filePresenter: nil)
+                    var error: NSError?
+                    coordinator.coordinate(writingItemAt: url, options: .forDeleting, error: &error) { coordinatedURL in
+                        try? FileManager.default.removeItem(at: coordinatedURL)
+                    }
+                    if error != nil {
+                        try? FileManager.default.removeItem(at: url)
+                    }
+                } else {
+                    try? FileManager.default.removeItem(at: url)
+                }
             }
 
         } catch {

@@ -9,7 +9,8 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct TranscriptionsView: View {
-    @StateObject private var viewModel = TranscriptionsViewModel.shared
+    // Use @ObservedObject for singletons to avoid AttributeGraph cycles
+    @ObservedObject private var viewModel = TranscriptionsViewModel.shared
     @State private var showingSortMenu = false
     @State private var showingFilterMenu = false
     @State private var showingExportMenu = false

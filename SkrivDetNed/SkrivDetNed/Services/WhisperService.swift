@@ -47,6 +47,12 @@ class WhisperService: ObservableObject {
 
     private init() {}
 
+    /// Dismiss the model loading modal
+    func dismissLoadingModal() {
+        isLoadingModel = false
+        loadingModelName = nil
+    }
+
     /// Unload the current WhisperKit model to free up memory
     func unloadModel() async {
         // Cancel any unload timer
@@ -369,6 +375,10 @@ class WhisperService: ObservableObject {
             let task: DecodingTask = settings.whisperTranslateToEnglish ? .translate : .transcribe
 
             // Create decode options with all settings (for WhisperKit 0.9.4)
+            // Thresholds are set to be more permissive to avoid cutting off audio early:
+            // - noSpeechThreshold: Higher = more likely to continue through quiet parts
+            // - compressionRatioThreshold: Higher = more tolerant of repetitive speech
+            // - logProbThreshold: Lower = more tolerant of uncertain transcriptions
             let decodeOptions = DecodingOptions(
                 verbose: true,
                 task: task,
@@ -387,9 +397,9 @@ class WhisperService: ObservableObject {
                 clipTimestamps: [],
                 suppressBlank: true,
                 supressTokens: [],
-                compressionRatioThreshold: 2.4,
-                logProbThreshold: -1.0,
-                noSpeechThreshold: 0.6,
+                compressionRatioThreshold: Float(settings.whisperCompressionRatioThreshold),
+                logProbThreshold: Float(settings.whisperLogProbThreshold),
+                noSpeechThreshold: Float(settings.whisperNoSpeechThreshold),
                 concurrentWorkerCount: settings.whisperThreadCount
             )
 
@@ -437,9 +447,15 @@ class WhisperService: ObservableObject {
                 throw WhisperError.transcriptionFailed("No transcription result")
             }
 
-            let fullText = firstResult.text
+            let fullText = firstResult.text.trimmingCharacters(in: .whitespacesAndNewlines)
             print("📝 Transcription text length: \(fullText.count) characters")
             print("📝 Transcription text preview: '\(fullText.prefix(100))'")
+
+            // Validate that we actually got some text
+            if fullText.isEmpty {
+                print("⚠️ Transcription returned empty text!")
+                throw WhisperError.transcriptionFailed("Transskriptionen returnerede tom tekst. Prøv igen eller brug en anden model.")
+            }
 
             let segments = firstResult.segments.map { segment in
                 TranscriptionSegment(

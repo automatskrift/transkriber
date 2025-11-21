@@ -9,9 +9,11 @@ import SwiftUI
 
 struct MainView: View {
     @State private var selectedTab: Tab = .monitor
-    @StateObject private var folderMonitorVM = FolderMonitorViewModel.shared
-    @StateObject private var transcriptionVM = TranscriptionViewModel.shared
-    @StateObject private var whisperService = WhisperService.shared
+    // Use @ObservedObject for singletons instead of @StateObject to avoid AttributeGraph cycles
+    // @StateObject should only be used for objects that the view creates and owns
+    @ObservedObject private var folderMonitorVM = FolderMonitorViewModel.shared
+    @ObservedObject private var transcriptionVM = TranscriptionViewModel.shared
+    @ObservedObject private var whisperService = WhisperService.shared
     @State private var showModelDownloadAlert = false
 
     enum Tab {
@@ -142,8 +144,7 @@ struct MainView: View {
 
                         // OK button to acknowledge the information
                         Button(action: {
-                            whisperService.isLoadingModel = false
-                            whisperService.loadingModelName = nil
+                            whisperService.dismissLoadingModal()
                         }) {
                             Text(NSLocalizedString("OK", comment: "OK button"))
                         }

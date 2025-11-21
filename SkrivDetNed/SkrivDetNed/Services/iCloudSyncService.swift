@@ -148,10 +148,7 @@ class iCloudSyncService: ObservableObject {
 
         stopMonitoring() // Stop any existing query
 
-        metadataQuery = NSMetadataQuery()
-        guard let query = metadataQuery else { return }
-
-        // Get container URL to search in
+        // Get container URL to search in (this triggers iCloud initialization)
         guard let containerURL = FileManager.default.url(forUbiquityContainerIdentifier: containerIdentifier) else {
             print("❌ Cannot get container URL for monitoring")
             return
@@ -159,6 +156,19 @@ class iCloudSyncService: ObservableObject {
 
         let documentsURL = containerURL.appendingPathComponent("Documents")
         print("🔍 Monitoring iCloud at: \(documentsURL.path)")
+
+        // Delay query start to allow iCloud container to fully initialize
+        // This prevents "couldn't fetch remote operation IDs" errors
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second delay
+            self.startMetadataQuery(onNewFile: onNewFile)
+        }
+    }
+
+    /// Internal method to start the NSMetadataQuery after iCloud is ready
+    private func startMetadataQuery(onNewFile: @escaping (URL) -> Void) {
+        metadataQuery = NSMetadataQuery()
+        guard let query = metadataQuery else { return }
 
         // Search in specific iCloud container Documents folder
         query.searchScopes = [NSMetadataQueryUbiquitousDocumentsScope]
@@ -602,9 +612,29 @@ class iCloudSyncService: ObservableObject {
         let transcriptionFileName = "\(baseName).txt"
         let transcriptionURL = recordingsFolder.appendingPathComponent(transcriptionFileName)
 
-        // Write transcription with prompt prefix
-        try finalTranscription.write(to: transcriptionURL, atomically: true, encoding: .utf8)
-        print("💾 Saved transcription to iCloud: \(transcriptionFileName)")
+        // Write transcription with NSFileCoordinator to avoid iCloud sync conflicts
+        // This prevents the old version from overwriting the new transcription
+        let coordinator = NSFileCoordinator(filePresenter: nil)
+        var coordinatorError: NSError?
+        var writeError: Error?
+
+        coordinator.coordinate(writingItemAt: transcriptionURL, options: .forReplacing, error: &coordinatorError) { url in
+            do {
+                try finalTranscription.write(to: url, atomically: true, encoding: .utf8)
+                print("💾 Saved transcription to iCloud (coordinated): \(transcriptionFileName)")
+            } catch {
+                writeError = error
+            }
+        }
+
+        if let error = coordinatorError {
+            print("⚠️ NSFileCoordinator error saving transcription: \(error)")
+            // Fallback to direct write
+            try finalTranscription.write(to: transcriptionURL, atomically: true, encoding: .utf8)
+            print("💾 Saved transcription to iCloud (fallback): \(transcriptionFileName)")
+        } else if let error = writeError {
+            throw error
+        }
 
         // Update metadata
         metadata.status = .completed

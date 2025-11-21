@@ -187,6 +187,70 @@ struct AdvancedSettingsView: View {
                         .padding(8)
                     }
 
+                    // Decoding Thresholds
+                    GroupBox(label: Label(NSLocalizedString("Transskriptions-tærskler", comment: "Transcription thresholds"), systemImage: "slider.horizontal.3")) {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text(NSLocalizedString("Disse indstillinger påvirker hvornår Whisper stopper transskriptionen. Højere værdier gør Whisper mere tolerant.", comment: ""))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+
+                            Divider()
+
+                            // Compression Ratio Threshold
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Text(NSLocalizedString("Gentagelses-tolerance", comment: "Compression ratio threshold"))
+                                        .font(.subheadline)
+                                    Spacer()
+                                    Text(String(format: "%.1f", settings.whisperCompressionRatioThreshold))
+                                        .foregroundColor(.secondary)
+                                        .monospacedDigit()
+                                }
+                                Slider(value: $settings.whisperCompressionRatioThreshold, in: 1.5...4.0, step: 0.1)
+                                Text(NSLocalizedString("Højere = mere tolerant over for gentagen tale. Standard: 2.8", comment: ""))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            Divider()
+
+                            // Log Prob Threshold
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Text(NSLocalizedString("Usikkerheds-tolerance", comment: "Log prob threshold"))
+                                        .font(.subheadline)
+                                    Spacer()
+                                    Text(String(format: "%.1f", settings.whisperLogProbThreshold))
+                                        .foregroundColor(.secondary)
+                                        .monospacedDigit()
+                                }
+                                Slider(value: $settings.whisperLogProbThreshold, in: -3.0...0.0, step: 0.1)
+                                Text(NSLocalizedString("Lavere = mere tolerant over for usikre transskriptioner. Standard: -1.5", comment: ""))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            Divider()
+
+                            // No Speech Threshold
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Text(NSLocalizedString("Stilheds-tolerance", comment: "No speech threshold"))
+                                        .font(.subheadline)
+                                    Spacer()
+                                    Text(String(format: "%.2f", settings.whisperNoSpeechThreshold))
+                                        .foregroundColor(.secondary)
+                                        .monospacedDigit()
+                                }
+                                Slider(value: $settings.whisperNoSpeechThreshold, in: 0.3...1.0, step: 0.05)
+                                Text(NSLocalizedString("Højere = mindre tilbøjelig til at stoppe ved stille dele. Standard: 0.8", comment: ""))
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding(8)
+                    }
+
                     // Reset button
                     HStack {
                         Spacer()
@@ -217,6 +281,10 @@ struct AdvancedSettingsView: View {
         settings.whisperWordLevelTimestamps = false
         settings.whisperThreadCount = 1
         settings.whisperAutoDetectLanguage = false
+        // Decoding thresholds
+        settings.whisperCompressionRatioThreshold = 2.8
+        settings.whisperLogProbThreshold = -1.5
+        settings.whisperNoSpeechThreshold = 0.8
     }
 }
 

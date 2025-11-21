@@ -1045,6 +1045,9 @@
         }
       }
     },
+    "Disse indstillinger påvirker hvornår Whisper stopper transskriptionen. Højere værdier gør Whisper mere tolerant." : {
+
+    },
     "Download" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1799,6 +1802,9 @@
         }
       }
     },
+    "Gentagelses-tolerance" : {
+      "comment" : "Compression ratio threshold"
+    },
     "Go to Monitoring tab" : {
       "comment" : "Folder monitoring step 1"
     },
@@ -1914,6 +1920,12 @@
         }
       }
     },
+    "Højere = mere tolerant over for gentagen tale. Standard: 2.8" : {
+
+    },
+    "Højere = mindre tilbøjelig til at stoppe ved stille dele. Standard: 0.8" : {
+
+    },
     "Højere værdier kan hjælpe ved dårlig lydkvalitet." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1930,6 +1942,9 @@
           }
         }
       }
+    },
+    "Hold Option (⌥) nede for at splitte lydfilen i to dele" : {
+      "comment" : "Split audio hint"
     },
     "How it works" : {
       "comment" : "How it works section title",
@@ -2817,6 +2832,9 @@
           }
         }
       }
+    },
+    "Lavere = mere tolerant over for usikre transskriptioner. Standard: -1.5" : {
+
     },
     "Lavere værdier giver mere konsistente resultater." : {
       "extractionState" : "manual",
@@ -4229,6 +4247,9 @@
     "Source" : {
       "comment" : "Source\nSource filter"
     },
+    "Split & transkribér igen" : {
+      "comment" : "Split and transcribe again"
+    },
     "Spring over" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4388,6 +4409,9 @@
           }
         }
       }
+    },
+    "Stilheds-tolerance" : {
+      "comment" : "No speech threshold"
     },
     "Stop Monitoring" : {
       "comment" : "Stop Monitoring button",
@@ -4861,6 +4885,9 @@
         }
       }
     },
+    "Transskriptions-tærskler" : {
+      "comment" : "Transcription thresholds"
+    },
     "Try searching for something else" : {
       "comment" : "No results description"
     },
@@ -4954,6 +4981,9 @@
     },
     "Use the menu bar icon for quick status updates" : {
       "comment" : "Tip 1"
+    },
+    "Usikkerheds-tolerance" : {
+      "comment" : "Log prob threshold"
     },
     "v%@" : {
       "comment" : "A label displaying the current app version.",
